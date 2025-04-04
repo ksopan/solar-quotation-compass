@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { QuotationFormValues } from "@/components/customer/QuotationForm";
 import { Database } from "@/integrations/supabase/types";
-import { User } from "@/contexts/AuthContext"; // Changed from Supabase User type to our custom User type
+import { User } from "@/contexts/AuthContext"; // Using our custom User type
 
 type QuotationInsert = Database['public']['Tables']['quotation_requests']['Insert'];
 type DocumentFileInsert = Database['public']['Tables']['quotation_document_files']['Insert'];
