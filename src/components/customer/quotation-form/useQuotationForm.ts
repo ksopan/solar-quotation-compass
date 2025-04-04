@@ -15,46 +15,54 @@ interface UseQuotationFormProps {
 }
 
 export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<QuotationFormValues>({
     location: "",
-    roofType: "flat",
+    roofType: "asphalt",
     energyUsage: 0,
     roofArea: 0,
     additionalNotes: "",
     files: []
   });
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
     // Handle numeric inputs
     if (name === "energyUsage" || name === "roofArea") {
-      const numericValue = value === "" ? 0 : parseFloat(value);
-      setFormData(prev => ({ ...prev, [name]: numericValue }));
+      setFormData({
+        ...formData,
+        [name]: parseFloat(value) || 0
+      });
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData({
+        ...formData,
+        [name]: value
+      });
     }
   };
-  
+
   const handleRoofTypeChange = (value: string) => {
-    setFormData(prev => ({ ...prev, roofType: value }));
+    setFormData({
+      ...formData,
+      roofType: value
+    });
   };
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      setFormData(prev => ({ ...prev, files: [...prev.files, ...filesArray] }));
-    }
+
+  const handleFileChange = (files: File[]) => {
+    setFormData((prev) => ({
+      ...prev,
+      files: [...prev.files, ...files]
+    }));
   };
-  
+
   const removeFile = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       files: prev.files.filter((_, i) => i !== index)
     }));
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -63,58 +71,52 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
       return;
     }
     
-    setIsSubmitting(true);
-    
     try {
+      setIsSubmitting(true);
+      
       // 1. Create the quotation request
       const quotationData: QuotationInsert = {
         customer_id: user.id,
         location: formData.location,
         roof_type: formData.roofType,
-        energy_usage: formData.energyUsage,
+        energy_usage: formData.energyUsage || null,
         roof_area: formData.roofArea,
-        additional_notes: formData.additionalNotes,
+        additional_notes: formData.additionalNotes || null,
         status: "pending"
       };
       
       const { data: quotation, error: quotationError } = await supabase
         .from("quotation_requests")
         .insert(quotationData)
-        .select()
+        .select("id")
         .single();
       
       if (quotationError) {
         throw new Error(`Error creating quotation: ${quotationError.message}`);
       }
       
-      if (!quotation) {
-        throw new Error("Failed to create quotation request");
-      }
-      
-      // 2. Upload any attached files
+      // 2. Upload files if any
       if (formData.files.length > 0) {
-        const uploadPromises = formData.files.map(async (file) => {
-          const filePath = `${quotation.id}/${file.name}`;
+        for (const file of formData.files) {
+          // Upload to Storage
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+          const filePath = `${user.id}/${quotation.id}/${fileName}`;
           
-          // Upload to storage
           const { error: uploadError } = await supabase.storage
-            .from("quotation_documents")
+            .from("quotation-files")
             .upload(filePath, file);
           
           if (uploadError) {
-            throw new Error(`Error uploading file: ${uploadError.message}`);
+            console.error("File upload error:", uploadError);
+            continue;
           }
           
-          // Get public URL
-          const { data: publicURL } = supabase.storage
-            .from("quotation_documents")
-            .getPublicUrl(filePath);
-          
-          // Record file in database
+          // Create document file entry
           const fileData: DocumentFileInsert = {
             quotation_id: quotation.id,
-            file_path: publicURL.publicUrl,
             file_name: file.name,
+            file_path: filePath,
             file_type: file.type,
             file_size: file.size
           };
@@ -124,32 +126,34 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
             .insert(fileData);
           
           if (fileRecordError) {
-            throw new Error(`Error recording file: ${fileRecordError.message}`);
+            console.error("File record error:", fileRecordError);
           }
-        });
-        
-        await Promise.all(uploadPromises);
+        }
       }
       
-      toast.success("Quotation request submitted successfully");
+      toast.success("Quotation request submitted successfully!");
+      
+      // Reset form
       setFormData({
         location: "",
-        roofType: "flat",
+        roofType: "asphalt",
         energyUsage: 0,
         roofArea: 0,
         additionalNotes: "",
         files: []
       });
       
+      // Call the success callback
       onSuccess();
+      
     } catch (error) {
-      console.error("Error submitting quotation:", error);
+      console.error("Quotation submission error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to submit quotation request");
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   return {
     formData,
     isSubmitting,
