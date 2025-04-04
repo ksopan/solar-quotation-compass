@@ -47,19 +47,14 @@ const vendorSchema = z.object({
   path: ["confirmPassword"]
 });
 
-// Combined registration schema - fixing the discriminated union
-type CustomerSchema = z.infer<typeof customerSchema>;
-type VendorSchema = z.infer<typeof vendorSchema>;
-type RegisterFormValues = CustomerSchema | VendorSchema;
+// Define type for the union schema
+type RegisterFormValues = z.infer<typeof customerSchema> | z.infer<typeof vendorSchema>;
 
 const Register = () => {
   const { register: authRegister } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"customer" | "vendor">("customer");
-
-  // Create a resolver function that uses the correct schema based on the active tab
-  const formResolver = zodResolver(activeTab === "customer" ? customerSchema : vendorSchema);
 
   const {
     register,
@@ -68,7 +63,7 @@ const Register = () => {
     setValue,
     formState: { errors }
   } = useForm<RegisterFormValues>({
-    resolver: formResolver,
+    resolver: zodResolver(activeTab === "customer" ? customerSchema : vendorSchema),
     defaultValues: {
       role: "customer" as const,
       email: "",
@@ -81,10 +76,11 @@ const Register = () => {
     setIsLoading(true);
     try {
       const { confirmPassword, ...registrationData } = data;
-      // Ensure we're passing the correct user role type
+      // Ensure password is passed as string and is required
       await authRegister({
         ...registrationData,
-        role: registrationData.role as UserRole
+        password: registrationData.password,
+        role: registrationData.role
       });
       navigate("/");
     } catch (error) {
@@ -96,7 +92,7 @@ const Register = () => {
   const handleTabChange = (value: string) => {
     setActiveTab(value as "customer" | "vendor");
     reset({
-      role: value as UserRole,
+      role: value as "customer" | "vendor",
       email: "",
       password: "",
       confirmPassword: ""
@@ -104,14 +100,13 @@ const Register = () => {
   };
 
   const handleGoogleRegister = () => {
-    toast("Google registration is for customers only. Redirecting to Google...", {
+    toast.info("Google registration is for customers only. Redirecting to Google...", {
       description: "This is a demo feature."
     });
     // In a real app, this would redirect to Google OAuth
     setTimeout(() => {
-      toast("Google authentication is not implemented in this demo", {
-        description: "This would connect to a real OAuth provider in production.",
-        variant: "destructive"
+      toast.error("Google authentication is not implemented in this demo", {
+        description: "This would connect to a real OAuth provider in production."
       });
     }, 2000);
   };
@@ -193,10 +188,10 @@ const Register = () => {
                     <Input
                       id="companyName"
                       placeholder="Solar Solutions Inc."
-                      {...register("companyName")}
+                      {...register(activeTab === "vendor" ? "companyName" : undefined as any)}
                     />
-                    {errors.companyName && (
-                      <p className="text-sm text-destructive">{errors.companyName.message as string}</p>
+                    {activeTab === "vendor" && errors.companyName && (
+                      <p className="text-sm text-destructive">{(errors as any).companyName?.message}</p>
                     )}
                   </div>
 

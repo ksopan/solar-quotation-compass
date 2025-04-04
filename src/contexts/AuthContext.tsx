@@ -87,9 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error("Invalid credentials or user role");
       }
     } catch (error) {
-      toast(error instanceof Error ? error.message : "Login failed", {
-        variant: "destructive"
-      });
+      toast.error(error instanceof Error ? error.message : "Login failed");
       throw error;
     } finally {
       setLoading(false);
@@ -125,13 +123,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(userWithoutPassword);
       localStorage.setItem("solarUser", JSON.stringify(userWithoutPassword));
       
-      toast("Registration successful!", {
+      toast.success("Registration successful!", {
         description: "You're now logged in."
       });
     } catch (error) {
-      toast(error instanceof Error ? error.message : "Registration failed", {
-        variant: "destructive"
-      });
+      toast.error(error instanceof Error ? error.message : "Registration failed");
       throw error;
     } finally {
       setLoading(false);
@@ -141,7 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem("solarUser");
-    toast("Logged out successfully!", {
+    toast.success("Logged out successfully!", {
       description: "See you soon!"
     });
   };
