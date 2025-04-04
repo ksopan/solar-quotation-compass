@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { FormFileUpload } from "./quotation-form/FormFileUpload";
 import { RoofTypeSelector } from "./quotation-form/RoofTypeSelector";
 import { QuotationMetrics } from "./quotation-form/QuotationMetrics";
 import { useQuotationForm } from "./quotation-form/useQuotationForm";
+import { toast } from "sonner";
 
 export type QuotationFormValues = {
   location: string;
@@ -36,13 +37,42 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({ onSuccess }) => {
     handleSubmit
   } = useQuotationForm({ user, onSuccess });
   
+  // Check authentication on component load
+  useEffect(() => {
+    if (!user) {
+      console.warn("QuotationForm rendered without authenticated user");
+    } else {
+      console.log("QuotationForm rendered with user:", user.id, user.role);
+    }
+  }, [user]);
+
+  const onSubmitWithValidation = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate user is logged in
+    if (!user) {
+      toast.error("You must be logged in to submit a quotation request");
+      return;
+    }
+    
+    // Validate user role
+    if (user.role !== "customer") {
+      toast.error("Only customers can submit quotation requests");
+      return;
+    }
+    
+    // Proceed with submission
+    console.log("Attempting form submission with user:", user.id);
+    handleSubmit(e);
+  };
+  
   return (
     <Card>
       <CardHeader>
         <CardTitle>Request a Solar Panel Quotation</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={onSubmitWithValidation} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="location">Installation Location</Label>
             <Input

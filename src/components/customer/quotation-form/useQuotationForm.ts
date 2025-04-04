@@ -66,6 +66,54 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
     }));
   };
 
+  const checkPermissions = async () => {
+    // Check if the user has permission to insert into quotation_requests
+    console.log("Testing database permissions...");
+    try {
+      // Verify session exists
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("Session retrieval error:", sessionError);
+        return false;
+      }
+      if (!sessionData.session) {
+        console.error("No active session");
+        return false;
+      }
+      console.log("Active session found with user:", sessionData.session.user.id);
+      
+      // Check quotation_requests permission
+      console.log("Checking quotation_requests permission...");
+      const { error: testError } = await supabase
+        .from("quotation_requests")
+        .select("id")
+        .limit(1);
+      
+      if (testError) {
+        console.error("Permission test error:", testError);
+        return false;
+      }
+      
+      // Check storage bucket permission
+      console.log("Checking storage bucket permission...");
+      const { error: storageError } = await supabase
+        .storage
+        .from("quotation-files")
+        .list('test-dir', { limit: 1 });
+      
+      if (storageError) {
+        console.error("Storage test error:", storageError);
+        return false;
+      }
+      
+      console.log("All permissions verified");
+      return true;
+    } catch (error) {
+      console.error("Permission check error:", error);
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -77,14 +125,28 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
     try {
       setIsSubmitting(true);
       
+      // Run permission check first
+      const hasPermission = await checkPermissions();
+      if (!hasPermission) {
+        throw new Error("You don't have permission to create quotations. Please check your account status.");
+      }
+      
       // Log the current auth status to help debug
       console.log("Submitting as user:", user.id);
       
       // Check if we have an active session first
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("Session error:", sessionError);
+        throw new Error(`Session error: ${sessionError.message}`);
+      }
+      
       if (!sessionData.session) {
+        console.error("No active session found");
         throw new Error("No active session found. Please log in again.");
       }
+      
+      console.log("Active session confirmed:", sessionData.session.user.id);
       
       // 1. Create the quotation request
       const quotationData: QuotationInsert = {
@@ -97,6 +159,8 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
         status: "pending"
       };
       
+      console.log("Submitting quotation data:", quotationData);
+      
       const { data: quotation, error: quotationError } = await supabase
         .from("quotation_requests")
         .insert(quotationData)
@@ -108,13 +172,19 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
         throw new Error(`Error creating quotation: ${quotationError.message}`);
       }
       
+      console.log("Quotation created successfully with ID:", quotation.id);
+      
       // 2. Upload files if any
       if (formData.files.length > 0) {
+        console.log(`Uploading ${formData.files.length} files...`);
+        
         for (const file of formData.files) {
           // Upload to Storage
           const fileExt = file.name.split('.').pop();
           const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
           const filePath = `${user.id}/${quotation.id}/${fileName}`;
+          
+          console.log(`Uploading file ${file.name} to path ${filePath}`);
           
           const { error: uploadError } = await supabase.storage
             .from("quotation-files")
@@ -124,6 +194,8 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
             console.error("File upload error:", uploadError);
             continue;
           }
+          
+          console.log(`File uploaded successfully to ${filePath}`);
           
           // Create document file entry
           const fileData: DocumentFileInsert = {
@@ -140,6 +212,8 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
           
           if (fileRecordError) {
             console.error("File record error:", fileRecordError);
+          } else {
+            console.log("File record created successfully");
           }
         }
       }
