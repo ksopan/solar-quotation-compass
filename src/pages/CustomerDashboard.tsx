@@ -70,7 +70,7 @@ const CustomerDashboard = () => {
         id: q.id,
         status: q.status,
         createdAt: new Date(q.created_at).toISOString().split('T')[0],
-        totalResponses: q.quotation_proposals.count,
+        totalResponses: q.quotation_proposals?.[0]?.count || 0,
         installationAddress: q.location,
         roofType: q.roof_type,
         monthlyBill: q.energy_usage || 0,
@@ -142,7 +142,7 @@ const CustomerDashboard = () => {
             continue;
           }
           
-          // Record file details in database
+          // Record file details in database - using a raw query since the table might not be in TypeScript definitions yet
           const { error: fileRecordError } = await supabase
             .from('quotation_document_files')
             .insert({
@@ -151,7 +151,7 @@ const CustomerDashboard = () => {
               file_name: file.name,
               file_type: file.type,
               file_size: file.size
-            });
+            } as any);
           
           if (fileRecordError) {
             console.error("Error recording file details:", fileRecordError);
@@ -266,6 +266,8 @@ const CustomerDashboard = () => {
                 <Input
                   id="monthly-bill"
                   type="number"
+                  step="0.01"
+                  min="0"
                   value={formData.monthlyBill || ""}
                   onChange={handleInputChange}
                   placeholder="150"
@@ -278,6 +280,7 @@ const CustomerDashboard = () => {
                 <Input
                   id="devices"
                   type="number"
+                  min="0"
                   value={formData.devices || ""}
                   onChange={handleInputChange}
                   placeholder="10"
