@@ -49,11 +49,14 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
     });
   };
 
-  const handleFileChange = (files: File[]) => {
-    setFormData((prev) => ({
-      ...prev,
-      files: [...prev.files, ...files]
-    }));
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const fileList = Array.from(e.target.files);
+      setFormData((prev) => ({
+        ...prev,
+        files: [...prev.files, ...fileList]
+      }));
+    }
   };
 
   const removeFile = (index: number) => {
