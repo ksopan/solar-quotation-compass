@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MainLayout } from "@/components/layouts/MainLayout";
@@ -48,7 +48,7 @@ const vendorSchema = z.object({
   path: ["confirmPassword"]
 });
 
-// Combined registration schema
+// Combined registration schema using discriminated union
 const registerSchema = z.discriminatedUnion("role", [customerSchema, vendorSchema]);
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -68,7 +68,7 @@ const Register = () => {
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      role: "customer",
+      role: "customer" as const,
       email: "",
       password: "",
       confirmPassword: ""
@@ -129,7 +129,7 @@ const Register = () => {
                         {...register("firstName")}
                       />
                       {errors.firstName && (
-                        <p className="text-sm text-destructive">{errors.firstName.message}</p>
+                        <p className="text-sm text-destructive">{errors.firstName.message as string}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -140,7 +140,7 @@ const Register = () => {
                         {...register("lastName")}
                       />
                       {errors.lastName && (
-                        <p className="text-sm text-destructive">{errors.lastName.message}</p>
+                        <p className="text-sm text-destructive">{errors.lastName.message as string}</p>
                       )}
                     </div>
                   </div>
@@ -155,7 +155,7 @@ const Register = () => {
                       {...register("address")}
                     />
                     {errors.address && (
-                      <p className="text-sm text-destructive">{errors.address.message}</p>
+                      <p className="text-sm text-destructive">{errors.address.message as string}</p>
                     )}
                   </div>
 
@@ -167,7 +167,7 @@ const Register = () => {
                       {...register("phone")}
                     />
                     {errors.phone && (
-                      <p className="text-sm text-destructive">{errors.phone.message}</p>
+                      <p className="text-sm text-destructive">{errors.phone.message as string}</p>
                     )}
                   </div>
                 </TabsContent>
@@ -181,7 +181,7 @@ const Register = () => {
                       {...register("companyName")}
                     />
                     {errors.companyName && (
-                      <p className="text-sm text-destructive">{errors.companyName.message}</p>
+                      <p className="text-sm text-destructive">{errors.companyName.message as string}</p>
                     )}
                   </div>
 
@@ -196,7 +196,7 @@ const Register = () => {
                         {...register("firstName")}
                       />
                       {errors.firstName && (
-                        <p className="text-sm text-destructive">{errors.firstName.message}</p>
+                        <p className="text-sm text-destructive">{errors.firstName.message as string}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -207,7 +207,7 @@ const Register = () => {
                         {...register("lastName")}
                       />
                       {errors.lastName && (
-                        <p className="text-sm text-destructive">{errors.lastName.message}</p>
+                        <p className="text-sm text-destructive">{errors.lastName.message as string}</p>
                       )}
                     </div>
                   </div>
@@ -220,7 +220,7 @@ const Register = () => {
                       {...register("address")}
                     />
                     {errors.address && (
-                      <p className="text-sm text-destructive">{errors.address.message}</p>
+                      <p className="text-sm text-destructive">{errors.address.message as string}</p>
                     )}
                   </div>
 
@@ -232,7 +232,7 @@ const Register = () => {
                       {...register("phone")}
                     />
                     {errors.phone && (
-                      <p className="text-sm text-destructive">{errors.phone.message}</p>
+                      <p className="text-sm text-destructive">{errors.phone.message as string}</p>
                     )}
                   </div>
                 </TabsContent>
@@ -247,7 +247,7 @@ const Register = () => {
                     {...register("email")}
                   />
                   {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email.message}</p>
+                    <p className="text-sm text-destructive">{errors.email.message as string}</p>
                   )}
                 </div>
 
@@ -261,7 +261,7 @@ const Register = () => {
                       {...register("password")}
                     />
                     {errors.password && (
-                      <p className="text-sm text-destructive">{errors.password.message}</p>
+                      <p className="text-sm text-destructive">{errors.password.message as string}</p>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -273,7 +273,7 @@ const Register = () => {
                       {...register("confirmPassword")}
                     />
                     {errors.confirmPassword && (
-                      <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+                      <p className="text-sm text-destructive">{errors.confirmPassword.message as string}</p>
                     )}
                   </div>
                 </div>
