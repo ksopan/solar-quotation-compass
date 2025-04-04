@@ -41,8 +41,14 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({ onSuccess }) => {
   useEffect(() => {
     if (!user) {
       console.warn("QuotationForm rendered without authenticated user");
+      toast.warning("Please login to submit a quotation request");
     } else {
       console.log("QuotationForm rendered with user:", user.id, user.role);
+      // Verify the user role
+      if (user.role !== "customer") {
+        console.warn(`User with role ${user.role} attempting to access customer form`);
+        toast.warning("Only customers can submit quotation requests");
+      }
     }
   }, [user]);
 
@@ -115,9 +121,17 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({ onSuccess }) => {
             onRemoveFile={removeFile}
           />
           
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button type="submit" className="w-full" disabled={isSubmitting || !user || user.role !== "customer"}>
             {isSubmitting ? "Submitting..." : "Submit Request"}
           </Button>
+          
+          {!user && (
+            <p className="text-sm text-red-500 mt-2">You must be logged in as a customer to submit a request</p>
+          )}
+          
+          {user && user.role !== "customer" && (
+            <p className="text-sm text-red-500 mt-2">Only customers can submit quotation requests</p>
+          )}
         </form>
       </CardContent>
     </Card>
