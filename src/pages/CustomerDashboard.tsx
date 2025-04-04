@@ -12,32 +12,16 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { toast } from "sonner";
 import { FileText, Home, LightbulbIcon, Zap, X, Upload, FileIcon, FileUp } from "lucide-react";
 import QuotationDetails, { QuotationDetails as QuotationDetailsType } from "@/components/customer/QuotationDetails";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
-// Mock data for quotations with more details
-const mockQuotations = [
-  {
-    id: "q1",
-    status: "Pending",
-    createdAt: "2023-04-01",
-    totalResponses: 0,
-    installationAddress: "123 Solar St, Sunny City, CA 92123",
-    roofType: "Asphalt Shingle",
-    monthlyBill: 180,
-    devices: 12,
-    additionalInfo: "Looking for energy-efficient options for a 2-story house."
-  },
-  {
-    id: "q2",
-    status: "Active",
-    createdAt: "2023-03-15",
-    totalResponses: 3,
-    installationAddress: "456 Green Ave, Eco Town, CA 90210",
-    roofType: "Metal",
-    monthlyBill: 230,
-    devices: 15,
-    additionalInfo: "Interested in battery storage options as well."
-  }
-];
+interface QuotationFormData {
+  installationAddress: string;
+  roofType: string;
+  monthlyBill: number;
+  devices: number;
+  additionalInfo: string;
+}
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
@@ -45,14 +29,156 @@ const CustomerDashboard = () => {
   const [selectedQuotation, setSelectedQuotation] = useState<QuotationDetailsType | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<QuotationFormData>({
+    installationAddress: user?.address || "",
+    roofType: "asphalt",
+    monthlyBill: 0,
+    devices: 0,
+    additionalInfo: "",
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const handleQuotationSubmit = (event: React.FormEvent) => {
+  // Fetch user's quotation requests
+  const { data: quotations = [], isLoading, refetch } = useQuery({
+    queryKey: ['quotations', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('quotation_requests')
+        .select(`
+          id,
+          status,
+          created_at,
+          location,
+          roof_type,
+          energy_usage,
+          roof_area,
+          additional_notes,
+          quotation_proposals(count)
+        `)
+        .eq('customer_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error("Error fetching quotations:", error);
+        throw new Error(error.message);
+      }
+      
+      return data.map(q => ({
+        id: q.id,
+        status: q.status,
+        createdAt: new Date(q.created_at).toISOString().split('T')[0],
+        totalResponses: q.quotation_proposals.count,
+        installationAddress: q.location,
+        roofType: q.roof_type,
+        monthlyBill: q.energy_usage || 0,
+        devices: q.roof_area || 0,
+        additionalInfo: q.additional_notes || ""
+      }));
+    },
+    enabled: !!user
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id.replace("installation-", "").replace("-", "")]: value
+    }));
+  };
+
+  const handleSelectChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      roofType: value
+    }));
+  };
+
+  const handleQuotationSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    // In a real implementation, you would upload the files to storage here
-    toast.success(`Quotation request submitted with ${uploadedFiles.length} file(s)`);
-    setIsDialogOpen(false);
-    setUploadedFiles([]);
+    
+    if (!user) {
+      toast.error("You must be logged in to submit a quotation request");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Insert quotation request
+      const { data: quotationData, error: quotationError } = await supabase
+        .from('quotation_requests')
+        .insert({
+          customer_id: user.id,
+          location: formData.installationAddress,
+          roof_type: formData.roofType,
+          energy_usage: formData.monthlyBill,
+          roof_area: formData.devices,
+          additional_notes: formData.additionalInfo,
+          status: 'pending',
+          budget: null // Optional field
+        })
+        .select('id')
+        .single();
+      
+      if (quotationError) throw new Error(quotationError.message);
+      
+      const quotationId = quotationData.id;
+      
+      // Upload files if any
+      if (uploadedFiles.length > 0) {
+        for (const file of uploadedFiles) {
+          // Upload file to storage
+          const filePath = `${user.id}/${quotationId}/${file.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from('quotation_documents')
+            .upload(filePath, file);
+          
+          if (uploadError) {
+            console.error("Error uploading file:", uploadError);
+            toast.error(`Failed to upload ${file.name}`);
+            continue;
+          }
+          
+          // Record file details in database
+          const { error: fileRecordError } = await supabase
+            .from('quotation_document_files')
+            .insert({
+              quotation_id: quotationId,
+              file_path: filePath,
+              file_name: file.name,
+              file_type: file.type,
+              file_size: file.size
+            });
+          
+          if (fileRecordError) {
+            console.error("Error recording file details:", fileRecordError);
+          }
+        }
+      }
+      
+      toast.success("Quotation request submitted successfully!");
+      setIsDialogOpen(false);
+      setUploadedFiles([]);
+      setFormData({
+        installationAddress: user.address || "",
+        roofType: "asphalt",
+        monthlyBill: 0,
+        devices: 0,
+        additionalInfo: ""
+      });
+      
+      // Refresh quotations list
+      refetch();
+      
+    } catch (error) {
+      toast.error("Failed to submit quotation request. Please try again.");
+      console.error("Quotation submission error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const viewQuotationDetails = (quotation: QuotationDetailsType) => {
@@ -109,14 +235,19 @@ const CustomerDashboard = () => {
                 <Label htmlFor="installation-address">Installation Address</Label>
                 <Input
                   id="installation-address"
-                  defaultValue={user.address}
+                  value={formData.installationAddress}
+                  onChange={handleInputChange}
                   placeholder="123 Main St, City, State, ZIP"
+                  required
                 />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="roof-type">Roof Type</Label>
-                <Select defaultValue="asphalt">
+                <Select 
+                  value={formData.roofType} 
+                  onValueChange={handleSelectChange}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a roof type" />
                   </SelectTrigger>
@@ -135,7 +266,10 @@ const CustomerDashboard = () => {
                 <Input
                   id="monthly-bill"
                   type="number"
+                  value={formData.monthlyBill || ""}
+                  onChange={handleInputChange}
                   placeholder="150"
+                  required
                 />
               </div>
               
@@ -144,7 +278,10 @@ const CustomerDashboard = () => {
                 <Input
                   id="devices"
                   type="number"
+                  value={formData.devices || ""}
+                  onChange={handleInputChange}
                   placeholder="10"
+                  required
                 />
               </div>
               
@@ -152,6 +289,8 @@ const CustomerDashboard = () => {
                 <Label htmlFor="additional-info">Additional Information</Label>
                 <Textarea
                   id="additional-info"
+                  value={formData.additionalInfo}
+                  onChange={handleInputChange}
                   placeholder="Any special requirements or questions you have..."
                 />
               </div>
@@ -210,7 +349,9 @@ const CustomerDashboard = () => {
               )}
               
               <DialogFooter>
-                <Button type="submit">Submit Request</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Submitting..." : "Submit Request"}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -224,9 +365,9 @@ const CustomerDashboard = () => {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockQuotations.length}</div>
+            <div className="text-2xl font-bold">{quotations.length}</div>
             <p className="text-xs text-muted-foreground">
-              {mockQuotations.filter(q => q.status === "Active").length} active requests
+              {quotations.filter(q => q.status === "Active").length} active requests
             </p>
           </CardContent>
         </Card>
@@ -236,9 +377,11 @@ const CustomerDashboard = () => {
             <LightbulbIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
+            <div className="text-2xl font-bold">
+              {quotations.reduce((sum, q) => sum + q.totalResponses, 0)}
+            </div>
             <p className="text-xs text-muted-foreground">
-              From 2 different vendors
+              From our vendor network
             </p>
           </CardContent>
         </Card>
@@ -258,18 +401,27 @@ const CustomerDashboard = () => {
 
       <h2 className="text-xl font-semibold mt-6">Your Quotation Requests</h2>
       <div className="grid gap-6">
-        {mockQuotations.length > 0 ? (
-          mockQuotations.map((quotation) => (
+        {isLoading ? (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-6">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+                <p className="text-muted-foreground mt-4">Loading your quotations...</p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : quotations.length > 0 ? (
+          quotations.map((quotation) => (
             <Card key={quotation.id}>
               <CardHeader>
-                <CardTitle className="text-lg">Quotation #{quotation.id}</CardTitle>
+                <CardTitle className="text-lg">Quotation #{quotation.id.substring(0, 8)}</CardTitle>
                 <CardDescription>Created on {quotation.createdAt}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-sm font-medium">Status: <span className={
-                      quotation.status === "Active" ? "text-green-600" : "text-amber-600"
+                      quotation.status === "active" ? "text-green-600" : "text-amber-600"
                     }>{quotation.status}</span></p>
                     <p className="text-sm">Total Responses: {quotation.totalResponses}</p>
                   </div>
