@@ -10,31 +10,49 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { FileText, Home, LightbulbIcon, Zap } from "lucide-react";
+import QuotationDetails, { QuotationDetails as QuotationDetailsType } from "@/components/customer/QuotationDetails";
 
-// Mock data for quotations
+// Mock data for quotations with more details
 const mockQuotations = [
   {
     id: "q1",
     status: "Pending",
     createdAt: "2023-04-01",
-    totalResponses: 0
+    totalResponses: 0,
+    installationAddress: "123 Solar St, Sunny City, CA 92123",
+    roofType: "Asphalt Shingle",
+    monthlyBill: 180,
+    devices: 12,
+    additionalInfo: "Looking for energy-efficient options for a 2-story house."
   },
   {
     id: "q2",
     status: "Active",
     createdAt: "2023-03-15",
-    totalResponses: 3
+    totalResponses: 3,
+    installationAddress: "456 Green Ave, Eco Town, CA 90210",
+    roofType: "Metal",
+    monthlyBill: 230,
+    devices: 15,
+    additionalInfo: "Interested in battery storage options as well."
   }
 ];
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedQuotation, setSelectedQuotation] = useState<QuotationDetailsType | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   
   const handleQuotationSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     toast.success("Quotation request submitted successfully!");
     setIsDialogOpen(false);
+  };
+
+  const viewQuotationDetails = (quotation: QuotationDetailsType) => {
+    setSelectedQuotation(quotation);
+    setIsDetailsOpen(true);
   };
 
   if (!user) return null;
@@ -173,7 +191,13 @@ const CustomerDashboard = () => {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" className="w-full">View Details</Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => viewQuotationDetails(quotation)}
+                >
+                  View Details
+                </Button>
               </CardFooter>
             </Card>
           ))
@@ -188,6 +212,13 @@ const CustomerDashboard = () => {
           </Card>
         )}
       </div>
+
+      {/* Quotation Details Dialog */}
+      <QuotationDetails 
+        quotation={selectedQuotation}
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+      />
     </div>
   );
 };
