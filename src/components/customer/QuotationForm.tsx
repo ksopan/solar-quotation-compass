@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Database } from "@/integrations/supabase/types";
+
+type QuotationInsert = Database['public']['Tables']['quotation_requests']['Insert'];
+type DocumentFileInsert = Database['public']['Tables']['quotation_document_files']['Insert'];
 
 export type QuotationFormValues = {
   location: string;
@@ -77,17 +80,19 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({ onSuccess }) => {
     
     try {
       // 1. Create the quotation request
+      const quotationData: QuotationInsert = {
+        customer_id: user.id,
+        location: formData.location,
+        roof_type: formData.roofType,
+        energy_usage: formData.energyUsage,
+        roof_area: formData.roofArea,
+        additional_notes: formData.additionalNotes,
+        status: "pending"
+      };
+      
       const { data: quotation, error: quotationError } = await supabase
         .from("quotation_requests")
-        .insert({
-          customer_id: user.id,
-          location: formData.location,
-          roof_type: formData.roofType,
-          energy_usage: formData.energyUsage,
-          roof_area: formData.roofArea,
-          additional_notes: formData.additionalNotes,
-          status: "pending"
-        })
+        .insert(quotationData)
         .select()
         .single();
       
@@ -119,15 +124,17 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({ onSuccess }) => {
             .getPublicUrl(filePath);
           
           // Record file in database
+          const fileData: DocumentFileInsert = {
+            quotation_id: quotation.id,
+            file_path: publicURL.publicUrl,
+            file_name: file.name,
+            file_type: file.type,
+            file_size: file.size
+          };
+          
           const { error: fileRecordError } = await supabase
             .from("quotation_document_files")
-            .insert({
-              quotation_id: quotation.id,
-              file_path: publicURL.publicUrl,
-              file_name: file.name,
-              file_type: file.type,
-              file_size: file.size
-            });
+            .insert(fileData);
           
           if (fileRecordError) {
             throw new Error(`Error recording file: ${fileRecordError.message}`);

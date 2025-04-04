@@ -46,8 +46,7 @@ const CustomerDashboard = () => {
           additional_notes,
           quotation_proposals (count)
         `)
-        .eq("customer_id", user.id)
-        .order("created_at", { ascending: false });
+        .eq("customer_id", user.id);
       
       if (error) {
         throw new Error(`Error fetching quotations: ${error.message}`);
