@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
-import { FileText, Home, LightbulbIcon, Zap } from "lucide-react";
+import { FileText, Home, LightbulbIcon, Zap, X, Upload, FileIcon, FileUp } from "lucide-react";
 import QuotationDetails, { QuotationDetails as QuotationDetailsType } from "@/components/customer/QuotationDetails";
 
 // Mock data for quotations with more details
@@ -43,16 +44,47 @@ const CustomerDashboard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState<QuotationDetailsType | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleQuotationSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    toast.success("Quotation request submitted successfully!");
+    // In a real implementation, you would upload the files to storage here
+    toast.success(`Quotation request submitted with ${uploadedFiles.length} file(s)`);
     setIsDialogOpen(false);
+    setUploadedFiles([]);
   };
 
   const viewQuotationDetails = (quotation: QuotationDetailsType) => {
     setSelectedQuotation(quotation);
     setIsDetailsOpen(true);
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const fileArray = Array.from(files);
+      const validFiles = fileArray.filter(file => {
+        const fileType = file.type;
+        return fileType === 'image/png' || fileType === 'text/plain' || fileType === 'application/pdf';
+      });
+      
+      if (fileArray.length !== validFiles.length) {
+        toast.error("Some files were rejected. Only PNG, TXT, and PDF files are allowed.");
+      }
+      
+      setUploadedFiles(prevFiles => [...prevFiles, ...validFiles]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+  };
+
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   if (!user) return null;
@@ -123,6 +155,59 @@ const CustomerDashboard = () => {
                   placeholder="Any special requirements or questions you have..."
                 />
               </div>
+              
+              {/* File Upload Section */}
+              <div className="space-y-2">
+                <Label>Upload Documents</Label>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept=".png,.txt,.pdf"
+                  multiple
+                  className="hidden"
+                />
+                <div 
+                  className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={triggerFileInput}
+                >
+                  <FileUp className="mx-auto h-8 w-8 text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-500">
+                    Click to upload PNG, TXT, or PDF files
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    You can upload multiple files
+                  </p>
+                </div>
+              </div>
+              
+              {/* Display uploaded files */}
+              {uploadedFiles.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Uploaded Files</Label>
+                  <div className="max-h-40 overflow-y-auto space-y-2">
+                    {uploadedFiles.map((file, index) => (
+                      <div 
+                        key={`${file.name}-${index}`} 
+                        className="flex items-center justify-between bg-gray-50 p-2 rounded-md"
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <FileIcon className="h-4 w-4 shrink-0" />
+                          <span className="text-sm truncate">{file.name}</span>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => removeFile(index)} 
+                          className="h-8 w-8 p-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <DialogFooter>
                 <Button type="submit">Submit Request</Button>
