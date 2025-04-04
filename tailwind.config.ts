@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,14 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Solar panel app-specific colors
+				solar: {
+					'green': '#4CAF50',
+					'dark-green': '#388E3C',
+					'blue': '#2196F3',
+					'light-gray': '#F5F5F5',
+					'medium-gray': '#E0E0E0',
 				}
 			},
 			borderRadius: {
