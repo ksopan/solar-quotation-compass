@@ -12,6 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { MainLayout } from "@/components/layouts/MainLayout";
+import { Home } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email format"),
@@ -64,7 +65,17 @@ const Login = () => {
       <div className="flex justify-center items-center min-h-[80vh]">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-2xl font-bold">Login</CardTitle>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate("/")}
+                aria-label="Home"
+              >
+                <Home className="h-5 w-5" />
+              </Button>
+            </div>
             <CardDescription className="text-center">
               Enter your credentials to access your account
             </CardDescription>

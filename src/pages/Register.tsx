@@ -13,6 +13,7 @@ import { CustomerRegistrationForm } from "@/components/register/CustomerRegistra
 import { VendorRegistrationForm } from "@/components/register/VendorRegistrationForm";
 import { SocialLogin } from "@/components/register/SocialLogin";
 import { customerSchema, vendorSchema, RegisterFormValues } from "@/components/register/registerSchemas";
+import { Home } from "lucide-react";
 
 const Register = () => {
   const { register: authRegister } = useAuth();
@@ -79,7 +80,17 @@ const Register = () => {
       <div className="flex justify-center items-center py-8">
         <Card className="w-full max-w-lg">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">Register</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-2xl font-bold">Register</CardTitle>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate("/")}
+                aria-label="Home"
+              >
+                <Home className="h-5 w-5" />
+              </Button>
+            </div>
             <CardDescription className="text-center">
               Create an account to get started
             </CardDescription>
@@ -125,4 +136,3 @@ const Register = () => {
 };
 
 export default Register;
-
