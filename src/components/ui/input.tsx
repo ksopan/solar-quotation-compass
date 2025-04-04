@@ -8,11 +8,33 @@ export interface InputProps
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {
-    // For number inputs, ensure we handle the input properly
-    const handleNumberInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (type === 'number' && props.onChange) {
-        // Allow the onChange handler to process the event
-        props.onChange(e);
+    // Handle numeric input by preventing non-numeric characters
+    const handleInput = (e: React.FormEvent<HTMLInputElement>) => {
+      const input = e.currentTarget;
+
+      if (type === 'number') {
+        // For mobile browsers that might not enforce numeric keyboard correctly
+        const value = input.value;
+        
+        // Allow only numbers, decimal point, and negative sign
+        const sanitizedValue = value.replace(/[^0-9.-]/g, '');
+        
+        // If the sanitized value is different from the current value, update the input
+        if (value !== sanitizedValue) {
+          input.value = sanitizedValue;
+        }
+        
+        // Call the original onChange if it exists
+        if (props.onChange) {
+          const event = {
+            ...e,
+            target: {
+              ...input,
+              value: sanitizedValue
+            }
+          } as React.ChangeEvent<HTMLInputElement>;
+          props.onChange(event);
+        }
       }
     };
 
@@ -24,7 +46,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           className
         )}
         ref={ref}
-        onInput={type === 'number' ? handleNumberInput : undefined}
+        onInput={handleInput}
         {...props}
       />
     )

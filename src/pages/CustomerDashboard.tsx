@@ -83,7 +83,7 @@ const CustomerDashboard = () => {
     const { id, value } = e.target;
     
     if (id === 'monthly-bill' || id === 'devices') {
-      const numericValue = value === '' ? 0 : parseFloat(value);
+      const numericValue = value === '' ? 0 : parseFloat(value) || 0;
       
       setFormData(prev => ({
         ...prev,
