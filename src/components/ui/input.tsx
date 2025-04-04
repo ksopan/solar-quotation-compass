@@ -7,9 +7,18 @@ export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, value, onChange, ...props }, ref) => {
     // For numeric inputs, ensure we're handling the value correctly
     if (type === 'number') {
+      const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (onChange) {
+          // Allow empty string or valid numbers only
+          if (e.target.value === '' || !isNaN(parseFloat(e.target.value))) {
+            onChange(e);
+          }
+        }
+      };
+
       return (
         <input
           type="number"
@@ -18,6 +27,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             className
           )}
           ref={ref}
+          value={value}
+          onChange={handleNumberChange}
           {...props}
         />
       )
@@ -25,6 +36,16 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     
     // For inputMode numeric or decimal, still use type="text" but handle numeric input
     if (props.inputMode === 'numeric' || props.inputMode === 'decimal') {
+      const handleNumericTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (onChange) {
+          const newValue = e.target.value;
+          // Allow empty or numeric values with optional decimal point
+          if (newValue === '' || /^[0-9]*\.?[0-9]*$/.test(newValue)) {
+            onChange(e);
+          }
+        }
+      };
+
       return (
         <input
           type="text"
@@ -33,6 +54,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             className
           )}
           ref={ref}
+          value={value}
+          onChange={handleNumericTextChange}
           {...props}
         />
       )
@@ -46,6 +69,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           className
         )}
         ref={ref}
+        value={value}
+        onChange={onChange}
         {...props}
       />
     )

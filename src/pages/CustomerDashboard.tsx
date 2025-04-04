@@ -145,7 +145,7 @@ const CustomerDashboard = () => {
       console.log("Submitting quotation with data:", formData);
       console.log("Current user ID:", user.id);
       
-      // Insert the quotation request directly with the user ID
+      // Insert the quotation request
       const { data: quotationData, error: quotationError } = await supabase
         .from('quotation_requests')
         .insert({
@@ -169,46 +169,54 @@ const CustomerDashboard = () => {
       const quotationId = quotationData.id;
       
       // Upload any attached files
+      const fileUploadPromises: Promise<void>[] = [];
       if (uploadedFiles.length > 0) {
         console.log("Uploading", uploadedFiles.length, "files");
         
         for (const file of uploadedFiles) {
-          try {
-            const filePath = `${user.id}/${quotationId}/${file.name}`;
-            console.log("Uploading file to path:", filePath);
-            
-            const { error: uploadError } = await supabase.storage
-              .from('quotation_documents')
-              .upload(filePath, file);
-            
-            if (uploadError) {
-              console.error("Error uploading file:", uploadError);
-              toast.error(`Failed to upload ${file.name}: ${uploadError.message}`);
-              continue;
+          const uploadPromise = async () => {
+            try {
+              const filePath = `${user.id}/${quotationId}/${file.name}`;
+              console.log("Uploading file to path:", filePath);
+              
+              const { error: uploadError } = await supabase.storage
+                .from('quotation_documents')
+                .upload(filePath, file);
+              
+              if (uploadError) {
+                console.error("Error uploading file:", uploadError);
+                toast.error(`Failed to upload ${file.name}: ${uploadError.message}`);
+                return;
+              }
+              
+              console.log("File uploaded successfully:", file.name);
+              
+              // Record the file information in the database
+              const { error: fileRecordError } = await supabase
+                .from('quotation_document_files')
+                .insert({
+                  quotation_id: quotationId,
+                  file_path: filePath,
+                  file_name: file.name,
+                  file_type: file.type,
+                  file_size: file.size
+                });
+              
+              if (fileRecordError) {
+                console.error("Error recording file details:", fileRecordError);
+                toast.error(`Failed to record file details: ${fileRecordError.message}`);
+              }
+            } catch (fileError) {
+              console.error("Unexpected error during file upload:", fileError);
+              toast.error(`Unexpected error uploading ${file.name}`);
             }
-            
-            console.log("File uploaded successfully:", file.name);
-            
-            // Record the file information in the database
-            const { error: fileRecordError } = await supabase
-              .from('quotation_document_files')
-              .insert({
-                quotation_id: quotationId,
-                file_path: filePath,
-                file_name: file.name,
-                file_type: file.type,
-                file_size: file.size
-              });
-            
-            if (fileRecordError) {
-              console.error("Error recording file details:", fileRecordError);
-              toast.error(`Failed to record file details: ${fileRecordError.message}`);
-            }
-          } catch (fileError) {
-            console.error("Unexpected error during file upload:", fileError);
-            toast.error(`Unexpected error uploading ${file.name}`);
-          }
+          };
+          
+          fileUploadPromises.push(uploadPromise());
         }
+        
+        // Wait for all file uploads to complete
+        await Promise.all(fileUploadPromises);
       }
       
       toast.success("Quotation request submitted successfully!");
