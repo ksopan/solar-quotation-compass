@@ -6,18 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Database } from "@/integrations/supabase/types";
 
-interface QuotationItem {
-  id: string;
-  status: string;
-  created_at: string;
-  location: string;
-  roof_type: string;
-  energy_usage: number | null;
-  roof_area: number;
-  additional_notes: string | null;
+type QuotationItem = Database['public']['Tables']['quotation_requests']['Row'] & {
   quotation_proposals: { count: number }[];
-}
+};
 
 interface QuotationListProps {
   quotations: QuotationItem[];
@@ -84,7 +77,7 @@ export const QuotationList: React.FC<QuotationListProps> = ({ quotations, loadin
                   <TableCell>{format(new Date(quotation.created_at), "MMM d, yyyy")}</TableCell>
                   <TableCell>{quotation.location}</TableCell>
                   <TableCell>{getStatusBadge(quotation.status)}</TableCell>
-                  <TableCell>{quotation.quotation_proposals.length}</TableCell>
+                  <TableCell>{quotation.quotation_proposals?.length || 0}</TableCell>
                   <TableCell className="text-right">
                     <Button asChild size="sm">
                       <Link to={`/quotation/${quotation.id}`}>View Details</Link>

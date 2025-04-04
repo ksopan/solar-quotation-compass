@@ -7,18 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QuotationForm } from "@/components/customer/QuotationForm";
 import { QuotationList } from "@/components/customer/QuotationList";
+import { Database } from "@/integrations/supabase/types";
 
-interface QuotationItem {
-  id: string;
-  status: string;
-  created_at: string;
-  location: string;
-  roof_type: string;
-  energy_usage: number | null;
-  roof_area: number;
-  additional_notes: string | null;
+type QuotationItem = Database['public']['Tables']['quotation_requests']['Row'] & {
   quotation_proposals: { count: number }[];
-}
+};
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
@@ -53,7 +46,6 @@ const CustomerDashboard = () => {
       }
       
       if (data) {
-        // Type assertion to ensure we have the right structure
         setQuotations(data as QuotationItem[]);
       }
     } catch (error) {
@@ -125,7 +117,7 @@ const CustomerDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {quotations.reduce((total, q) => total + q.quotation_proposals.length, 0)}
+              {quotations.reduce((total, q) => total + (q.quotation_proposals?.length || 0), 0)}
             </div>
           </CardContent>
         </Card>
