@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,41 +45,46 @@ const CustomerDashboard = () => {
       
       console.log("Fetching quotations for user ID:", user.id);
       
-      // Query quotation data directly from quotation_requests table, not auth.users
-      const { data, error } = await supabase
-        .from('quotation_requests')
-        .select(`
-          id,
-          status,
-          created_at,
-          location,
-          roof_type,
-          energy_usage,
-          roof_area,
-          additional_notes,
-          quotation_proposals(count)
-        `)
-        .eq('customer_id', user.id)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error("Error fetching quotations:", error);
-        throw new Error(error.message);
+      try {
+        const { data, error } = await supabase
+          .from('quotation_requests')
+          .select(`
+            id,
+            status,
+            created_at,
+            location,
+            roof_type,
+            energy_usage,
+            roof_area,
+            additional_notes,
+            quotation_proposals(count)
+          `)
+          .eq('customer_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error("Error fetching quotations:", error);
+          throw new Error(error.message);
+        }
+        
+        console.log("Quotation data retrieved:", data);
+        
+        return data.map(q => ({
+          id: q.id,
+          status: q.status,
+          createdAt: new Date(q.created_at).toISOString().split('T')[0],
+          totalResponses: q.quotation_proposals?.[0]?.count || 0,
+          installationAddress: q.location,
+          roofType: q.roof_type,
+          monthlyBill: q.energy_usage || 0,
+          devices: q.roof_area || 0,
+          additionalInfo: q.additional_notes || ""
+        }));
+      } catch (error) {
+        console.error("Failed to fetch quotations:", error);
+        toast.error("Failed to load your quotations. Please try again later.");
+        return [];
       }
-      
-      console.log("Quotation data retrieved:", data);
-      
-      return data.map(q => ({
-        id: q.id,
-        status: q.status,
-        createdAt: new Date(q.created_at).toISOString().split('T')[0],
-        totalResponses: q.quotation_proposals?.[0]?.count || 0,
-        installationAddress: q.location,
-        roofType: q.roof_type,
-        monthlyBill: q.energy_usage || 0,
-        devices: q.roof_area || 0,
-        additionalInfo: q.additional_notes || ""
-      }));
     },
     enabled: !!user
   });
@@ -88,17 +94,17 @@ const CustomerDashboard = () => {
     
     if (id === 'monthly-bill') {
       // Only allow numeric input with decimal point
-      const numericValue = value === '' ? 0 : parseFloat(value) || 0;
+      const numericValue = value === '' ? 0 : parseFloat(value);
       setFormData(prev => ({
         ...prev,
-        monthlyBill: numericValue
+        monthlyBill: isNaN(numericValue) ? 0 : numericValue
       }));
     } else if (id === 'devices') {
       // Only allow integer input
-      const numericValue = value === '' ? 0 : parseInt(value) || 0;
+      const numericValue = value === '' ? 0 : parseInt(value);
       setFormData(prev => ({
         ...prev,
-        devices: numericValue
+        devices: isNaN(numericValue) ? 0 : numericValue
       }));
     } else if (id === 'installation-address') {
       setFormData(prev => ({
@@ -128,14 +134,18 @@ const CustomerDashboard = () => {
       return;
     }
     
+    if (!formData.installationAddress) {
+      toast.error("Installation address is required");
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
       console.log("Submitting quotation with data:", formData);
       console.log("Current user ID:", user.id);
       
-      // Insert the quotation request - no need to check/create customer profile here
-      // as we've added RLS policies that work directly with auth.uid()
+      // Insert the quotation request directly with the user ID
       const { data: quotationData, error: quotationError } = await supabase
         .from('quotation_requests')
         .insert({
@@ -308,10 +318,12 @@ const CustomerDashboard = () => {
                 <Label htmlFor="monthly-bill">Average Monthly Electricity Bill ($)</Label>
                 <Input
                   id="monthly-bill"
-                  inputMode="decimal"
+                  type="number"
                   value={formData.monthlyBill === 0 ? "" : formData.monthlyBill}
                   onChange={handleInputChange}
                   placeholder="150"
+                  min="0"
+                  step="0.01"
                   required
                 />
               </div>
@@ -320,10 +332,12 @@ const CustomerDashboard = () => {
                 <Label htmlFor="devices">Number of Electronic Devices</Label>
                 <Input
                   id="devices"
-                  inputMode="numeric"
+                  type="number"
                   value={formData.devices === 0 ? "" : formData.devices}
                   onChange={handleInputChange}
                   placeholder="10"
+                  min="0"
+                  step="1"
                   required
                 />
               </div>
