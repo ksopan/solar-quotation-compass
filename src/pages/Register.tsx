@@ -8,7 +8,6 @@ import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,16 +47,19 @@ const vendorSchema = z.object({
   path: ["confirmPassword"]
 });
 
-// Combined registration schema using discriminated union
-const registerSchema = z.discriminatedUnion("role", [customerSchema, vendorSchema]);
-
-type RegisterFormValues = z.infer<typeof registerSchema>;
+// Combined registration schema - fixing the discriminated union
+type CustomerSchema = z.infer<typeof customerSchema>;
+type VendorSchema = z.infer<typeof vendorSchema>;
+type RegisterFormValues = CustomerSchema | VendorSchema;
 
 const Register = () => {
   const { register: authRegister } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"customer" | "vendor">("customer");
+
+  // Create a resolver function that uses the correct schema based on the active tab
+  const formResolver = zodResolver(activeTab === "customer" ? customerSchema : vendorSchema);
 
   const {
     register,
@@ -66,7 +68,7 @@ const Register = () => {
     setValue,
     formState: { errors }
   } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+    resolver: formResolver,
     defaultValues: {
       role: "customer" as const,
       email: "",
@@ -79,7 +81,11 @@ const Register = () => {
     setIsLoading(true);
     try {
       const { confirmPassword, ...registrationData } = data;
-      await authRegister(registrationData);
+      // Ensure we're passing the correct user role type
+      await authRegister({
+        ...registrationData,
+        role: registrationData.role as UserRole
+      });
       navigate("/");
     } catch (error) {
       // Error is already handled in the register function
@@ -89,15 +95,24 @@ const Register = () => {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as "customer" | "vendor");
-    reset();
-    setValue("role", value as UserRole);
+    reset({
+      role: value as UserRole,
+      email: "",
+      password: "",
+      confirmPassword: ""
+    });
   };
 
   const handleGoogleRegister = () => {
-    toast.info("Google registration is for customers only. Redirecting to Google...");
+    toast("Google registration is for customers only. Redirecting to Google...", {
+      description: "This is a demo feature."
+    });
     // In a real app, this would redirect to Google OAuth
     setTimeout(() => {
-      toast.error("Google authentication is not implemented in this demo");
+      toast("Google authentication is not implemented in this demo", {
+        description: "This would connect to a real OAuth provider in production.",
+        variant: "destructive"
+      });
     }, 2000);
   };
 

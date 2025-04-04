@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -88,7 +87,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error("Invalid credentials or user role");
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Login failed");
+      toast(error instanceof Error ? error.message : "Login failed", {
+        variant: "destructive"
+      });
       throw error;
     } finally {
       setLoading(false);
@@ -124,9 +125,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(userWithoutPassword);
       localStorage.setItem("solarUser", JSON.stringify(userWithoutPassword));
       
-      toast.success("Registration successful!");
+      toast("Registration successful!", {
+        description: "You're now logged in."
+      });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Registration failed");
+      toast(error instanceof Error ? error.message : "Registration failed", {
+        variant: "destructive"
+      });
       throw error;
     } finally {
       setLoading(false);
@@ -136,7 +141,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem("solarUser");
-    toast.success("Logged out successfully!");
+    toast("Logged out successfully!", {
+      description: "See you soon!"
+    });
   };
 
   return (
