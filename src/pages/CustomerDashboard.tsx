@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
-import { FileText, Home, LightbulbIcon, Zap, X, Upload, FileIcon, FileUp } from "lucide-react";
+import { FileText, LightbulbIcon, Zap, X, FileUp, FileIcon } from "lucide-react";
 import QuotationDetails, { QuotationDetails as QuotationDetailsType } from "@/components/customer/QuotationDetails";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -46,7 +44,7 @@ const CustomerDashboard = () => {
       
       console.log("Fetching quotations for user ID:", user.id);
       
-      // Query quotation data directly without referencing auth.users
+      // Query quotation data directly from quotation_requests table, not auth.users
       const { data, error } = await supabase
         .from('quotation_requests')
         .select(`
@@ -136,39 +134,8 @@ const CustomerDashboard = () => {
       console.log("Submitting quotation with data:", formData);
       console.log("Current user ID:", user.id);
       
-      // First, check if the customer profile exists
-      const { data: customerData, error: customerError } = await supabase
-        .from('customer_profiles')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle();
-      
-      if (customerError) {
-        console.error("Error checking customer profile:", customerError);
-        throw new Error("Failed to check customer profile: " + customerError.message);
-      }
-      
-      if (!customerData) {
-        console.log("Creating customer profile for user");
-        // Create customer profile if it doesn't exist
-        const { error: insertError } = await supabase
-          .from('customer_profiles')
-          .insert({
-            id: user.id,
-            first_name: user.firstName || '',
-            last_name: user.lastName || '',
-            email: user.email,
-            address: user.address || '',
-            phone: user.phone || ''
-          });
-        
-        if (insertError) {
-          console.error("Error creating customer profile:", insertError);
-          throw new Error("Failed to create customer profile: " + insertError.message);
-        }
-      }
-      
-      // Insert the quotation request
+      // Insert the quotation request - no need to check/create customer profile here
+      // as we've added RLS policies that work directly with auth.uid()
       const { data: quotationData, error: quotationError } = await supabase
         .from('quotation_requests')
         .insert({
@@ -195,18 +162,6 @@ const CustomerDashboard = () => {
       if (uploadedFiles.length > 0) {
         console.log("Uploading", uploadedFiles.length, "files");
         
-        // Check if storage bucket exists
-        const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-        
-        if (bucketsError) {
-          console.error("Error listing storage buckets:", bucketsError);
-          toast.error("Could not access storage buckets. File uploads may fail.");
-        } else {
-          console.log("Available buckets:", buckets);
-          const bucketExists = buckets?.some(bucket => bucket.name === 'quotation_documents');
-          console.log("Bucket exists:", bucketExists);
-        }
-        
         for (const file of uploadedFiles) {
           try {
             const filePath = `${user.id}/${quotationId}/${file.name}`;
@@ -218,7 +173,7 @@ const CustomerDashboard = () => {
             
             if (uploadError) {
               console.error("Error uploading file:", uploadError);
-              toast.error(`Failed to upload ${file.name}`);
+              toast.error(`Failed to upload ${file.name}: ${uploadError.message}`);
               continue;
             }
             
@@ -237,6 +192,7 @@ const CustomerDashboard = () => {
             
             if (fileRecordError) {
               console.error("Error recording file details:", fileRecordError);
+              toast.error(`Failed to record file details: ${fileRecordError.message}`);
             }
           } catch (fileError) {
             console.error("Unexpected error during file upload:", fileError);
