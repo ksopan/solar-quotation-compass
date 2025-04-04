@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -82,17 +83,29 @@ const CustomerDashboard = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     
-    if (id === 'monthly-bill' || id === 'devices') {
+    if (id === 'monthly-bill') {
+      // Only allow numeric input with decimal point
       const numericValue = value === '' ? 0 : parseFloat(value) || 0;
-      
       setFormData(prev => ({
         ...prev,
-        [id.replace("monthly-", "").replace("-", "")]: numericValue
+        monthlyBill: numericValue
       }));
-    } else {
+    } else if (id === 'devices') {
+      // Only allow integer input
+      const numericValue = value === '' ? 0 : parseInt(value) || 0;
       setFormData(prev => ({
         ...prev,
-        [id.replace("installation-", "").replace("-", "")]: value
+        devices: numericValue
+      }));
+    } else if (id === 'installation-address') {
+      setFormData(prev => ({
+        ...prev,
+        installationAddress: value
+      }));
+    } else if (id === 'additional-info') {
+      setFormData(prev => ({
+        ...prev,
+        additionalInfo: value
       }));
     }
   };
@@ -267,9 +280,6 @@ const CustomerDashboard = () => {
                 <Label htmlFor="monthly-bill">Average Monthly Electricity Bill ($)</Label>
                 <Input
                   id="monthly-bill"
-                  type="number"
-                  step="0.01"
-                  min="0"
                   inputMode="decimal"
                   value={formData.monthlyBill === 0 ? "" : formData.monthlyBill}
                   onChange={handleInputChange}
@@ -282,8 +292,6 @@ const CustomerDashboard = () => {
                 <Label htmlFor="devices">Number of Electronic Devices</Label>
                 <Input
                   id="devices"
-                  type="number"
-                  min="0"
                   inputMode="numeric"
                   value={formData.devices === 0 ? "" : formData.devices}
                   onChange={handleInputChange}
