@@ -44,7 +44,9 @@ const CustomerDashboard = () => {
     queryFn: async () => {
       if (!user) return [];
       
-      // Query quotation data from the customer's perspective
+      console.log("Fetching quotations for user ID:", user.id);
+      
+      // Query quotation data directly without referencing auth.users
       const { data, error } = await supabase
         .from('quotation_requests')
         .select(`
@@ -65,6 +67,8 @@ const CustomerDashboard = () => {
         console.error("Error fetching quotations:", error);
         throw new Error(error.message);
       }
+      
+      console.log("Quotation data retrieved:", data);
       
       return data.map(q => ({
         id: q.id,
@@ -132,6 +136,37 @@ const CustomerDashboard = () => {
       console.log("Submitting quotation with data:", formData);
       console.log("Current user ID:", user.id);
       
+      // First, check if the customer profile exists
+      const { data: customerData, error: customerError } = await supabase
+        .from('customer_profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+      
+      if (customerError && customerError.code !== 'PGRST116') {
+        console.error("Error checking customer profile:", customerError);
+      }
+      
+      if (!customerData) {
+        console.log("Creating customer profile for user");
+        // Create customer profile if it doesn't exist
+        const { error: insertError } = await supabase
+          .from('customer_profiles')
+          .insert({
+            id: user.id,
+            first_name: user.firstName || '',
+            last_name: user.lastName || '',
+            email: user.email,
+            address: user.address || '',
+            phone: user.phone || ''
+          });
+        
+        if (insertError) {
+          console.error("Error creating customer profile:", insertError);
+          throw new Error("Failed to create customer profile: " + insertError.message);
+        }
+      }
+      
       // Insert the quotation request
       const { data: quotationData, error: quotationError } = await supabase
         .from('quotation_requests')
@@ -158,6 +193,17 @@ const CustomerDashboard = () => {
       // Upload any attached files
       if (uploadedFiles.length > 0) {
         console.log("Uploading", uploadedFiles.length, "files");
+        
+        // Check if storage bucket exists, create if not
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const bucketExists = buckets?.some(bucket => bucket.name === 'quotation_documents');
+        
+        if (!bucketExists) {
+          console.log("Creating quotation_documents bucket");
+          await supabase.storage.createBucket('quotation_documents', {
+            public: false
+          });
+        }
         
         for (const file of uploadedFiles) {
           const filePath = `${user.id}/${quotationId}/${file.name}`;
