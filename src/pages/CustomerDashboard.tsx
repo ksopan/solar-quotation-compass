@@ -44,6 +44,7 @@ const CustomerDashboard = () => {
     queryFn: async () => {
       if (!user) return [];
       
+      // Query quotation data from the customer's perspective
       const { data, error } = await supabase
         .from('quotation_requests')
         .select(`
