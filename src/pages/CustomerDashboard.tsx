@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,7 +38,6 @@ const CustomerDashboard = () => {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Fetch user's quotation requests
   const { data: quotations = [], isLoading, refetch } = useQuery({
     queryKey: ['quotations', user?.id],
     queryFn: async () => {
@@ -83,10 +81,20 @@ const CustomerDashboard = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [id.replace("installation-", "").replace("-", "")]: value
-    }));
+    
+    if (id === 'monthly-bill' || id === 'devices') {
+      const numericValue = value === '' ? 0 : parseFloat(value);
+      
+      setFormData(prev => ({
+        ...prev,
+        [id.replace("monthly-", "").replace("-", "")]: numericValue
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [id.replace("installation-", "").replace("-", "")]: value
+      }));
+    }
   };
 
   const handleSelectChange = (value: string) => {
@@ -107,7 +115,6 @@ const CustomerDashboard = () => {
     setIsSubmitting(true);
     
     try {
-      // Insert quotation request
       const { data: quotationData, error: quotationError } = await supabase
         .from('quotation_requests')
         .insert({
@@ -118,7 +125,7 @@ const CustomerDashboard = () => {
           roof_area: formData.devices,
           additional_notes: formData.additionalInfo,
           status: 'pending',
-          budget: null // Optional field
+          budget: null
         })
         .select('id')
         .single();
@@ -127,10 +134,8 @@ const CustomerDashboard = () => {
       
       const quotationId = quotationData.id;
       
-      // Upload files if any
       if (uploadedFiles.length > 0) {
         for (const file of uploadedFiles) {
-          // Upload file to storage
           const filePath = `${user.id}/${quotationId}/${file.name}`;
           const { error: uploadError } = await supabase.storage
             .from('quotation_documents')
@@ -142,7 +147,6 @@ const CustomerDashboard = () => {
             continue;
           }
           
-          // Record file details in database - using a raw query since the table might not be in TypeScript definitions yet
           const { error: fileRecordError } = await supabase
             .from('quotation_document_files')
             .insert({
@@ -170,9 +174,7 @@ const CustomerDashboard = () => {
         additionalInfo: ""
       });
       
-      // Refresh quotations list
       refetch();
-      
     } catch (error) {
       toast.error("Failed to submit quotation request. Please try again.");
       console.error("Quotation submission error:", error);
@@ -268,7 +270,8 @@ const CustomerDashboard = () => {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={formData.monthlyBill || ""}
+                  inputMode="decimal"
+                  value={formData.monthlyBill === 0 ? "" : formData.monthlyBill}
                   onChange={handleInputChange}
                   placeholder="150"
                   required
@@ -281,7 +284,8 @@ const CustomerDashboard = () => {
                   id="devices"
                   type="number"
                   min="0"
-                  value={formData.devices || ""}
+                  inputMode="numeric"
+                  value={formData.devices === 0 ? "" : formData.devices}
                   onChange={handleInputChange}
                   placeholder="10"
                   required
@@ -298,7 +302,6 @@ const CustomerDashboard = () => {
                 />
               </div>
               
-              {/* File Upload Section */}
               <div className="space-y-2">
                 <Label>Upload Documents</Label>
                 <input
@@ -323,7 +326,6 @@ const CustomerDashboard = () => {
                 </div>
               </div>
               
-              {/* Display uploaded files */}
               {uploadedFiles.length > 0 && (
                 <div className="space-y-2">
                   <Label>Uploaded Files</Label>
@@ -453,7 +455,6 @@ const CustomerDashboard = () => {
         )}
       </div>
 
-      {/* Quotation Details Dialog */}
       <QuotationDetails 
         quotation={selectedQuotation}
         isOpen={isDetailsOpen}
