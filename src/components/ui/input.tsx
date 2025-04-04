@@ -8,7 +8,7 @@ export interface InputProps
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {
-    // For numeric inputs, ensure we're handling them correctly
+    // For numeric inputs, handle value formatting correctly
     if (type === 'number' || props.inputMode === 'numeric' || props.inputMode === 'decimal') {
       return (
         <input

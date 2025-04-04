@@ -141,10 +141,11 @@ const CustomerDashboard = () => {
         .from('customer_profiles')
         .select('id')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
       
-      if (customerError && customerError.code !== 'PGRST116') {
+      if (customerError) {
         console.error("Error checking customer profile:", customerError);
+        throw new Error("Failed to check customer profile: " + customerError.message);
       }
       
       if (!customerData) {
@@ -194,46 +195,52 @@ const CustomerDashboard = () => {
       if (uploadedFiles.length > 0) {
         console.log("Uploading", uploadedFiles.length, "files");
         
-        // Check if storage bucket exists, create if not
-        const { data: buckets } = await supabase.storage.listBuckets();
-        const bucketExists = buckets?.some(bucket => bucket.name === 'quotation_documents');
+        // Check if storage bucket exists
+        const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
         
-        if (!bucketExists) {
-          console.log("Creating quotation_documents bucket");
-          await supabase.storage.createBucket('quotation_documents', {
-            public: false
-          });
+        if (bucketsError) {
+          console.error("Error listing storage buckets:", bucketsError);
+          toast.error("Could not access storage buckets. File uploads may fail.");
+        } else {
+          console.log("Available buckets:", buckets);
+          const bucketExists = buckets?.some(bucket => bucket.name === 'quotation_documents');
+          console.log("Bucket exists:", bucketExists);
         }
         
         for (const file of uploadedFiles) {
-          const filePath = `${user.id}/${quotationId}/${file.name}`;
-          console.log("Uploading file to path:", filePath);
-          
-          const { error: uploadError } = await supabase.storage
-            .from('quotation_documents')
-            .upload(filePath, file);
-          
-          if (uploadError) {
-            console.error("Error uploading file:", uploadError);
-            toast.error(`Failed to upload ${file.name}`);
-            continue;
-          }
-          
-          console.log("File uploaded successfully:", file.name);
-          
-          // Record the file information in the database
-          const { error: fileRecordError } = await supabase
-            .from('quotation_document_files')
-            .insert({
-              quotation_id: quotationId,
-              file_path: filePath,
-              file_name: file.name,
-              file_type: file.type,
-              file_size: file.size
-            });
-          
-          if (fileRecordError) {
-            console.error("Error recording file details:", fileRecordError);
+          try {
+            const filePath = `${user.id}/${quotationId}/${file.name}`;
+            console.log("Uploading file to path:", filePath);
+            
+            const { error: uploadError } = await supabase.storage
+              .from('quotation_documents')
+              .upload(filePath, file);
+            
+            if (uploadError) {
+              console.error("Error uploading file:", uploadError);
+              toast.error(`Failed to upload ${file.name}`);
+              continue;
+            }
+            
+            console.log("File uploaded successfully:", file.name);
+            
+            // Record the file information in the database
+            const { error: fileRecordError } = await supabase
+              .from('quotation_document_files')
+              .insert({
+                quotation_id: quotationId,
+                file_path: filePath,
+                file_name: file.name,
+                file_type: file.type,
+                file_size: file.size
+              });
+            
+            if (fileRecordError) {
+              console.error("Error recording file details:", fileRecordError);
+            }
+          } catch (fileError) {
+            console.error("Unexpected error during file upload:", fileError);
+            toast.error(`Unexpected error uploading ${file.name}`);
           }
         }
       }
