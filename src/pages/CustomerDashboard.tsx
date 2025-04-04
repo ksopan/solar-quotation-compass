@@ -128,6 +128,10 @@ const CustomerDashboard = () => {
     setIsSubmitting(true);
     
     try {
+      console.log("Submitting quotation with data:", formData);
+      console.log("Current user ID:", user.id);
+      
+      // Insert the quotation request
       const { data: quotationData, error: quotationError } = await supabase
         .from('quotation_requests')
         .insert({
@@ -137,19 +141,27 @@ const CustomerDashboard = () => {
           energy_usage: formData.monthlyBill,
           roof_area: formData.devices,
           additional_notes: formData.additionalInfo,
-          status: 'pending',
-          budget: null
+          status: 'pending'
         })
         .select('id')
         .single();
       
-      if (quotationError) throw new Error(quotationError.message);
+      if (quotationError) {
+        console.error("Error inserting quotation:", quotationError);
+        throw new Error(quotationError.message);
+      }
       
+      console.log("Quotation inserted successfully, ID:", quotationData.id);
       const quotationId = quotationData.id;
       
+      // Upload any attached files
       if (uploadedFiles.length > 0) {
+        console.log("Uploading", uploadedFiles.length, "files");
+        
         for (const file of uploadedFiles) {
           const filePath = `${user.id}/${quotationId}/${file.name}`;
+          console.log("Uploading file to path:", filePath);
+          
           const { error: uploadError } = await supabase.storage
             .from('quotation_documents')
             .upload(filePath, file);
@@ -160,6 +172,9 @@ const CustomerDashboard = () => {
             continue;
           }
           
+          console.log("File uploaded successfully:", file.name);
+          
+          // Record the file information in the database
           const { error: fileRecordError } = await supabase
             .from('quotation_document_files')
             .insert({
@@ -168,7 +183,7 @@ const CustomerDashboard = () => {
               file_name: file.name,
               file_type: file.type,
               file_size: file.size
-            } as any);
+            });
           
           if (fileRecordError) {
             console.error("Error recording file details:", fileRecordError);
@@ -187,10 +202,13 @@ const CustomerDashboard = () => {
         additionalInfo: ""
       });
       
+      // Refresh the quotations list
       refetch();
     } catch (error) {
-      toast.error("Failed to submit quotation request. Please try again.");
-      console.error("Quotation submission error:", error);
+      console.error("Full error details:", error);
+      toast.error(error instanceof Error 
+        ? `Failed to submit quotation: ${error.message}` 
+        : "Failed to submit quotation request. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
