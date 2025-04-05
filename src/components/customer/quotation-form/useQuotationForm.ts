@@ -80,20 +80,6 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
       // Log the current auth status to help debug
       console.log("Submitting as user:", user.id, "with role:", user.role);
       
-      // Check if we have an active session first
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        console.error("Session error:", sessionError);
-        throw new Error(`Session error: ${sessionError.message}`);
-      }
-      
-      if (!sessionData.session) {
-        console.error("No active session found");
-        throw new Error("No active session found. Please log in again.");
-      }
-      
-      console.log("Active session confirmed with user ID:", sessionData.session.user.id);
-      
       // 1. Create the quotation request
       const quotationData: QuotationInsert = {
         customer_id: user.id,
