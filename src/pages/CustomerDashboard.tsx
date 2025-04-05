@@ -25,6 +25,8 @@ const CustomerDashboard = () => {
     try {
       setLoading(true);
       
+      console.log("Fetching quotations for user:", user.id);
+      
       // Get customer's quotation requests
       const { data, error } = await supabase
         .from("quotation_requests")
@@ -42,8 +44,11 @@ const CustomerDashboard = () => {
         .eq("customer_id", user.id);
       
       if (error) {
+        console.error("Quotation fetch error:", error);
         throw new Error(`Error fetching quotations: ${error.message}`);
       }
+      
+      console.log("Fetched quotations:", data);
       
       if (data) {
         setQuotations(data as QuotationItem[]);
@@ -57,7 +62,9 @@ const CustomerDashboard = () => {
   };
 
   useEffect(() => {
-    fetchQuotations();
+    if (user) {
+      fetchQuotations();
+    }
   }, [user]);
 
   const handleTabChange = (value: string) => {
