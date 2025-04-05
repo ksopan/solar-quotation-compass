@@ -27,7 +27,7 @@ const CustomerDashboard = () => {
       
       console.log("Fetching quotations for user:", user.id);
       
-      // Get customer's quotation requests
+      // Get customer's quotation requests directly without joining with users table
       const { data, error } = await supabase
         .from("quotation_requests")
         .select(`
@@ -45,7 +45,8 @@ const CustomerDashboard = () => {
       
       if (error) {
         console.error("Quotation fetch error:", error);
-        throw new Error(`Error fetching quotations: ${error.message}`);
+        toast.error("Failed to load your quotation requests");
+        return;
       }
       
       console.log("Fetched quotations:", data);
@@ -124,7 +125,7 @@ const CustomerDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {quotations.reduce((total, q) => total + (q.quotation_proposals?.length || 0), 0)}
+              {quotations.reduce((total, q) => total + (q.quotation_proposals?.[0]?.count || 0), 0)}
             </div>
           </CardContent>
         </Card>

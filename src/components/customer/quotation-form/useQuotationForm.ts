@@ -77,10 +77,9 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
     try {
       setIsSubmitting(true);
       
-      // Log the current auth status to help debug
       console.log("Submitting as user:", user.id, "with role:", user.role);
       
-      // 1. Create the quotation request
+      // Create the quotation request directly without referencing users table
       const quotationData: QuotationInsert = {
         customer_id: user.id,
         location: formData.location,
@@ -106,7 +105,7 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
       
       console.log("Quotation created successfully with ID:", quotation.id);
       
-      // 2. Upload files if any
+      // Upload files if any
       if (formData.files.length > 0) {
         console.log(`Uploading ${formData.files.length} files...`);
         
