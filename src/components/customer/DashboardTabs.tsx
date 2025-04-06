@@ -3,9 +3,8 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { QuotationList } from "./QuotationList";
-import { QuotationForm } from "./QuotationForm";
 
 interface DashboardTabsProps {
   quotations: any[];
@@ -56,7 +55,7 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({
             <QuotationList
               quotations={quotations}
               loading={loading}
-              onDelete={deleteQuotation}
+              deleteQuotation={deleteQuotation}
             />
           </CardContent>
         </Card>
