@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -125,7 +124,9 @@ const Register = () => {
                         {...register("fullName")}
                       />
                       {errors.fullName && (
-                        <p className="text-sm text-destructive">{errors.fullName.message as string}</p>
+                        <p className="text-sm text-destructive">
+                          {activeTab === "admin" ? errors.fullName?.message as string : ""}
+                        </p>
                       )}
                     </div>
                     

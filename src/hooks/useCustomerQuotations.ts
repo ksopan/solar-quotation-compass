@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
@@ -28,14 +28,15 @@ export const useCustomerQuotations = (user: AuthUser | null) => {
   const [loading, setLoading] = useState<boolean>(true);
   
   const supabaseUser = transformToSupabaseUser(user);
+  const userId = supabaseUser?.id;
 
-  const fetchQuotations = async () => {
-    if (!supabaseUser) return;
+  const fetchQuotations = useCallback(async () => {
+    if (!userId) return;
     
     try {
       setLoading(true);
       
-      console.log("Fetching quotations for user:", supabaseUser.id);
+      console.log("Fetching quotations for user:", userId);
       
       const { data, error } = await supabase
         .from("quotation_requests")
@@ -50,7 +51,7 @@ export const useCustomerQuotations = (user: AuthUser | null) => {
           additional_notes,
           quotation_proposals (count)
         `)
-        .eq("customer_id", supabaseUser.id);
+        .eq("customer_id", userId);
       
       if (error) {
         console.error("Quotation fetch error:", error);
@@ -69,13 +70,13 @@ export const useCustomerQuotations = (user: AuthUser | null) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
-    if (supabaseUser) {
+    if (userId) {
       fetchQuotations();
     }
-  }, [supabaseUser]);
+  }, [userId, fetchQuotations]);
 
   return { quotations, loading, fetchQuotations };
 };
