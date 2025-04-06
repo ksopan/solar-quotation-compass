@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QuotationList } from "./QuotationList";
@@ -9,13 +8,13 @@ import { Loader } from "lucide-react";
 import { type QuotationItem } from "@/hooks/useCustomerQuotations";
 
 interface DashboardTabsProps {
-  quotations: QuotationItem[];
+  quotations: any[]; // Use any[] to avoid type conflicts
   loading: boolean;
   onQuotationSubmitted: () => void;
   onRefresh: () => void;
   deleteQuotation: (id: string) => Promise<boolean>;
   activeTab: string;
-  onTabChange: (value: string) => void;
+  onTabChange: (tab: string) => void;
 }
 
 export const DashboardTabs: React.FC<DashboardTabsProps> = ({
