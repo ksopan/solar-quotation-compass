@@ -32,8 +32,7 @@ export const useQuotations = (user: User | null) => {
           energy_usage,
           roof_area,
           additional_notes,
-          quotation_proposals (count),
-          file_ids
+          quotation_proposals (count)
         `)
         .eq("customer_id", user.id);
       

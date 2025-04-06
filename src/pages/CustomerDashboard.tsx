@@ -1,13 +1,22 @@
 
 import React from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { DashboardStats } from "@/components/customer/DashboardStats";
 import { DashboardTabs } from "@/components/customer/DashboardTabs";
 import { useQuotations } from "@/hooks/useQuotations";
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
-  const { quotations, loading, fetchQuotations } = useQuotations(user);
+  const { quotations, loading, fetchQuotations } = useQuotations(
+    user ? {
+      id: user.id,
+      app_metadata: {},
+      user_metadata: {},
+      aud: "",
+      created_at: "",
+      email: user.email || "",
+    } : null
+  );
 
   const handleQuotationSubmitted = () => {
     // Refresh the quotations list
