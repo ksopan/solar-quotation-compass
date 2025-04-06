@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/auth";
 export const CustomerDashboard = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("quotations");
-  const { quotations, loading, fetchQuotations, deleteQuotation: deleteQuotationRequest } = useCustomerQuotations(user?.id);
+  const { quotations, loading, fetchQuotations, deleteQuotation: deleteQuotationRequest } = useCustomerQuotations(user);
 
   // Reload data when the component mounts
   useEffect(() => {

@@ -13,7 +13,7 @@ interface DashboardTabsProps {
   loading: boolean;
   onQuotationSubmitted: () => void;
   onRefresh: () => void;
-  deleteQuotation: (id: string) => Promise<boolean>; // Ensure this returns a Promise<boolean>
+  deleteQuotation: (id: string) => Promise<boolean>;
   activeTab: string;
   onTabChange: (value: string) => void;
 }
@@ -44,7 +44,7 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({
           <QuotationList 
             quotations={quotations}
             onRefresh={onRefresh}
-            deleteQuotation={deleteQuotation} // This now returns Promise<boolean>
+            deleteQuotation={deleteQuotation}
           />
         )}
       </TabsContent>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +17,7 @@ export interface QuotationItem {
   additional_notes: string;
   updated_at: string;
   quotation_proposals?: any[];
+  proposal_count?: number;
 }
 
 export const useCustomerQuotations = (user: User | null) => {
