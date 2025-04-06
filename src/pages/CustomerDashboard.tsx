@@ -16,6 +16,11 @@ const CustomerDashboard = () => {
     fetchQuotations();
   };
 
+  // Wrap the deleteQuotation function to match the expected type
+  const handleDeleteQuotation = async (id: string): Promise<void> => {
+    await deleteQuotation(id);
+  };
+
   return (
     <div className="container mx-auto p-4 max-w-6xl">
       <h1 className="text-2xl font-bold mb-6">Customer Dashboard</h1>
@@ -25,7 +30,7 @@ const CustomerDashboard = () => {
         loading={loading} 
         onQuotationSubmitted={handleQuotationSubmitted}
         onRefresh={fetchQuotations}
-        deleteQuotation={deleteQuotation}
+        deleteQuotation={handleDeleteQuotation}
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
