@@ -39,23 +39,20 @@ const CompleteProfile = () => {
 
   // Create schema based on user role
   const getProfileSchema = (role: UserRole) => {
-    const baseSchema = {
-      address: z.string().min(1, "Address is required"),
-      phone: z.string().min(1, "Phone number is required"),
-    };
-
     if (role === "customer") {
       return z.object({
-        ...baseSchema,
         firstName: z.string().min(1, "First name is required"),
         lastName: z.string().min(1, "Last name is required"),
+        address: z.string().min(1, "Address is required"),
+        phone: z.string().min(1, "Phone number is required"),
       });
     } else if (role === "vendor") {
       return z.object({
-        ...baseSchema,
         firstName: z.string().min(1, "First name is required"),
         lastName: z.string().min(1, "Last name is required"),
         companyName: z.string().min(1, "Company name is required"),
+        address: z.string().min(1, "Company address is required"),
+        phone: z.string().min(1, "Contact phone is required"),
       });
     } else {
       return z.object({
