@@ -23,6 +23,9 @@ export const QuestionnaireProfile: React.FC = () => {
     handleCreateProfile
   } = useQuestionnaireProfileHandlers();
   
+  console.log("QuestionnaireProfile rendering with isEditing:", isEditing);
+  console.log("QuestionnaireProfile loading state:", loading);
+  
   // Show loading state if data is being fetched
   if (loading) {
     console.log("Showing loading state, loading:", loading);

@@ -15,7 +15,8 @@ export const useQuestionnaireProfileState = () => {
     getFileUrl
   } = useQuestionnaire();
   
-  const [isEditing, setIsEditing] = useState(false);
+  // Use React.useState to ensure state persistence
+  const [isEditing, setIsEditing] = useState<boolean>(false);
   const [formData, setFormData] = useState<Partial<QuestionnaireData> | null>(null);
   const [attachments, setAttachments] = useState<{ name: string; size: number; id?: string }[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);

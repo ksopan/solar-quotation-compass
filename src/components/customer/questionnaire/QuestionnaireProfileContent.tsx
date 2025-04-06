@@ -37,10 +37,11 @@ export const QuestionnaireProfileContent: React.FC = () => {
     handleFileDelete
   } = useQuestionnaireProfileHandlers();
   
+  // Debug current render state  
   console.log("🧩 QuestionnaireProfileContent rendering with isEditing:", isEditing);
   console.log("📄 Form data in content:", formData);
   
-  // Force a re-render when isEditing changes
+  // Force a re-render when isEditing changes to ensure UI updates
   useEffect(() => {
     console.log("🔄 isEditing changed to:", isEditing);
   }, [isEditing]);

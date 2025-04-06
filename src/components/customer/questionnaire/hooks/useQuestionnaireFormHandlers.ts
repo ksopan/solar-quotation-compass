@@ -15,13 +15,15 @@ export const useQuestionnaireFormHandlers = () => {
     createQuestionnaire
   } = useQuestionnaireProfileState();
   
+  // This function should be coordinated with the one in index.ts
   const handleEdit = useCallback(() => {
-    console.log("✏️ handleEdit called, setting form data:", questionnaire);
+    console.log("✏️ handleEdit called from useQuestionnaireFormHandlers");
     setFormData(questionnaire || {});
     setIsEditing(true);
   }, [questionnaire, setFormData, setIsEditing]);
   
   const handleChange = useCallback((field: keyof QuestionnaireData, value: any) => {
+    console.log(`🔄 Updating form field ${String(field)} to:`, value);
     setFormData(prev => prev ? { ...prev, [field]: value } : { [field]: value });
   }, [setFormData]);
   
@@ -58,6 +60,7 @@ export const useQuestionnaireFormHandlers = () => {
   }, [formData, questionnaire, updateQuestionnaire, createQuestionnaire, setIsEditing]);
   
   const handleCancel = useCallback(() => {
+    console.log("❌ Cancelling edit mode");
     setFormData(questionnaire || {});
     setIsEditing(false);
   }, [questionnaire, setFormData, setIsEditing]);
@@ -85,6 +88,7 @@ export const useQuestionnaireFormHandlers = () => {
   }, [questionnaire]);
   
   const handleCreateProfile = useCallback(() => {
+    console.log("🆕 Creating new profile");
     setFormData({
       property_type: "home",
       ownership_status: "own",

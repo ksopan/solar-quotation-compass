@@ -5,6 +5,7 @@ import { useQuestionnaireFileHandlers } from "./useQuestionnaireFileHandlers";
 import { useQuestionnaireFormHandlers } from "./useQuestionnaireFormHandlers";
 
 export const useQuestionnaireProfileHandlers = () => {
+  // Get state from the state hook
   const {
     questionnaire,
     setFormData,
@@ -14,6 +15,7 @@ export const useQuestionnaireProfileHandlers = () => {
     formData
   } = useQuestionnaireProfileState();
 
+  // Get file and form handlers
   const fileHandlers = useQuestionnaireFileHandlers();
   const formHandlers = useQuestionnaireFormHandlers();
 
@@ -27,8 +29,9 @@ export const useQuestionnaireProfileHandlers = () => {
     }
   }, [questionnaire, loadFiles, setIsLoadingFiles]);
 
-  // ✅ Handle Edit button
+  // ✅ Create our own handleEdit function to ensure proper flow
   const handleEdit = useCallback(() => {
+    console.log("🖊️ handleEdit called in useQuestionnaireProfileHandlers");
     if (questionnaire) {
       console.log("🖋️ Edit button clicked, setting form data and editing mode");
       setFormData(questionnaire);
@@ -41,8 +44,8 @@ export const useQuestionnaireProfileHandlers = () => {
   return {
     ...fileHandlers,
     ...formHandlers,
-    handleEdit, // <- expose the new handler
-    isEditing   // <- expose the isEditing state for debugging
+    handleEdit, // Expose our handleEdit function
+    isEditing  // Expose the isEditing state for debugging
   };
 };
 
