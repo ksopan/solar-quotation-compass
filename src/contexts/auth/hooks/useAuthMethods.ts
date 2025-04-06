@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole } from "../types";
-import { transformUserData, handleAuthError, checkProfileComplete } from "../authUtils";
+import { transformUserData, handleAuthError, isProfileComplete } from "../authUtils";
 
 export const useAuthMethods = (
   setUser: React.Dispatch<React.SetStateAction<User | null>>,
@@ -43,7 +42,7 @@ export const useAuthMethods = (
       setUser(userData);
       
       // Redirect based on completion and role
-      if (!checkProfileComplete(userData)) {
+      if (!isProfileComplete(userData)) {
         navigate("/complete-profile");
       } else {
         navigate("/");
