@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from "react";
-import { MainLayout } from "@/components/layouts/MainLayout";
 import { DashboardStats } from "@/components/customer/DashboardStats";
 import { DashboardTabs } from "@/components/customer/DashboardTabs";
 import { QuestionnaireProfile } from "@/components/customer/QuestionnaireProfile";
