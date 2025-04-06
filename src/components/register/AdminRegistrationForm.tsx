@@ -4,7 +4,7 @@ import { UseFormRegister, FieldErrors } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SharedFormFields } from "./SharedFormFields";
-import { RegisterFormValues } from "./registerSchemas";
+import { RegisterFormValues, AdminSchema } from "./registerSchemas";
 
 interface AdminFormProps {
   register: UseFormRegister<RegisterFormValues>;
@@ -12,6 +12,10 @@ interface AdminFormProps {
 }
 
 export const AdminRegistrationForm: React.FC<AdminFormProps> = ({ register, errors }) => {
+  // Cast errors to a type that includes fullName
+  // This is necessary because RegisterFormValues is a union type
+  const adminErrors = errors as FieldErrors<AdminSchema>;
+  
   return (
     <div className="space-y-4">
       <input type="hidden" {...register("role")} value="admin" />
@@ -24,8 +28,8 @@ export const AdminRegistrationForm: React.FC<AdminFormProps> = ({ register, erro
           placeholder="Full Name"
           {...register("fullName")}
         />
-        {errors.fullName && (
-          <p className="text-sm text-destructive">{errors.fullName.message as string}</p>
+        {adminErrors.fullName && (
+          <p className="text-sm text-destructive">{adminErrors.fullName.message as string}</p>
         )}
       </div>
       
