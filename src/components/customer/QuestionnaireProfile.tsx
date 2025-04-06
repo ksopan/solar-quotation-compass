@@ -21,6 +21,7 @@ export const QuestionnaireProfile: React.FC = () => {
     questionnaire, 
     loading, 
     isSaving,
+    isUploading,
     updateQuestionnaire, 
     createQuestionnaire,
     uploadAttachment,
@@ -232,6 +233,7 @@ export const QuestionnaireProfile: React.FC = () => {
             handleFileUpload={handleFileUpload}
             handleFileDelete={handleFileDelete}
             getFileUrl={getFileUrl}
+            isUploading={isUploading}
           />
         )}
       </CardContent>

@@ -1,48 +1,41 @@
 
+import { useState } from "react";
 import { toast } from "sonner";
 import { useQuestionnaireBase } from "./useQuestionnaireBase";
 
 export const useQuestionnaireAttachments = () => {
-  const { user, questionnaire, setIsSaving, supabase } = useQuestionnaireBase();
+  const { user, questionnaire, supabase } = useQuestionnaireBase();
+  const [isUploading, setIsUploading] = useState(false);
   
-  // Upload questionnaire attachments
+  // Upload attachment for a questionnaire
   const uploadAttachment = async (file: File) => {
-    if (!user || !questionnaire) return null;
+    if (!user || !questionnaire) {
+      toast.error("You need to create a profile first");
+      return null;
+    }
+    
+    // Check file size limit (5MB)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("File size exceeds the 5MB limit");
+      return null;
+    }
     
     try {
-      setIsSaving(true);
+      setIsUploading(true);
+      console.log("Uploading attachment for questionnaire:", questionnaire.id);
       
-      // Create a unique file name to avoid collisions
+      // Create a unique file path
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${file.name}`;
+      const timestamp = new Date().getTime();
+      const filePath = `${questionnaire.id}/${timestamp}-${file.name}`;
       
-      // Create a folder path with the user's ID and questionnaire ID
-      const filePath = `${user.id}/${questionnaire.id}/${fileName}`;
-      
-      console.log(`Uploading file ${file.name} to path ${filePath}`);
-      
-      // Check file size (5MB limit)
-      const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
-      if (file.size > maxSizeInBytes) {
-        toast.error(`File is too large. Maximum size is 5MB.`);
-        return null;
-      }
-      
-      // Check if the bucket exists
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const bucketExists = buckets?.some(bucket => bucket.name === 'questionnaire_attachments');
-      
-      if (!bucketExists) {
-        console.error("Bucket 'questionnaire_attachments' doesn't exist");
-        toast.error("Storage configuration error. Please contact support.");
-        return null;
-      }
-      
+      // Upload file to storage
       const { data, error } = await supabase.storage
-        .from("questionnaire_attachments")
+        .from('questionnaire_attachments')
         .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: true
+          cacheControl: '3600',
+          upsert: false
         });
       
       if (error) {
@@ -51,26 +44,29 @@ export const useQuestionnaireAttachments = () => {
         return null;
       }
       
-      console.log("File uploaded:", data);
+      console.log("File uploaded successfully:", data.path);
+      toast.success("File uploaded successfully");
       return data.path;
     } catch (error) {
       console.error("Error in uploadAttachment:", error);
-      toast.error("An error occurred while uploading your file");
+      toast.error("An error occurred while uploading the file");
       return null;
     } finally {
-      setIsSaving(false);
+      setIsUploading(false);
     }
   };
-
-  // Get list of attachments
+  
+  // Get attachments for a questionnaire
   const getAttachments = async () => {
     if (!user || !questionnaire) return [];
     
     try {
-      // List files in the user's folder for this questionnaire
+      console.log("Fetching attachments for questionnaire:", questionnaire.id);
+      
+      // List files in storage
       const { data, error } = await supabase.storage
-        .from("questionnaire_attachments")
-        .list(`${user.id}/${questionnaire.id}`);
+        .from('questionnaire_attachments')
+        .list(questionnaire.id);
       
       if (error) {
         console.error("Error listing files:", error);
@@ -78,26 +74,26 @@ export const useQuestionnaireAttachments = () => {
         return [];
       }
       
-      return data || [];
+      console.log("Fetched attachments:", data);
+      return data;
     } catch (error) {
       console.error("Error in getAttachments:", error);
       toast.error("An error occurred while loading attachments");
       return [];
     }
   };
-
-  // Delete an attachment
+  
+  // Delete attachment
   const deleteAttachment = async (fileName: string) => {
     if (!user || !questionnaire) return false;
     
     try {
-      setIsSaving(true);
+      console.log("Deleting attachment:", fileName);
       
-      const filePath = `${user.id}/${questionnaire.id}/${fileName}`;
-      
+      // Remove file from storage
       const { error } = await supabase.storage
-        .from("questionnaire_attachments")
-        .remove([filePath]);
+        .from('questionnaire_attachments')
+        .remove([`${questionnaire.id}/${fileName}`]);
       
       if (error) {
         console.error("Error deleting file:", error);
@@ -105,27 +101,32 @@ export const useQuestionnaireAttachments = () => {
         return false;
       }
       
+      console.log("File deleted successfully");
       toast.success("File deleted successfully");
       return true;
     } catch (error) {
       console.error("Error in deleteAttachment:", error);
-      toast.error("An error occurred while deleting your file");
+      toast.error("An error occurred while deleting the file");
       return false;
-    } finally {
-      setIsSaving(false);
+    }
+  };
+  
+  // Get file URL for an attachment
+  const getFileUrl = (fileName: string) => {
+    if (!questionnaire) return null;
+    
+    try {
+      // Build the URL
+      const { data } = supabase.storage
+        .from('questionnaire_attachments')
+        .getPublicUrl(`${questionnaire.id}/${fileName}`);
+      
+      return data.publicUrl;
+    } catch (error) {
+      console.error("Error in getFileUrl:", error);
+      return null;
     }
   };
 
-  // Get a public URL for a file
-  const getFileUrl = (fileName: string) => {
-    if (!user || !questionnaire) return null;
-    
-    const { data } = supabase.storage
-      .from("questionnaire_attachments")
-      .getPublicUrl(`${user.id}/${questionnaire.id}/${fileName}`);
-    
-    return data.publicUrl;
-  };
-
-  return { uploadAttachment, getAttachments, deleteAttachment, getFileUrl };
+  return { uploadAttachment, getAttachments, deleteAttachment, getFileUrl, isUploading };
 };

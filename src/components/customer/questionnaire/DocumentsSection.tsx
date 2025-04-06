@@ -13,6 +13,7 @@ interface DocumentsSectionProps {
   handleFileUpload: (file: File) => Promise<void>;
   handleFileDelete: (fileName: string) => Promise<void>;
   getFileUrl: (fileName: string) => string | null;
+  isUploading?: boolean;
 }
 
 export const DocumentsSection: React.FC<DocumentsSectionProps> = ({ 
@@ -21,7 +22,8 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
   attachments,
   handleFileUpload,
   handleFileDelete,
-  getFileUrl
+  getFileUrl,
+  isUploading = false
 }) => {
   if (!questionnaire) return null;
   
@@ -30,6 +32,17 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
       <Label>Property Documents & Photos</Label>
       <div className="mt-2">
         <FileUploader onUpload={handleFileUpload} />
+        
+        {isUploading && (
+          <div className="my-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-purple-600 animate-pulse">Uploading file...</span>
+              <span className="text-xs text-gray-500">Please wait</span>
+            </div>
+            <Progress value={100} className="h-1" />
+          </div>
+        )}
+        
         {isLoadingFiles ? (
           <div className="flex flex-col items-center justify-center h-20 gap-2">
             <Loader className="h-6 w-6 animate-spin" />

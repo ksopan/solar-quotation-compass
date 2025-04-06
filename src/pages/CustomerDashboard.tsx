@@ -1,46 +1,63 @@
 
-import React, { useState } from "react";
-import { useAuth } from "@/contexts/auth";
+import React, { useState, useEffect } from "react";
+import { MainLayout } from "@/components/layouts/MainLayout";
 import { DashboardStats } from "@/components/customer/DashboardStats";
 import { DashboardTabs } from "@/components/customer/DashboardTabs";
-import { useCustomerQuotations } from "@/hooks/useCustomerQuotations";
 import { QuestionnaireProfile } from "@/components/customer/QuestionnaireProfile";
+import { useCustomerQuotations } from "@/hooks/useCustomerQuotations";
+import { useAuth } from "@/contexts/auth";
 
-const CustomerDashboard = () => {
+export const CustomerDashboard = () => {
   const { user } = useAuth();
-  const { quotations, loading, fetchQuotations, deleteQuotation } = useCustomerQuotations(user);
-  const [activeTab, setActiveTab] = useState<string>("quotations");
+  const [activeTab, setActiveTab] = useState("quotations");
+  const { quotations, loading, fetchQuotations, deleteQuotation: deleteQuotationRequest } = useCustomerQuotations(user);
+
+  // Reload data when the component mounts
+  useEffect(() => {
+    fetchQuotations();
+  }, [fetchQuotations]);
 
   const handleQuotationSubmitted = () => {
-    // Refresh the quotations list
+    fetchQuotations();
+    setActiveTab("quotations");
+  };
+
+  const handleRefresh = () => {
     fetchQuotations();
   };
 
-  // Wrap the deleteQuotation function to match the expected type
-  const handleDeleteQuotation = async (id: string): Promise<void> => {
-    await deleteQuotation(id);
+  const deleteQuotation = async (id: string): Promise<boolean> => {
+    try {
+      await deleteQuotationRequest(id);
+      return true;
+    } catch (error) {
+      console.error("Error deleting quotation:", error);
+      return false;
+    }
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-6xl">
-      <h1 className="text-2xl font-bold mb-6">Customer Dashboard</h1>
-      
-      <DashboardTabs 
-        quotations={quotations} 
-        loading={loading} 
-        onQuotationSubmitted={handleQuotationSubmitted}
-        onRefresh={fetchQuotations}
-        deleteQuotation={handleDeleteQuotation}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
-      
-      {activeTab === "profile" ? (
-        <QuestionnaireProfile />
-      ) : (
+    <MainLayout>
+      <div className="container mx-auto py-8">
+        <h1 className="text-3xl font-bold mb-8">Customer Dashboard</h1>
+        
         <DashboardStats quotations={quotations} />
-      )}
-    </div>
+        
+        <DashboardTabs
+          quotations={quotations}
+          loading={loading}
+          onQuotationSubmitted={handleQuotationSubmitted}
+          onRefresh={handleRefresh}
+          deleteQuotation={deleteQuotation}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+        
+        {activeTab === "profile" && (
+          <QuestionnaireProfile />
+        )}
+      </div>
+    </MainLayout>
   );
 };
 
