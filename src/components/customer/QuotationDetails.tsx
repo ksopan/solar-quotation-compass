@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
@@ -8,7 +9,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 // Define the quotation type
@@ -39,6 +40,7 @@ const QuotationDetails: React.FC<QuotationDetailsProps> = ({
   onDelete,
 }) => {
   const [files, setFiles] = useState<{ name: string; url: string }[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchFiles = async () => {
@@ -59,9 +61,37 @@ const QuotationDetails: React.FC<QuotationDetailsProps> = ({
 
   if (!quotation) return null;
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (confirm("Are you sure you want to delete this quotation?")) {
-      onDelete?.(quotation.id);
+      try {
+        setIsDeleting(true);
+        
+        // Check if there's a handler provided
+        if (onDelete) {
+          await onDelete(quotation.id);
+          toast.success("Quotation deleted successfully");
+        } else {
+          // Fallback direct deletion if no handler is provided
+          const { error } = await supabase
+            .from("quotation_requests")
+            .delete()
+            .eq("id", quotation.id);
+            
+          if (error) {
+            console.error("Error deleting quotation:", error);
+            toast.error("Failed to delete quotation");
+            throw error;
+          }
+          
+          toast.success("Quotation deleted successfully");
+          onClose();
+        }
+      } catch (error) {
+        console.error("Delete quotation error:", error);
+        toast.error("Failed to delete quotation");
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -71,11 +101,6 @@ const QuotationDetails: React.FC<QuotationDetailsProps> = ({
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center">
             <span>Quotation #{quotation.id}</span>
-            {/* <DialogClose asChild>
-              <Button variant="ghost" size="icon">
-                <X className="h-4 w-4" />
-              </Button>
-            </DialogClose> */}
           </DialogTitle>
           <DialogDescription>
             Created on {quotation.createdAt}
@@ -114,8 +139,12 @@ const QuotationDetails: React.FC<QuotationDetailsProps> = ({
         </div>
 
         <div className="flex justify-between items-center pt-4">
-          <Button variant="destructive" onClick={handleDelete}>
-            Delete Quotation
+          <Button 
+            variant="destructive" 
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Deleting..." : "Delete Quotation"}
           </Button>
           <DialogClose asChild>
             <Button variant="outline">Close</Button>
@@ -134,120 +163,3 @@ const InfoRow: React.FC<{ label: string; children: React.ReactNode }> = ({ label
 );
 
 export default QuotationDetails;
-
-
-// import React from "react";
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogDescription,
-//   DialogClose
-// } from "@/components/ui/dialog";
-// import { Button } from "@/components/ui/button";
-// import { X } from "lucide-react";
-
-// // Define the quotation type
-// export interface QuotationDetails {
-//   id: string;
-//   status: string;
-//   createdAt: string;
-//   totalResponses: number;
-//   installationAddress?: string;
-//   roofType?: string;
-//   monthlyBill?: number;
-//   devices?: number;
-//   additionalInfo?: string;
-// }
-
-// interface QuotationDetailsProps {
-//   quotation: QuotationDetails | null;
-//   isOpen: boolean;
-//   onClose: () => void;
-// }
-
-// const QuotationDetails: React.FC<QuotationDetailsProps> = ({
-//   quotation,
-//   isOpen,
-//   onClose,
-// }) => {
-//   if (!quotation) return null;
-
-//   return (
-//     <Dialog open={isOpen} onOpenChange={onClose}>
-//       <DialogContent className="sm:max-w-[500px]">
-//         <DialogHeader>
-//           <DialogTitle className="flex justify-between items-center">
-//             <span>Quotation #{quotation.id}</span>
-//             <DialogClose asChild>
-//               <Button variant="ghost" size="icon">
-//                 <X className="h-4 w-4" />
-//               </Button>
-//             </DialogClose>
-//           </DialogTitle>
-//           <DialogDescription>
-//             Created on {quotation.createdAt}
-//           </DialogDescription>
-//         </DialogHeader>
-//         <div className="space-y-4 py-4">
-//           <div className="grid grid-cols-3 gap-4">
-//             <div className="col-span-1 font-medium">Status:</div>
-//             <div className="col-span-2">
-//               <span className={quotation.status === "Active" ? "text-green-600" : "text-amber-600"}>
-//                 {quotation.status}
-//               </span>
-//             </div>
-//           </div>
-          
-//           <div className="grid grid-cols-3 gap-4">
-//             <div className="col-span-1 font-medium">Responses:</div>
-//             <div className="col-span-2">{quotation.totalResponses}</div>
-//           </div>
-          
-//           {quotation.installationAddress && (
-//             <div className="grid grid-cols-3 gap-4">
-//               <div className="col-span-1 font-medium">Installation Address:</div>
-//               <div className="col-span-2">{quotation.installationAddress}</div>
-//             </div>
-//           )}
-          
-//           {quotation.roofType && (
-//             <div className="grid grid-cols-3 gap-4">
-//               <div className="col-span-1 font-medium">Roof Type:</div>
-//               <div className="col-span-2">{quotation.roofType}</div>
-//             </div>
-//           )}
-          
-//           {quotation.monthlyBill && (
-//             <div className="grid grid-cols-3 gap-4">
-//               <div className="col-span-1 font-medium">Monthly Bill:</div>
-//               <div className="col-span-2">${quotation.monthlyBill}</div>
-//             </div>
-//           )}
-          
-//           {quotation.devices && (
-//             <div className="grid grid-cols-3 gap-4">
-//               <div className="col-span-1 font-medium">Number of Devices:</div>
-//               <div className="col-span-2">{quotation.devices}</div>
-//             </div>
-//           )}
-          
-//           {quotation.additionalInfo && (
-//             <div className="grid grid-cols-3 gap-4">
-//               <div className="col-span-1 font-medium">Additional Info:</div>
-//               <div className="col-span-2">{quotation.additionalInfo}</div>
-//             </div>
-//           )}
-//         </div>
-//         <div className="flex justify-end">
-//           <DialogClose asChild>
-//             <Button variant="outline">Close</Button>
-//           </DialogClose>
-//         </div>
-//       </DialogContent>
-//     </Dialog>
-//   );
-// };
-
-// export default QuotationDetails;

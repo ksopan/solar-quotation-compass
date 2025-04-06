@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import QuotationDetails from "./QuotationDetails";
 
 type QuotationItem = Database['public']['Tables']['quotation_requests']['Row'] & {
@@ -19,7 +20,7 @@ const mapToQuotationDetails = (quotation: QuotationItem) => {
     id: quotation.id,
     status: quotation.status,
     createdAt: format(new Date(quotation.created_at), "MMM d, yyyy"),
-    totalResponses: quotation.quotation_proposals?.length || 0,
+    totalResponses: quotation.quotation_proposals?.[0]?.count || 0,
     installationAddress: quotation.location,
     roofType: quotation.roof_type,
     monthlyBill: quotation.energy_usage,
@@ -37,16 +38,36 @@ interface QuotationListProps {
 
 export const QuotationList: React.FC<QuotationListProps> = ({ quotations, loading, onRefresh }) => {
   const [selectedQuotation, setSelectedQuotation] = useState<QuotationItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDeleteQuotation = async (id: string) => {
-    const { error } = await supabase.from("quotation_requests").delete().eq("id", id);
-    if (error) {
-      alert("Failed to delete quotation.");
-      console.error(error);
-    } else {
-      alert("Quotation deleted successfully.");
+    try {
+      setIsDeleting(true);
+      console.log("Deleting quotation with ID:", id);
+      
+      const { error } = await supabase
+        .from("quotation_requests")
+        .delete()
+        .eq("id", id);
+        
+      if (error) {
+        console.error("Failed to delete quotation:", error);
+        toast.error("Failed to delete quotation");
+        throw error;
+      }
+      
+      toast.success("Quotation deleted successfully");
       setSelectedQuotation(null);
-      onRefresh?.(); // Refresh the quotation list (if provided)
+      
+      // Refresh the quotation list (if callback provided)
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("An error occurred while deleting the quotation");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -110,7 +131,7 @@ export const QuotationList: React.FC<QuotationListProps> = ({ quotations, loadin
                     <TableCell>{format(new Date(quotation.created_at), "MMM d, yyyy")}</TableCell>
                     <TableCell>{quotation.location}</TableCell>
                     <TableCell>{getStatusBadge(quotation.status)}</TableCell>
-                    <TableCell>{quotation.quotation_proposals?.length || 0}</TableCell>
+                    <TableCell>{quotation.quotation_proposals?.[0]?.count || 0}</TableCell>
                     <TableCell className="text-right">
                       <Button
                         size="sm"
