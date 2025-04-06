@@ -7,7 +7,7 @@ import { useCustomerQuotations } from "@/hooks/useCustomerQuotations";
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
-  const { quotations, loading, fetchQuotations } = useCustomerQuotations(user);
+  const { quotations, loading, fetchQuotations, deleteQuotation } = useCustomerQuotations(user);
 
   const handleQuotationSubmitted = () => {
     // Refresh the quotations list
@@ -23,6 +23,7 @@ const CustomerDashboard = () => {
         loading={loading} 
         onQuotationSubmitted={handleQuotationSubmitted}
         onRefresh={fetchQuotations}
+        deleteQuotation={deleteQuotation}
       />
       
       <DashboardStats quotations={quotations} />

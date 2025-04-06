@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -6,11 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Database } from "@/integrations/supabase/types";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import QuotationDetails from "./QuotationDetails";
 import { useAuth } from "@/contexts/auth";
+import { useCustomerQuotations } from "@/hooks/useCustomerQuotations";
 
 type QuotationItem = Database['public']['Tables']['quotation_requests']['Row'] & {
   quotation_proposals: { count: number }[];
@@ -36,9 +35,15 @@ interface QuotationListProps {
   quotations: QuotationItem[];
   loading: boolean;
   onRefresh?: () => void; // Optional: used to reload data after delete
+  deleteQuotation?: (id: string) => Promise<boolean>; // New prop to receive the delete function
 }
 
-export const QuotationList: React.FC<QuotationListProps> = ({ quotations, loading, onRefresh }) => {
+export const QuotationList: React.FC<QuotationListProps> = ({ 
+  quotations, 
+  loading, 
+  onRefresh,
+  deleteQuotation 
+}) => {
   const [selectedQuotation, setSelectedQuotation] = useState<QuotationItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { user } = useAuth();
@@ -49,26 +54,24 @@ export const QuotationList: React.FC<QuotationListProps> = ({ quotations, loadin
       setIsDeleting(true);
       console.log("Deleting quotation with ID:", id);
       
-      // Add customer_id filter to ensure the user can only delete their own quotations
-      const { error } = await supabase
-        .from("quotation_requests")
-        .delete()
-        .eq("id", id)
-        .eq("customer_id", user?.id || '');
+      let success = false;
+      
+      // First try using the provided deleteQuotation function from parent
+      if (deleteQuotation) {
+        console.log("Using provided deleteQuotation function");
+        success = await deleteQuotation(id);
+      } 
+      
+      // If deletion was successful or there's no dedicated function
+      if (success) {
+        console.log("Deletion successful");
+        setSelectedQuotation(null);
         
-      if (error) {
-        console.error("Failed to delete quotation:", error);
-        toast.error("Failed to delete quotation");
-        throw error;
-      }
-      
-      toast.success("Quotation deleted successfully");
-      setSelectedQuotation(null);
-      
-      // Refresh the quotation list (if callback provided)
-      if (onRefresh) {
-        console.log("Refreshing quotation list after deletion");
-        onRefresh();
+        // Refresh the quotation list (if callback provided)
+        if (onRefresh) {
+          console.log("Refreshing quotation list after deletion");
+          onRefresh();
+        }
       }
     } catch (error) {
       console.error("Delete error:", error);

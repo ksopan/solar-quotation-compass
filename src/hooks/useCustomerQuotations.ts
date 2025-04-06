@@ -74,6 +74,49 @@ export const useCustomerQuotations = (user: AuthUser | null) => {
     }
   }, [userId]);
 
+  // Dedicated function to delete a quotation and return success/failure status
+  const deleteQuotation = useCallback(async (quotationId: string) => {
+    if (!userId) {
+      toast.error("You must be logged in to delete quotations");
+      return false;
+    }
+    
+    try {
+      console.log(`Attempting to delete quotation ${quotationId} for user ${userId}`);
+      
+      const { error, count } = await supabase
+        .from("quotation_requests")
+        .delete({ count: 'exact' }) // Get count of deleted items
+        .eq("id", quotationId)
+        .eq("customer_id", userId);
+      
+      if (error) {
+        console.error("Error deleting quotation:", error);
+        toast.error("Failed to delete quotation: " + error.message);
+        return false;
+      }
+      
+      console.log(`Deletion result: ${count} rows affected`);
+      
+      if (count === 0) {
+        toast.error("No quotation found to delete. It may have been removed already.");
+        return false;
+      }
+      
+      // Update local state to remove the deleted quotation
+      setQuotations(prevQuotations => 
+        prevQuotations.filter(quotation => quotation.id !== quotationId)
+      );
+      
+      toast.success("Quotation deleted successfully");
+      return true;
+    } catch (error) {
+      console.error("Error in deleteQuotation:", error);
+      toast.error("An unexpected error occurred while deleting the quotation");
+      return false;
+    }
+  }, [userId]);
+
   useEffect(() => {
     if (userId) {
       fetchQuotations();
@@ -82,7 +125,7 @@ export const useCustomerQuotations = (user: AuthUser | null) => {
     }
   }, [userId, fetchQuotations]);
 
-  return { quotations, loading, fetchQuotations };
+  return { quotations, loading, fetchQuotations, deleteQuotation };
 };
 
 export type { QuotationItem };

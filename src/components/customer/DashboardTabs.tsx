@@ -10,13 +10,15 @@ interface DashboardTabsProps {
   loading: boolean;
   onQuotationSubmitted: () => void;
   onRefresh: () => void;
+  deleteQuotation?: (id: string) => Promise<boolean>;
 }
 
 export const DashboardTabs: React.FC<DashboardTabsProps> = ({ 
   quotations, 
   loading, 
   onQuotationSubmitted,
-  onRefresh
+  onRefresh,
+  deleteQuotation
 }) => {
   const [activeTab, setActiveTab] = useState<string>("quotations");
 
@@ -36,6 +38,7 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({
           quotations={quotations}
           loading={loading}
           onRefresh={onRefresh}
+          deleteQuotation={deleteQuotation}
         />
       </TabsContent>
       

@@ -71,16 +71,23 @@ export const useQuotationDetail = (quotationId: string | undefined) => {
         setIsDeleting(true);
         console.log("Starting deletion process for quotation ID:", quotationId);
         
-        // Add customer_id filter to ensure the user can only delete their own quotations
-        const { error } = await supabase
+        // Request with exact count to verify deletion
+        const { error, count } = await supabase
           .from("quotation_requests")
-          .delete()
+          .delete({ count: 'exact' })
           .eq("id", quotationId)
           .eq("customer_id", user.id);
           
         if (error) {
           console.error("Error deleting quotation:", error);
-          toast.error("Failed to delete quotation");
+          toast.error("Failed to delete quotation: " + error.message);
+          return;
+        }
+        
+        console.log(`Deletion result: ${count} rows affected`);
+        
+        if (count === 0) {
+          toast.error("No quotation found to delete. It may have been removed already.");
           return;
         }
         
