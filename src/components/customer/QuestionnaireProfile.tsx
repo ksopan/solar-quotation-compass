@@ -8,7 +8,7 @@ import { EmptyProfile } from "./questionnaire/EmptyProfile";
 import { LoadingProfile } from "./questionnaire/LoadingProfile";
 
 // Import the refactored hooks
-import { useQuestionnaireProfileState, useQuestionnaireProfileHandlers } from "./questionnaire/useQuestionnaireProfileHooks";
+import { useQuestionnaireProfileState, useQuestionnaireProfileHandlers } from "./questionnaire/hooks";
 
 export const QuestionnaireProfile: React.FC = () => {
   const {

@@ -11,8 +11,8 @@ import { ContactInfoSection } from "./ContactInfoSection";
 import { DocumentsSection } from "./DocumentsSection";
 import { ProfileFooter } from "./ProfileFooter";
 
-// Import the hooks
-import { useQuestionnaireProfileState, useQuestionnaireProfileHandlers } from "./useQuestionnaireProfileHooks";
+// Import the refactored hooks
+import { useQuestionnaireProfileState, useQuestionnaireProfileHandlers } from "./hooks";
 
 export const QuestionnaireProfileContent: React.FC = () => {
   const {
