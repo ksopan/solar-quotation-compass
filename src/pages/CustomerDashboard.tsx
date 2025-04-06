@@ -12,10 +12,12 @@ export const CustomerDashboard = () => {
   const [activeTab, setActiveTab] = useState("quotations");
   const { quotations, loading, fetchQuotations, deleteQuotation: deleteQuotationRequest } = useCustomerQuotations(user);
 
-  // Reload data when the component mounts
+  // Load data only once when the component mounts or when user changes
   useEffect(() => {
-    fetchQuotations();
-  }, [fetchQuotations]);
+    if (user) {
+      fetchQuotations();
+    }
+  }, [user, fetchQuotations]);
 
   const handleQuotationSubmitted = () => {
     fetchQuotations();
@@ -37,27 +39,25 @@ export const CustomerDashboard = () => {
   };
 
   return (
-    <MainLayout>
-      <div className="container mx-auto py-8">
-        <h1 className="text-3xl font-bold mb-8">Customer Dashboard</h1>
-        
-        <DashboardStats quotations={quotations} />
-        
-        <DashboardTabs
-          quotations={quotations}
-          loading={loading}
-          onQuotationSubmitted={handleQuotationSubmitted}
-          onRefresh={handleRefresh}
-          deleteQuotation={deleteQuotation}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-        
-        {activeTab === "profile" && (
-          <QuestionnaireProfile />
-        )}
-      </div>
-    </MainLayout>
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-8">Customer Dashboard</h1>
+      
+      <DashboardStats quotations={quotations} />
+      
+      <DashboardTabs
+        quotations={quotations}
+        loading={loading}
+        onQuotationSubmitted={handleQuotationSubmitted}
+        onRefresh={handleRefresh}
+        deleteQuotation={deleteQuotation}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+      
+      {activeTab === "profile" && (
+        <QuestionnaireProfile />
+      )}
+    </div>
   );
 };
 

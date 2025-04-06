@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuestionnaire, QuestionnaireData } from "@/hooks/useQuestionnaire";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -57,24 +57,26 @@ export const useQuestionnaireProfileState = () => {
 };
 
 export const useQuestionnaireProfileHandlers = () => {
+  const state = useQuestionnaireProfileState();
   const {
     questionnaire,
     isEditing,
     setIsEditing,
     formData,
     setFormData,
-    attachments,
     setAttachments,
-    isLoadingFiles,
     setIsLoadingFiles,
     updateQuestionnaire,
     createQuestionnaire,
     uploadAttachment,
     getAttachments,
     deleteAttachment
-  } = useQuestionnaireProfileState();
+  } = state;
   
-  const loadFiles = async () => {
+  // Use useCallback to stabilize loadFiles function
+  const loadFiles = useCallback(async () => {
+    if (!questionnaire) return;
+    
     setIsLoadingFiles(true);
     try {
       const files = await getAttachments();
@@ -88,16 +90,14 @@ export const useQuestionnaireProfileHandlers = () => {
     } finally {
       setIsLoadingFiles(false);
     }
-  };
+  }, [questionnaire, getAttachments, setAttachments, setIsLoadingFiles]);
   
+  // Use useEffect with proper dependencies
   useEffect(() => {
-    const fetchAttachments = async () => {
-      if (!questionnaire) return;
-      await loadFiles();
-    };
-    
-    fetchAttachments();
-  }, [questionnaire]);
+    if (questionnaire) {
+      loadFiles();
+    }
+  }, [questionnaire, loadFiles]);
   
   const handleEdit = () => {
     setFormData(questionnaire || {});

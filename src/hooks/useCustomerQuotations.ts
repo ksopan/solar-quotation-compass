@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -24,7 +24,8 @@ export const useCustomerQuotations = (user: User | null) => {
   const [quotations, setQuotations] = useState<QuotationItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchQuotations = async () => {
+  // Use useCallback to stabilize the fetchQuotations function
+  const fetchQuotations = useCallback(async () => {
     if (!user) {
       setQuotations([]);
       setLoading(false);
@@ -60,7 +61,7 @@ export const useCustomerQuotations = (user: User | null) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const deleteQuotation = async (id: string): Promise<boolean> => {
     try {
@@ -94,10 +95,6 @@ export const useCustomerQuotations = (user: User | null) => {
       return false;
     }
   };
-
-  useEffect(() => {
-    fetchQuotations();
-  }, [user]);
 
   return { quotations, loading, fetchQuotations, deleteQuotation };
 };

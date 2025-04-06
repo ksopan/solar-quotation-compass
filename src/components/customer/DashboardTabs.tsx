@@ -5,7 +5,7 @@ import { QuotationList } from "./QuotationList";
 import { QuotationForm } from "./QuotationForm";
 import { Loader } from "lucide-react";
 
-// Import the QuotationItem type
+// Import the QuotationItem type from our hook
 import { type QuotationItem } from "@/hooks/useCustomerQuotations";
 
 interface DashboardTabsProps {
@@ -43,6 +43,7 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({
         ) : (
           <QuotationList 
             quotations={quotations}
+            loading={loading}
             onRefresh={onRefresh}
             deleteQuotation={deleteQuotation}
           />

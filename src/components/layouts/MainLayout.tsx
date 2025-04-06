@@ -1,6 +1,5 @@
-
 import React from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
@@ -60,7 +59,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 <span className="text-sm text-muted-foreground">
                   {getDisplayName()}
                 </span>
-                <Button variant="outline" size="sm" onClick={handleLogout}>
+                <Button variant="outline" size="sm" onClick={handleLogout} className="md:hidden">
                   <LogOut className="h-4 w-4 mr-2" />
                   Logout
                 </Button>
@@ -85,12 +84,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   );
 };
 
-interface AppSidebarProps {
-  userRole: string;
-  onLogout: () => void;
-}
-
-const AppSidebar: React.FC<AppSidebarProps> = ({ userRole, onLogout }) => {
+const AppSidebar = ({ userRole, onLogout }: { userRole: string; onLogout: () => void }) => {
   return (
     <Sidebar>
       <SidebarHeader className="flex items-center justify-center p-4">
