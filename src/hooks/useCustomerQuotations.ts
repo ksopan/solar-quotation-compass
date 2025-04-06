@@ -1,22 +1,24 @@
 
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-interface Quotation {
+export interface QuotationItem {
   id: string;
-  created_at: string;
-  status: string;
   location: string;
   roof_type: string;
   roof_area: number;
-  energy_usage: number;
+  energy_usage: number | null;
   budget: number | null;
-  additional_notes: string | null;
+  status: string;
+  created_at: string;
+  customer_id: string;
+  proposal_count?: number;
 }
 
-export const useCustomerQuotations = (user: any) => {
-  const [quotations, setQuotations] = useState<Quotation[]>([]);
+export const useCustomerQuotations = (user: User | null) => {
+  const [quotations, setQuotations] = useState<QuotationItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchQuotations = async () => {
@@ -28,20 +30,29 @@ export const useCustomerQuotations = (user: any) => {
 
     try {
       setLoading(true);
+      
       const { data, error } = await supabase
         .from("quotation_requests")
-        .select("*")
+        .select(`
+          *,
+          quotation_proposals:quotation_proposals(id)
+        `)
         .eq("customer_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching quotations:", error);
         throw error;
       }
 
-      setQuotations(data as Quotation[]);
+      // Transform data to include proposal_count
+      const transformedData = data.map((quotation: any) => ({
+        ...quotation,
+        proposal_count: quotation.quotation_proposals?.length || 0
+      }));
+
+      setQuotations(transformedData);
     } catch (error) {
-      console.error("Error in fetchQuotations:", error);
+      console.error("Error fetching quotations:", error);
       toast.error("Failed to load your quotations");
     } finally {
       setLoading(false);
@@ -49,28 +60,34 @@ export const useCustomerQuotations = (user: any) => {
   };
 
   const deleteQuotation = async (id: string): Promise<boolean> => {
-    if (!user) return false;
-
     try {
+      // Delete associated proposals first
+      const { error: proposalError } = await supabase
+        .from("quotation_proposals")
+        .delete()
+        .eq("quotation_request_id", id);
+
+      if (proposalError) {
+        throw proposalError;
+      }
+
+      // Now delete the quotation
       const { error } = await supabase
         .from("quotation_requests")
         .delete()
-        .eq("id", id)
-        .eq("customer_id", user.id);
+        .eq("id", id);
 
       if (error) {
-        console.error("Error deleting quotation:", error);
-        toast.error("Failed to delete quotation");
-        return false;
+        throw error;
       }
 
       // Update the local state
-      setQuotations(quotations.filter((q) => q.id !== id));
+      setQuotations(quotations.filter(q => q.id !== id));
       toast.success("Quotation deleted successfully");
       return true;
     } catch (error) {
-      console.error("Error in deleteQuotation:", error);
-      toast.error("An error occurred while deleting the quotation");
+      console.error("Error deleting quotation:", error);
+      toast.error("Failed to delete quotation");
       return false;
     }
   };

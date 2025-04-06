@@ -21,6 +21,13 @@ export const useQuestionnaireAttachments = () => {
       
       console.log(`Uploading file ${file.name} to path ${filePath}`);
       
+      // Check file size (5MB limit)
+      const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSizeInBytes) {
+        toast.error(`File is too large. Maximum size is 5MB.`);
+        return null;
+      }
+      
       // Check if the bucket exists
       const { data: buckets } = await supabase.storage.listBuckets();
       const bucketExists = buckets?.some(bucket => bucket.name === 'questionnaire_attachments');

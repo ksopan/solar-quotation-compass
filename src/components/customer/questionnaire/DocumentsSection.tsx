@@ -1,9 +1,10 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
 import { FileUploader } from "./FileUploader";
 import { FilesList } from "./FilesList";
+import { Progress } from "@/components/ui/progress";
 
 interface DocumentsSectionProps {
   questionnaire: any;
@@ -30,8 +31,9 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
       <div className="mt-2">
         <FileUploader onUpload={handleFileUpload} />
         {isLoadingFiles ? (
-          <div className="flex items-center justify-center h-20">
+          <div className="flex flex-col items-center justify-center h-20 gap-2">
             <Loader className="h-6 w-6 animate-spin" />
+            <p className="text-sm text-muted-foreground">Loading files...</p>
           </div>
         ) : (
           <FilesList 

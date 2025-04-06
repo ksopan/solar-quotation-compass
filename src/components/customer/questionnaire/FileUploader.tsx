@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import { Upload, Loader } from "lucide-react";
 import { toast } from "sonner";
 
 interface FileUploaderProps {
@@ -46,10 +46,10 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onUpload }) => {
     try {
       setIsUploading(true);
       
-      // Check file size (10MB limit)
-      const maxSizeInBytes = 10 * 1024 * 1024; // 10MB
+      // Check file size (5MB limit)
+      const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
       if (file.size > maxSizeInBytes) {
-        toast.error(`File is too large. Maximum size is 10MB.`);
+        toast.error(`File is too large. Maximum size is 5MB.`);
         return;
       }
       
@@ -86,15 +86,19 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onUpload }) => {
     >
       <div className="space-y-4">
         <div className="flex justify-center">
-          <Upload className="h-10 w-10 text-muted-foreground" />
+          {isUploading ? (
+            <Loader className="h-10 w-10 text-primary animate-spin" />
+          ) : (
+            <Upload className="h-10 w-10 text-muted-foreground" />
+          )}
         </div>
         <div className="space-y-2">
           <p className="text-sm font-medium">
-            Drag and drop files here or click to upload
+            {isUploading ? "Uploading..." : "Drag and drop files here or click to upload"}
           </p>
           <p className="text-xs text-muted-foreground">
             Upload property photos, electrical bills, or any other documents
-            related to your solar installation (Max 10MB)
+            related to your solar installation (Max 5MB)
           </p>
         </div>
         <Button

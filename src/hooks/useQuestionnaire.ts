@@ -1,10 +1,11 @@
 
-import { useQuestionnaireBase, QuestionnaireData } from "./questionnaire/useQuestionnaireBase";
+import { useQuestionnaireBase } from "./questionnaire/useQuestionnaireBase";
 import { useFetchQuestionnaire } from "./questionnaire/useFetchQuestionnaire";
 import { useQuestionnaireActions } from "./questionnaire/useQuestionnaireActions";
 import { useQuestionnaireAttachments } from "./questionnaire/useQuestionnaireAttachments";
 
-export { QuestionnaireData } from "./questionnaire/useQuestionnaireBase";
+// Use export type for re-exporting types
+export type { QuestionnaireData } from "./questionnaire/useQuestionnaireBase";
 
 export const useQuestionnaire = () => {
   const { questionnaire, loading, isSaving } = useQuestionnaireBase();
