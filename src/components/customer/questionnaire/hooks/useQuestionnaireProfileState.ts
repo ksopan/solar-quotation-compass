@@ -15,12 +15,21 @@ export const useQuestionnaireProfileState = () => {
     getFileUrl
   } = useQuestionnaire();
   
-  // Use React.useState to ensure state persistence
+  // Create state variables with useState
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [formData, setFormData] = useState<Partial<QuestionnaireData> | null>(null);
   const [attachments, setAttachments] = useState<{ name: string; size: number; id?: string }[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [showSubmitButton, setShowSubmitButton] = useState(false);
+  
+  // Debug state changes
+  useEffect(() => {
+    console.log("🔄 isEditing state changed:", isEditing);
+  }, [isEditing]);
+
+  useEffect(() => {
+    console.log("🔄 formData state changed:", formData);
+  }, [formData]);
   
   // Determine if we should show the submit button based on questionnaire completion status
   useEffect(() => {
@@ -31,18 +40,13 @@ export const useQuestionnaireProfileState = () => {
     }
   }, [questionnaire]);
 
-  // Update formData whenever isEditing becomes true
+  // Update formData whenever editing starts
   useEffect(() => {
     if (isEditing && questionnaire) {
       console.log("🔄 Updating form data with questionnaire data because isEditing is true");
       setFormData(questionnaire);
     }
   }, [isEditing, questionnaire]);
-  
-  // For debugging
-  useEffect(() => {
-    console.log("✏️ isEditing state changed to:", isEditing);
-  }, [isEditing]);
   
   return {
     questionnaire,

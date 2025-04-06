@@ -15,11 +15,13 @@ export const useQuestionnaireFormHandlers = () => {
     createQuestionnaire
   } = useQuestionnaireProfileState();
   
-  // This function should be coordinated with the one in index.ts
+  // This function will be overridden by the one in index.ts
   const handleEdit = useCallback(() => {
-    console.log("✏️ handleEdit called from useQuestionnaireFormHandlers");
-    setFormData(questionnaire || {});
-    setIsEditing(true);
+    console.log("⚠️ Secondary handleEdit called from useQuestionnaireFormHandlers");
+    if (questionnaire) {
+      setFormData(questionnaire);
+      setIsEditing(true);
+    }
   }, [questionnaire, setFormData, setIsEditing]);
   
   const handleChange = useCallback((field: keyof QuestionnaireData, value: any) => {

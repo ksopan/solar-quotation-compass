@@ -43,7 +43,7 @@ export const QuestionnaireProfileContent: React.FC = () => {
   
   // Force a re-render when isEditing changes to ensure UI updates
   useEffect(() => {
-    console.log("🔄 isEditing changed to:", isEditing);
+    console.log("🔄 isEditing changed in QuestionnaireProfileContent to:", isEditing);
   }, [isEditing]);
   
   // Data source is either form data (when editing) or the questionnaire data
@@ -51,7 +51,10 @@ export const QuestionnaireProfileContent: React.FC = () => {
   
   return (
     <Card className="w-full">
-      <ProfileHeader isEditing={isEditing} onEdit={handleEdit} />
+      <ProfileHeader 
+        isEditing={isEditing} 
+        onEdit={handleEdit} 
+      />
       
       <CardContent className="space-y-6">
         <PropertyInfoSection 

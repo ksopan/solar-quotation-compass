@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback } from "react";
+import { useCallback } from "react";
 import { useQuestionnaireProfileState } from "./useQuestionnaireProfileState";
 import { useQuestionnaireFileHandlers } from "./useQuestionnaireFileHandlers";
 import { useQuestionnaireFormHandlers } from "./useQuestionnaireFormHandlers";
@@ -10,42 +10,30 @@ export const useQuestionnaireProfileHandlers = () => {
     questionnaire,
     setFormData,
     setIsEditing,
-    setIsLoadingFiles,
-    isEditing,
-    formData
+    setIsLoadingFiles
   } = useQuestionnaireProfileState();
 
   // Get file and form handlers
   const fileHandlers = useQuestionnaireFileHandlers();
   const formHandlers = useQuestionnaireFormHandlers();
 
-  const { loadFiles } = fileHandlers;
-
-  // 🔁 Load attachments when questionnaire changes
-  useEffect(() => {
-    if (questionnaire) {
-      setIsLoadingFiles(true);
-      loadFiles();
-    }
-  }, [questionnaire, loadFiles, setIsLoadingFiles]);
-
-  // ✅ Create our own handleEdit function to ensure proper flow
+  // Handle edit function - defined here to ensure proper control flow
   const handleEdit = useCallback(() => {
-    console.log("🖊️ handleEdit called in useQuestionnaireProfileHandlers");
+    console.log("🔑 Main handleEdit called in useQuestionnaireProfileHandlers");
     if (questionnaire) {
-      console.log("🖋️ Edit button clicked, setting form data and editing mode");
+      console.log("📋 Setting form data to questionnaire data:", questionnaire);
       setFormData(questionnaire);
+      console.log("✏️ Setting isEditing to TRUE");
       setIsEditing(true);
-      console.log("🔍 Current editing state after setting:", isEditing);
-      console.log("📋 Current form data after setting:", formData);
     }
-  }, [questionnaire, setFormData, setIsEditing, isEditing, formData]);
+  }, [questionnaire, setFormData, setIsEditing]);
 
   return {
     ...fileHandlers,
     ...formHandlers,
-    handleEdit, // Expose our handleEdit function
-    isEditing  // Expose the isEditing state for debugging
+    handleEdit, // Override the handleEdit from formHandlers
+    loadFiles: fileHandlers.loadFiles,
+    setIsLoadingFiles
   };
 };
 

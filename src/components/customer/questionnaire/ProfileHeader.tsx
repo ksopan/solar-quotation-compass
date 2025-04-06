@@ -26,7 +26,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <CardDescription>Details about your solar requirements</CardDescription>
         </div>
         {!isEditing && (
-          <Button onClick={handleEditClick} className="bg-primary hover:bg-primary/90">
+          <Button 
+            onClick={handleEditClick} 
+            variant="default"
+          >
             <Edit className="mr-2 h-4 w-4" />
             Edit Profile
           </Button>
