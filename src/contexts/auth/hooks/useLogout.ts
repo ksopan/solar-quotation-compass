@@ -11,14 +11,21 @@ export const useLogout = (
 
   const logout = async () => {
     try {
+      console.log("Starting logout process");
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      
+      if (error) {
+        console.error("Error during logout:", error);
+        throw error;
+      }
+      
+      console.log("Logout successful, clearing user state");
       setUser(null);
       toast.success("Logged out successfully!");
       navigate("/");
     } catch (err) {
+      console.error("Error during logout:", err);
       toast.error("Error logging out.");
-      console.error(err);
     }
   };
 

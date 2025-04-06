@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/auth";
 
 // Define the quotation type
 export interface QuotationDetails {
@@ -41,6 +42,7 @@ const QuotationDetails: React.FC<QuotationDetailsProps> = ({
 }) => {
   const [files, setFiles] = useState<{ name: string; url: string }[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchFiles = async () => {
@@ -62,6 +64,11 @@ const QuotationDetails: React.FC<QuotationDetailsProps> = ({
   if (!quotation) return null;
 
   const handleDelete = async () => {
+    if (!user) {
+      toast.error("You must be logged in to delete quotations");
+      return;
+    }
+    
     if (confirm("Are you sure you want to delete this quotation?")) {
       try {
         setIsDeleting(true);
@@ -71,7 +78,6 @@ const QuotationDetails: React.FC<QuotationDetailsProps> = ({
         if (onDelete) {
           console.log("Using provided onDelete handler");
           await onDelete(quotation.id);
-          toast.success("Quotation deleted successfully");
           onClose();
         } else {
           // Fallback direct deletion if no handler is provided
@@ -79,7 +85,8 @@ const QuotationDetails: React.FC<QuotationDetailsProps> = ({
           const { error } = await supabase
             .from("quotation_requests")
             .delete()
-            .eq("id", quotation.id);
+            .eq("id", quotation.id)
+            .eq("customer_id", user.id);
             
           if (error) {
             console.error("Error deleting quotation:", error);

@@ -8,7 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import QuotationDetails from "./QuotationDetails";
+import { useAuth } from "@/contexts/auth";
 
 type QuotationItem = Database['public']['Tables']['quotation_requests']['Row'] & {
   quotation_proposals: { count: number }[];
@@ -39,16 +41,20 @@ interface QuotationListProps {
 export const QuotationList: React.FC<QuotationListProps> = ({ quotations, loading, onRefresh }) => {
   const [selectedQuotation, setSelectedQuotation] = useState<QuotationItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleDeleteQuotation = async (id: string) => {
     try {
       setIsDeleting(true);
       console.log("Deleting quotation with ID:", id);
       
+      // Add customer_id filter to ensure the user can only delete their own quotations
       const { error } = await supabase
         .from("quotation_requests")
         .delete()
-        .eq("id", id);
+        .eq("id", id)
+        .eq("customer_id", user?.id || '');
         
       if (error) {
         console.error("Failed to delete quotation:", error);
@@ -61,6 +67,7 @@ export const QuotationList: React.FC<QuotationListProps> = ({ quotations, loadin
       
       // Refresh the quotation list (if callback provided)
       if (onRefresh) {
+        console.log("Refreshing quotation list after deletion");
         onRefresh();
       }
     } catch (error) {

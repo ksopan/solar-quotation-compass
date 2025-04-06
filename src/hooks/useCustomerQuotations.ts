@@ -63,6 +63,8 @@ export const useCustomerQuotations = (user: AuthUser | null) => {
       
       if (data) {
         setQuotations(data as QuotationItem[]);
+      } else {
+        setQuotations([]);
       }
     } catch (error) {
       console.error("Error fetching customer quotations:", error);
@@ -75,6 +77,8 @@ export const useCustomerQuotations = (user: AuthUser | null) => {
   useEffect(() => {
     if (userId) {
       fetchQuotations();
+    } else {
+      setQuotations([]);
     }
   }, [userId, fetchQuotations]);
 

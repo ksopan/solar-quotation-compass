@@ -71,6 +71,7 @@ export const useQuotationDetail = (quotationId: string | undefined) => {
         setIsDeleting(true);
         console.log("Starting deletion process for quotation ID:", quotationId);
         
+        // Add customer_id filter to ensure the user can only delete their own quotations
         const { error } = await supabase
           .from("quotation_requests")
           .delete()
