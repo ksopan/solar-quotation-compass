@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,6 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session?.user?.id);
       if (session?.user) {
         const userData = transformUserData(session.user);
         setUser(userData);
@@ -107,6 +109,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw new Error(error.message);
       if (!data.user) throw new Error("No user returned.");
+
+      // Check if email is confirmed for password auth
+      if (!data.user.email_confirmed_at && data.user.app_metadata.provider === 'email') {
+        await supabase.auth.signOut();
+        throw new Error("Please confirm your email before logging in.");
+      }
 
       // Check if user role matches expected role
       const userRole = data.user.user_metadata?.role;
@@ -188,7 +196,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: userData.email!,
         password: userData.password,
         options: {
-          data: userMetadata
+          data: userMetadata,
+          emailRedirectTo: `${window.location.origin}/login`
         }
       });
 
@@ -197,15 +206,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
-        toast.success("Registration successful!", {
-          description: "You're now signed up. Please confirm your email if required."
-        });
-        
-        // Set user in state immediately for a smoother experience
-        const newUser = transformUserData(data.user);
-        setUser(newUser);
-        
-        navigate("/");
+        // Check if email confirmation is required
+        if (data.user.identities && data.user.identities.length > 0) {
+          // For email/password signups
+          toast.success("Registration successful!", {
+            description: "Please check your email to confirm your account before logging in."
+          });
+          
+          // Sign out immediately for email/password registration
+          await supabase.auth.signOut();
+          setUser(null);
+          
+          navigate("/login");
+        } else {
+          // OAuth signup (unlikely to hit this case but included for completeness)
+          toast.success("Registration successful!", {
+            description: "You're now signed up and logged in."
+          });
+          
+          // Set user in state for OAuth signups
+          const newUser = transformUserData(data.user);
+          setUser(newUser);
+          
+          if (!isProfileComplete()) {
+            navigate("/complete-profile");
+          } else {
+            navigate("/");
+          }
+        }
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Registration failed");

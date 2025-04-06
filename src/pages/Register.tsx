@@ -124,8 +124,8 @@ const Register = () => {
                         placeholder="Full Name"
                         {...register("fullName")}
                       />
-                      {errors.fullName && 'message' in errors.fullName && (
-                        <p className="text-sm text-destructive">{errors.fullName.message as string}</p>
+                      {errors.fullName?.message && (
+                        <p className="text-sm text-destructive">{errors.fullName.message}</p>
                       )}
                     </div>
                     
