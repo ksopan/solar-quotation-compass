@@ -65,13 +65,17 @@ const QuotationDetails: React.FC<QuotationDetailsProps> = ({
     if (confirm("Are you sure you want to delete this quotation?")) {
       try {
         setIsDeleting(true);
+        console.log("Starting deletion process for quotation:", quotation.id);
         
-        // Check if there's a handler provided
+        // Check if there's a handler provided by the parent component
         if (onDelete) {
+          console.log("Using provided onDelete handler");
           await onDelete(quotation.id);
           toast.success("Quotation deleted successfully");
+          onClose();
         } else {
           // Fallback direct deletion if no handler is provided
+          console.log("No onDelete handler provided, performing direct deletion");
           const { error } = await supabase
             .from("quotation_requests")
             .delete()
@@ -83,6 +87,7 @@ const QuotationDetails: React.FC<QuotationDetailsProps> = ({
             throw error;
           }
           
+          console.log("Deletion successful");
           toast.success("Quotation deleted successfully");
           onClose();
         }
@@ -96,7 +101,7 @@ const QuotationDetails: React.FC<QuotationDetailsProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center">

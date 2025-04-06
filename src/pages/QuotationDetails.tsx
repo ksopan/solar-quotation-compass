@@ -24,6 +24,7 @@ const QuotationDetails = () => {
       
       try {
         setLoading(true);
+        console.log("Fetching quotation details for ID:", id);
         const { data, error } = await supabase
           .from("quotation_requests")
           .select(`
@@ -47,6 +48,7 @@ const QuotationDetails = () => {
           return;
         }
         
+        console.log("Fetched quotation:", data);
         setQuotation(data);
       } catch (error) {
         console.error("Error in fetchQuotationDetails:", error);
@@ -65,6 +67,7 @@ const QuotationDetails = () => {
     if (confirm("Are you sure you want to delete this quotation?")) {
       try {
         setIsDeleting(true);
+        console.log("Starting deletion process for quotation ID:", id);
         
         const { error } = await supabase
           .from("quotation_requests")
@@ -78,6 +81,7 @@ const QuotationDetails = () => {
           return;
         }
         
+        console.log("Deletion successful, redirecting to dashboard");
         toast.success("Quotation deleted successfully");
         navigate("/"); // Redirect to home/dashboard after delete
       } catch (error) {
