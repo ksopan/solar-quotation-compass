@@ -63,6 +63,63 @@ export type Database = {
         }
         Relationships: []
       }
+      property_questionnaires: {
+        Row: {
+          battery_reason: string | null
+          created_at: string
+          customer_id: string | null
+          email: string
+          first_name: string
+          id: string
+          interested_in_batteries: boolean
+          is_completed: boolean
+          last_name: string
+          monthly_electric_bill: number
+          ownership_status: string
+          property_type: string
+          purchase_timeline: string
+          roof_age_status: string
+          updated_at: string
+          willing_to_remove_trees: boolean
+        }
+        Insert: {
+          battery_reason?: string | null
+          created_at?: string
+          customer_id?: string | null
+          email: string
+          first_name: string
+          id?: string
+          interested_in_batteries: boolean
+          is_completed?: boolean
+          last_name: string
+          monthly_electric_bill: number
+          ownership_status: string
+          property_type: string
+          purchase_timeline: string
+          roof_age_status: string
+          updated_at?: string
+          willing_to_remove_trees: boolean
+        }
+        Update: {
+          battery_reason?: string | null
+          created_at?: string
+          customer_id?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          interested_in_batteries?: boolean
+          is_completed?: boolean
+          last_name?: string
+          monthly_electric_bill?: number
+          ownership_status?: string
+          property_type?: string
+          purchase_timeline?: string
+          roof_age_status?: string
+          updated_at?: string
+          willing_to_remove_trees?: boolean
+        }
+        Relationships: []
+      }
       quotation_document_files: {
         Row: {
           created_at: string

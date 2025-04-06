@@ -1,13 +1,15 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { DashboardStats } from "@/components/customer/DashboardStats";
 import { DashboardTabs } from "@/components/customer/DashboardTabs";
 import { useCustomerQuotations } from "@/hooks/useCustomerQuotations";
+import { QuestionnaireProfile } from "@/components/customer/QuestionnaireProfile";
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
   const { quotations, loading, fetchQuotations, deleteQuotation } = useCustomerQuotations(user);
+  const [activeTab, setActiveTab] = useState<string>("quotations");
 
   const handleQuotationSubmitted = () => {
     // Refresh the quotations list
@@ -24,9 +26,15 @@ const CustomerDashboard = () => {
         onQuotationSubmitted={handleQuotationSubmitted}
         onRefresh={fetchQuotations}
         deleteQuotation={deleteQuotation}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
       
-      <DashboardStats quotations={quotations} />
+      {activeTab === "profile" ? (
+        <QuestionnaireProfile />
+      ) : (
+        <DashboardStats quotations={quotations} />
+      )}
     </div>
   );
 };

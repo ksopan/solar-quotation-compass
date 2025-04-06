@@ -52,6 +52,23 @@ export const useRegistration = (
       }
 
       if (data.user) {
+        // Check if there's a questionnaire ID in session storage and associate it with the user
+        const questionnaireId = sessionStorage.getItem("questionnaire_id");
+        if (questionnaireId && userData.role === "customer") {
+          console.log("Associating questionnaire with new user:", data.user.id);
+          const { error: updateError } = await supabase
+            .from("property_questionnaires")
+            .update({ customer_id: data.user.id, is_completed: true })
+            .eq("id", questionnaireId);
+            
+          if (updateError) {
+            console.error("Error associating questionnaire with user:", updateError);
+          } else {
+            console.log("Successfully associated questionnaire with user");
+            sessionStorage.removeItem("questionnaire_id");
+          }
+        }
+        
         // Email/password signup (always requires email confirmation)
         toast.success("Registration successful!", {
           description: "Please check your email to confirm your account before logging in."

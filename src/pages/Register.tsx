@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, Link } from "react-router-dom";
@@ -13,17 +13,20 @@ import { VendorRegistrationForm } from "@/components/register/VendorRegistration
 import { AdminRegistrationForm } from "@/components/register/AdminRegistrationForm";
 import { customerSchema, vendorSchema, adminSchema, RegisterFormValues } from "@/components/register/registerSchemas";
 import { Home } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
   const { register: authRegister, loginWithOAuth } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"customer" | "vendor" | "admin">("customer");
+  const [questionnaireId, setQuestionnaireId] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors }
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(
@@ -41,6 +44,44 @@ const Register = () => {
     }
   });
 
+  // Check for a questionnaire ID in session storage on component mount
+  useEffect(() => {
+    const storedQuestionnaireId = sessionStorage.getItem("questionnaire_id");
+    if (storedQuestionnaireId) {
+      setQuestionnaireId(storedQuestionnaireId);
+      
+      // Fetch the questionnaire data to pre-fill the form
+      const fetchQuestionnaireData = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("property_questionnaires")
+            .select("*")
+            .eq("id", storedQuestionnaireId)
+            .single();
+            
+          if (error) {
+            console.error("Error fetching questionnaire data:", error);
+            return;
+          }
+          
+          if (data) {
+            // Pre-fill the registration form with questionnaire data
+            setValue("email", data.email);
+            setValue("firstName", data.first_name);
+            setValue("lastName", data.last_name);
+            
+            // Set active tab to customer since questionnaire is for customers
+            setActiveTab("customer");
+          }
+        } catch (error) {
+          console.error("Error in fetchQuestionnaireData:", error);
+        }
+      };
+      
+      fetchQuestionnaireData();
+    }
+  }, [setValue]);
+
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
@@ -51,6 +92,12 @@ const Register = () => {
         password: registrationData.password,
         role: registrationData.role
       });
+      
+      // If there's a questionnaire ID, associate it with the new user
+      if (questionnaireId) {
+        // This will be handled in the auth hook after successful registration
+        sessionStorage.removeItem("questionnaire_id");
+      }
     } catch (error) {
       // Error is already handled in the register function
     } finally {
@@ -69,6 +116,10 @@ const Register = () => {
   };
 
   const handleOAuthRegister = (provider: "google" | "twitter") => {
+    // Store questionnaire ID in localStorage before OAuth flow
+    if (questionnaireId) {
+      localStorage.setItem("questionnaire_id", questionnaireId);
+    }
     loginWithOAuth(provider);
   };
 
@@ -89,7 +140,9 @@ const Register = () => {
               </Button>
             </div>
             <CardDescription className="text-center">
-              Create an account to get started
+              {questionnaireId 
+                ? "Complete your registration to view your solar quotes" 
+                : "Create an account to get started"}
             </CardDescription>
           </CardHeader>
           <CardContent>

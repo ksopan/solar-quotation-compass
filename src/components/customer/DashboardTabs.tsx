@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QuotationForm } from "@/components/customer/QuotationForm";
 import { QuotationList } from "@/components/customer/QuotationList";
@@ -11,6 +11,8 @@ interface DashboardTabsProps {
   onQuotationSubmitted: () => void;
   onRefresh: () => void;
   deleteQuotation?: (id: string) => Promise<boolean>;
+  activeTab?: string;
+  onTabChange?: (value: string) => void;
 }
 
 export const DashboardTabs: React.FC<DashboardTabsProps> = ({ 
@@ -18,12 +20,14 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({
   loading, 
   onQuotationSubmitted,
   onRefresh,
-  deleteQuotation
+  deleteQuotation,
+  activeTab = "quotations",
+  onTabChange
 }) => {
-  const [activeTab, setActiveTab] = useState<string>("quotations");
-
   const handleTabChange = (value: string) => {
-    setActiveTab(value);
+    if (onTabChange) {
+      onTabChange(value);
+    }
   };
 
   return (
@@ -31,6 +35,7 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({
       <TabsList className="mb-6">
         <TabsTrigger value="quotations">My Quotation Requests</TabsTrigger>
         <TabsTrigger value="new">Request New Quotation</TabsTrigger>
+        <TabsTrigger value="profile">My Solar Profile</TabsTrigger>
       </TabsList>
       
       <TabsContent value="quotations">
@@ -44,6 +49,10 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({
       
       <TabsContent value="new">
         <QuotationForm onSuccess={onQuotationSubmitted} />
+      </TabsContent>
+      
+      <TabsContent value="profile">
+        {/* Content rendered in the CustomerDashboard component */}
       </TabsContent>
     </Tabs>
   );

@@ -3,68 +3,81 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MainLayout } from "@/components/layouts/MainLayout";
-import { useAuth } from "@/contexts/auth";
-import { toast } from "sonner";
+import { User } from "@/contexts/auth/types";
+import { transformUserData } from "@/contexts/auth/authUtils";
+import { isProfileComplete } from "@/contexts/auth/authUtils";
 
 const AuthCallback = () => {
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { isProfileComplete } = useAuth();
+  const [message, setMessage] = useState("Processing login...");
 
   useEffect(() => {
-    const handleAuthCallback = async () => {
-      // Get session from URL
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        setError(error.message);
-        toast.error("Authentication failed");
-        setTimeout(() => navigate("/login"), 3000);
-        return;
-      }
-      
-      if (data.session) {
-        // Update user metadata with role=customer if not set
-        // Since only customers can use OAuth
-        const user = data.session.user;
-        const metadata = user.user_metadata || {};
+    const handleCallback = async () => {
+      try {
+        setMessage("Completing authentication...");
         
-        if (!metadata.role) {
-          await supabase.auth.updateUser({
-            data: { role: "customer" }
-          });
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
         }
         
-        // Check if profile needs completion
-        const redirectTo = isProfileComplete() ? "/" : "/complete-profile";
-        toast.success("Successfully authenticated!");
-        navigate(redirectTo);
-      } else {
-        setError("No session found");
-        toast.error("Authentication failed");
-        setTimeout(() => navigate("/login"), 3000);
+        if (!data.session) {
+          throw new Error("No session found");
+        }
+        
+        // Check for questionnaire ID in localStorage from OAuth flow
+        const questionnaireId = localStorage.getItem("questionnaire_id");
+        if (questionnaireId && data.session.user) {
+          setMessage("Associating your questionnaire data...");
+          try {
+            // Associate questionnaire with the authenticated user
+            await supabase
+              .from("property_questionnaires")
+              .update({ 
+                customer_id: data.session.user.id,
+                is_completed: true
+              })
+              .eq("id", questionnaireId);
+              
+            console.log("Associated questionnaire with user after OAuth");
+            localStorage.removeItem("questionnaire_id");
+          } catch (err) {
+            console.error("Error associating questionnaire after OAuth:", err);
+          }
+        }
+        
+        const userData = transformUserData(data.session.user);
+        
+        setMessage("Login successful. Redirecting...");
+        
+        // Redirect based on profile completion
+        setTimeout(() => {
+          if (isProfileComplete(userData as User)) {
+            navigate("/");
+          } else {
+            navigate("/complete-profile");
+          }
+        }, 1000);
+        
+      } catch (err) {
+        console.error("Error during auth callback:", err);
+        setMessage("Authentication failed. Redirecting to login...");
+        setTimeout(() => navigate("/login"), 2000);
       }
     };
-    
-    handleAuthCallback();
-  }, [navigate, isProfileComplete]);
-  
+
+    handleCallback();
+  }, [navigate]);
+
   return (
     <MainLayout>
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        {error ? (
-          <div className="text-destructive">
-            <h2 className="text-xl font-semibold">Authentication Error</h2>
-            <p>{error}</p>
-            <p>Redirecting to login page...</p>
-          </div>
-        ) : (
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
-            <h2 className="text-xl font-semibold">Completing authentication...</h2>
-            <p className="text-muted-foreground">Please wait while we validate your credentials.</p>
-          </div>
-        )}
+      <div className="min-h-[80vh] flex flex-col items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+          <h1 className="text-2xl font-bold">{message}</h1>
+          <p className="text-muted-foreground">Please wait while we complete your authentication.</p>
+        </div>
       </div>
     </MainLayout>
   );

@@ -1,12 +1,17 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sun, Zap, DollarSign, Users, Check } from "lucide-react";
+import { QuestionnaireModal } from "@/components/questionnaire/QuestionnaireModal";
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const [isQuestionnaireOpen, setIsQuestionnaireOpen] = useState(false);
+  
+  const handleGetQuotesClick = () => {
+    setIsQuestionnaireOpen(true);
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -22,7 +27,7 @@ const LandingPage = () => {
                 Get multiple quotes from top-rated solar installers and save up to 30% on your energy bills.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" onClick={() => navigate("/register")}>
+                <Button size="lg" onClick={handleGetQuotesClick}>
                   Get Free Quotes
                 </Button>
                 <Button size="lg" variant="outline" onClick={() => navigate("/login")}>
@@ -185,7 +190,11 @@ const LandingPage = () => {
             Join thousands of homeowners who have found their perfect solar solution through Solar Quotation Compass.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" onClick={() => navigate("/register")}>
+            <Button 
+              size="lg" 
+              variant="secondary" 
+              onClick={handleGetQuotesClick}
+            >
               Get Started Today
             </Button>
             <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10" onClick={() => navigate("/login")}>
@@ -242,6 +251,12 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
+
+      {/* Questionnaire Modal */}
+      <QuestionnaireModal 
+        open={isQuestionnaireOpen} 
+        onOpenChange={setIsQuestionnaireOpen} 
+      />
     </div>
   );
 };
