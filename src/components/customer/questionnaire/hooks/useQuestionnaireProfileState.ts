@@ -11,7 +11,6 @@ export const useQuestionnaireProfileState = () => {
     updateQuestionnaire, 
     createQuestionnaire,
     uploadAttachment,
-    getAttachments,
     deleteAttachment,
     getFileUrl
   } = useQuestionnaire();
@@ -30,10 +29,23 @@ export const useQuestionnaireProfileState = () => {
       setShowSubmitButton(false);
     }
   }, [questionnaire]);
+
+  // Update formData whenever isEditing becomes true
+  useEffect(() => {
+    if (isEditing && questionnaire) {
+      console.log("🔄 Updating form data with questionnaire data because isEditing is true");
+      setFormData(questionnaire);
+    }
+  }, [isEditing, questionnaire]);
+  
+  // For debugging
+  useEffect(() => {
+    console.log("✏️ isEditing state changed to:", isEditing);
+  }, [isEditing]);
   
   return {
     questionnaire,
-    loading: questionnaireLoading, // Make sure to use the loading state from useQuestionnaire
+    loading: questionnaireLoading, 
     isSaving,
     isUploading,
     isEditing,
@@ -49,7 +61,6 @@ export const useQuestionnaireProfileState = () => {
     updateQuestionnaire,
     createQuestionnaire,
     uploadAttachment,
-    getAttachments,
     deleteAttachment,
     getFileUrl
   };

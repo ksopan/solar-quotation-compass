@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 
 // Import all the section components
@@ -38,6 +38,12 @@ export const QuestionnaireProfileContent: React.FC = () => {
   } = useQuestionnaireProfileHandlers();
   
   console.log("🧩 QuestionnaireProfileContent rendering with isEditing:", isEditing);
+  console.log("📄 Form data in content:", formData);
+  
+  // Force a re-render when isEditing changes
+  useEffect(() => {
+    console.log("🔄 isEditing changed to:", isEditing);
+  }, [isEditing]);
   
   // Data source is either form data (when editing) or the questionnaire data
   const data = isEditing ? formData : questionnaire;

@@ -11,7 +11,7 @@ export const useQuestionnaire = () => {
   const { questionnaire, loading, isSaving } = useQuestionnaireBase();
   const { fetchQuestionnaire } = useFetchQuestionnaire();
   const { updateQuestionnaire, createQuestionnaire } = useQuestionnaireActions();
-  const { uploadAttachment, getAttachments, deleteAttachment, getFileUrl, isUploading } = useQuestionnaireAttachments();
+  const { uploadAttachment, deleteAttachment, getFileUrl, isUploading } = useQuestionnaireAttachments();
 
   return {
     questionnaire,
@@ -20,7 +20,6 @@ export const useQuestionnaire = () => {
     updateQuestionnaire,
     createQuestionnaire,
     uploadAttachment,
-    getAttachments,
     deleteAttachment,
     getFileUrl,
     fetchQuestionnaire,

@@ -1,19 +1,21 @@
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useQuestionnaireProfileState } from "./useQuestionnaireProfileState";
 import { useQuestionnaireFileHandlers } from "./useQuestionnaireFileHandlers";
 import { useQuestionnaireFormHandlers } from "./useQuestionnaireFormHandlers";
 
 export const useQuestionnaireProfileHandlers = () => {
-  const fileHandlers = useQuestionnaireFileHandlers();
-  const formHandlers = useQuestionnaireFormHandlers();
-
   const {
     questionnaire,
     setFormData,
     setIsEditing,
-    setIsLoadingFiles
+    setIsLoadingFiles,
+    isEditing,
+    formData
   } = useQuestionnaireProfileState();
+
+  const fileHandlers = useQuestionnaireFileHandlers();
+  const formHandlers = useQuestionnaireFormHandlers();
 
   const { loadFiles } = fileHandlers;
 
@@ -25,19 +27,22 @@ export const useQuestionnaireProfileHandlers = () => {
     }
   }, [questionnaire, loadFiles, setIsLoadingFiles]);
 
-  // ✅ Add this: Handle Edit button
-  const handleEdit = () => {
+  // ✅ Handle Edit button
+  const handleEdit = useCallback(() => {
     if (questionnaire) {
       console.log("🖋️ Edit button clicked, setting form data and editing mode");
       setFormData(questionnaire);
       setIsEditing(true);
+      console.log("🔍 Current editing state after setting:", isEditing);
+      console.log("📋 Current form data after setting:", formData);
     }
-  };
+  }, [questionnaire, setFormData, setIsEditing, isEditing, formData]);
 
   return {
     ...fileHandlers,
     ...formHandlers,
-    handleEdit // <- expose the new handler
+    handleEdit, // <- expose the new handler
+    isEditing   // <- expose the isEditing state for debugging
   };
 };
 
