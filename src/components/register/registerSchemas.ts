@@ -50,4 +50,6 @@ export const adminSchema = z.object({
 export type CustomerSchema = z.infer<typeof customerSchema>;
 export type VendorSchema = z.infer<typeof vendorSchema>;
 export type AdminSchema = z.infer<typeof adminSchema>;
+
+// Create a union type for all possible form values
 export type RegisterFormValues = CustomerSchema | VendorSchema | AdminSchema;

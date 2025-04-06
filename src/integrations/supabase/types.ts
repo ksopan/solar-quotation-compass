@@ -208,39 +208,6 @@ export type Database = {
           },
         ]
       }
-      users: {
-        Row: {
-          address: string | null
-          created_at: string
-          email: string | null
-          full_name: string | null
-          id: number
-          phone: string | null
-          role: string | null
-          user_id: string | null
-        }
-        Insert: {
-          address?: string | null
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id?: number
-          phone?: string | null
-          role?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          address?: string | null
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id?: number
-          phone?: string | null
-          role?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       vendor_profiles: {
         Row: {
           address: string | null

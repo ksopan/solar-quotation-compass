@@ -122,10 +122,10 @@ const Register = () => {
                         type="text"
                         className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                         placeholder="Full Name"
-                        {...register("fullName")}
+                        {...register("fullName" as any)}
                       />
-                      {errors.fullName?.message && (
-                        <p className="text-sm text-destructive">{errors.fullName.message}</p>
+                      {errors.fullName && (
+                        <p className="text-sm text-destructive">{(errors as any).fullName?.message}</p>
                       )}
                     </div>
                     

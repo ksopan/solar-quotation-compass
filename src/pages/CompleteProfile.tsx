@@ -19,6 +19,32 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
+// Create the profile schemas based on user role
+const customerProfileSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  address: z.string().min(1, "Address is required"),
+  phone: z.string().min(1, "Phone number is required"),
+});
+
+const vendorProfileSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  companyName: z.string().min(1, "Company name is required"),
+  address: z.string().min(1, "Company address is required"),
+  phone: z.string().min(1, "Contact phone is required"),
+});
+
+const adminProfileSchema = z.object({
+  fullName: z.string().min(1, "Full name is required"),
+});
+
+// Define the profile form values type as a discriminated union
+type ProfileFormValues = 
+  | z.infer<typeof customerProfileSchema>
+  | z.infer<typeof vendorProfileSchema>
+  | z.infer<typeof adminProfileSchema>;
+
 const CompleteProfile = () => {
   const { user, updateProfile, isProfileComplete } = useAuth();
   const navigate = useNavigate();
@@ -37,43 +63,35 @@ const CompleteProfile = () => {
 
   if (!user) return null;
 
-  // Create schema based on user role
+  // Get the appropriate schema based on the user role
   const getProfileSchema = (role: UserRole) => {
     if (role === "customer") {
-      return z.object({
-        firstName: z.string().min(1, "First name is required"),
-        lastName: z.string().min(1, "Last name is required"),
-        address: z.string().min(1, "Address is required"),
-        phone: z.string().min(1, "Phone number is required"),
-      });
+      return customerProfileSchema;
     } else if (role === "vendor") {
-      return z.object({
-        firstName: z.string().min(1, "First name is required"),
-        lastName: z.string().min(1, "Last name is required"),
-        companyName: z.string().min(1, "Company name is required"),
-        address: z.string().min(1, "Company address is required"),
-        phone: z.string().min(1, "Contact phone is required"),
-      });
+      return vendorProfileSchema;
     } else {
-      return z.object({
-        fullName: z.string().min(1, "Full name is required"),
-      });
+      return adminProfileSchema;
     }
   };
 
   const profileSchema = getProfileSchema(user.role);
-  type ProfileFormValues = z.infer<typeof profileSchema>;
 
   // Initialize form with defaults from user object
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: user.firstName || "",
-      lastName: user.lastName || "",
-      companyName: user.companyName || "",
-      address: user.address || "",
-      phone: user.phone || "",
-      fullName: user.fullName || "",
+      ...(user.role === "customer" || user.role === "vendor" ? {
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        address: user.address || "",
+        phone: user.phone || "",
+      } : {}),
+      ...(user.role === "vendor" ? {
+        companyName: user.companyName || "",
+      } : {}),
+      ...(user.role === "admin" ? {
+        fullName: user.fullName || "",
+      } : {}),
     } as any,
   });
 
