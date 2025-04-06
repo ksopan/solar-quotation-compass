@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, XCircle, Tool } from "lucide-react";
+import { CheckCircle, XCircle, Wrench } from "lucide-react";
 
 interface RoofAgeStepProps {
   value: string;
@@ -47,7 +47,7 @@ export const RoofAgeStep: React.FC<RoofAgeStepProps> = ({
           onClick={() => onChange("replace")}
         >
           <CardContent className="flex items-center p-4">
-            <Tool className="h-6 w-6 mr-4 text-primary" />
+            <Wrench className="h-6 w-6 mr-4 text-primary" />
             <span className="font-medium">Yes – but I plan to replace it to go solar</span>
           </CardContent>
         </Card>
