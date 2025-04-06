@@ -4,7 +4,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
-import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
+import { UserRole } from "@/contexts/auth/types";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { 
   Form, 

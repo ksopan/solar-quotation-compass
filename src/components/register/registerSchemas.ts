@@ -1,6 +1,6 @@
 
 import { z } from "zod";
-import { UserRole } from "@/contexts/AuthContext";
+import { UserRole } from "@/contexts/auth/types";
 
 // Base schema with common fields
 const baseSchema = {
