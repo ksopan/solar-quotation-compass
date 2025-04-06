@@ -12,6 +12,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   isEditing, 
   onEdit 
 }) => {
+  const handleEditClick = () => {
+    console.log("📝 Edit button clicked in ProfileHeader");
+    onEdit();
+  };
+
   return (
     <CardHeader>
       <div className="flex justify-between items-center">
@@ -20,7 +25,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <CardDescription>Details about your solar requirements</CardDescription>
         </div>
         {!isEditing && (
-          <Button onClick={onEdit}>Edit Profile</Button>
+          <Button onClick={handleEditClick}>Edit Profile</Button>
         )}
       </div>
     </CardHeader>

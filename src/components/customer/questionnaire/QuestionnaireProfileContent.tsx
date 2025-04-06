@@ -37,6 +37,8 @@ export const QuestionnaireProfileContent: React.FC = () => {
     handleFileDelete
   } = useQuestionnaireProfileHandlers();
   
+  console.log("🧩 QuestionnaireProfileContent rendering with isEditing:", isEditing);
+  
   // Data source is either form data (when editing) or the questionnaire data
   const data = isEditing ? formData : questionnaire;
   

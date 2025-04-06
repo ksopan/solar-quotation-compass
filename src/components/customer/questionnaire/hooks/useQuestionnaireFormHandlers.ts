@@ -16,6 +16,7 @@ export const useQuestionnaireFormHandlers = () => {
   } = useQuestionnaireProfileState();
   
   const handleEdit = useCallback(() => {
+    console.log("✏️ handleEdit called, setting form data:", questionnaire);
     setFormData(questionnaire || {});
     setIsEditing(true);
   }, [questionnaire, setFormData, setIsEditing]);

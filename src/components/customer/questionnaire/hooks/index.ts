@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useQuestionnaireProfileState } from "./useQuestionnaireProfileState";
 import { useQuestionnaireFileHandlers } from "./useQuestionnaireFileHandlers";
@@ -27,6 +28,7 @@ export const useQuestionnaireProfileHandlers = () => {
   // ✅ Add this: Handle Edit button
   const handleEdit = () => {
     if (questionnaire) {
+      console.log("🖋️ Edit button clicked, setting form data and editing mode");
       setFormData(questionnaire);
       setIsEditing(true);
     }
