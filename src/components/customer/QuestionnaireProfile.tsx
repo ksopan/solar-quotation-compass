@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuestionnaire, QuestionnaireData } from "@/hooks/useQuestionnaire";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,21 +26,29 @@ export const QuestionnaireProfile: React.FC = () => {
   
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<QuestionnaireData> | null>(null);
-  const [files, setFiles] = useState<Array<{name: string, size: number, id?: string}>>([]);
+  const [attachments, setAttachments] = useState<{ name: string; size: number; id?: string }[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   
-  // Load files when questionnaire is loaded
   useEffect(() => {
-    if (questionnaire) {
-      loadFiles();
-    }
-  }, [questionnaire]);
+    const fetchAttachments = async () => {
+      if (!questionnaire) return;
+      
+      const files = await getAttachments();
+      setAttachments(files.map(file => ({
+        name: file.name,
+        size: file.metadata?.size || 0,
+        id: file.id
+      })));
+    };
+    
+    fetchAttachments();
+  }, [questionnaire, getAttachments]);
   
   const loadFiles = async () => {
     setIsLoadingFiles(true);
     try {
       const attachments = await getAttachments();
-      setFiles(attachments);
+      setAttachments(attachments);
     } catch (error) {
       console.error("Error loading files:", error);
     } finally {
@@ -66,7 +73,6 @@ export const QuestionnaireProfile: React.FC = () => {
     if (questionnaire) {
       success = await updateQuestionnaire(formData);
     } else {
-      // Create a new questionnaire if user doesn't have one
       const requiredFields = [
         'property_type', 'ownership_status', 'monthly_electric_bill',
         'interested_in_batteries', 'purchase_timeline', 'willing_to_remove_trees',
@@ -110,7 +116,6 @@ export const QuestionnaireProfile: React.FC = () => {
     }
   };
   
-  // Create a new empty questionnaire profile
   const handleCreateProfile = () => {
     setFormData({
       property_type: "home",
@@ -413,7 +418,7 @@ export const QuestionnaireProfile: React.FC = () => {
                 </div>
               ) : (
                 <FilesList 
-                  files={files} 
+                  files={attachments} 
                   onDelete={handleFileDelete} 
                   getFileUrl={getFileUrl} 
                 />
