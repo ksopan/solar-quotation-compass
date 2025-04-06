@@ -5,7 +5,7 @@ import { useQuestionnaire, QuestionnaireData } from "@/hooks/useQuestionnaire";
 export const useQuestionnaireProfileState = () => {
   const { 
     questionnaire, 
-    loading, 
+    loading: questionnaireLoading, 
     isSaving,
     isUploading,
     updateQuestionnaire, 
@@ -22,6 +22,7 @@ export const useQuestionnaireProfileState = () => {
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [showSubmitButton, setShowSubmitButton] = useState(false);
   
+  // Determine if we should show the submit button based on questionnaire completion status
   useEffect(() => {
     if (questionnaire && !questionnaire.is_completed) {
       setShowSubmitButton(true);
@@ -32,7 +33,7 @@ export const useQuestionnaireProfileState = () => {
   
   return {
     questionnaire,
-    loading,
+    loading: questionnaireLoading, // Make sure to use the loading state from useQuestionnaire
     isSaving,
     isUploading,
     isEditing,

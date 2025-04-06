@@ -59,6 +59,7 @@ export const useFetchQuestionnaire = () => {
       console.error("Error in fetchQuestionnaire:", error);
       toast.error("An error occurred while loading your questionnaire data");
     } finally {
+      // Always set loading to false when the fetch completes
       setLoading(false);
     }
   };
