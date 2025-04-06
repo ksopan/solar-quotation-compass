@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { CustomerRegistrationForm } from "@/components/register/CustomerRegistrationForm";
 import { VendorRegistrationForm } from "@/components/register/VendorRegistrationForm";
-import { customerSchema, vendorSchema, RegisterFormValues } from "@/components/register/registerSchemas";
+import { customerSchema, vendorSchema, adminSchema, RegisterFormValues } from "@/components/register/registerSchemas";
 import { Home, Twitter } from "lucide-react";
 
 const Register = () => {
@@ -31,7 +31,7 @@ const Register = () => {
         ? customerSchema 
         : activeTab === "vendor" 
           ? vendorSchema 
-          : customerSchema // fallback
+          : adminSchema
     ),
     defaultValues: {
       role: "customer" as const,
@@ -124,7 +124,7 @@ const Register = () => {
                         placeholder="Full Name"
                         {...register("fullName")}
                       />
-                      {errors.fullName && (
+                      {errors.fullName && 'message' in errors.fullName && (
                         <p className="text-sm text-destructive">{errors.fullName.message as string}</p>
                       )}
                     </div>

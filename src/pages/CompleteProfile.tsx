@@ -152,7 +152,7 @@ const CompleteProfile = () => {
                     {user.role === "vendor" && (
                       <FormField
                         control={form.control}
-                        name="companyName"
+                        name="companyName" 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Company Name</FormLabel>

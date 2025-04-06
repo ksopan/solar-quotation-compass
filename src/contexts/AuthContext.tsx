@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -216,7 +215,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateProfile = async (userData: Partial<User>) => {
+  const updateProfile = async (userData: Partial<User>): Promise<void> => {
     try {
       // Create metadata update object
       const metadataUpdates: Record<string, any> = {};
@@ -251,8 +250,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(updatedUser);
         toast.success("Profile updated successfully!");
       }
-      
-      return data.user;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Profile update failed");
       throw err;
