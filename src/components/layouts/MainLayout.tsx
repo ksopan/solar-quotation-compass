@@ -27,7 +27,20 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+  };
+
+  // Get display name based on user role and available fields
+  const getDisplayName = () => {
+    if (!user) return "";
+    
+    if (user.role === "vendor") {
+      return user.companyName || `${user.firstName || ""} ${user.lastName || ""}`.trim();
+    } else if (user.role === "admin") {
+      return user.fullName || "Admin";
+    } else {
+      // Customer
+      return `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email;
+    }
   };
 
   return (
@@ -45,7 +58,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             {user ? (
               <div className="flex items-center gap-4">
                 <span className="text-sm text-muted-foreground">
-                  {user.role === "vendor" ? user.companyName : `${user.firstName} ${user.lastName}`}
+                  {getDisplayName()}
                 </span>
                 <Button variant="outline" size="sm" onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
@@ -110,7 +123,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ userRole, onLogout }) => {
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <a href="/profile">
+                    <a href="/complete-profile">
                       <User className="h-4 w-4 mr-2" />
                       <span>My Profile</span>
                     </a>
@@ -139,7 +152,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ userRole, onLogout }) => {
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <a href="/company-profile">
+                    <a href="/complete-profile">
                       <Settings className="h-4 w-4 mr-2" />
                       <span>Company Profile</span>
                     </a>
