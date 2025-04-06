@@ -1,11 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database } from "@/integrations/supabase/types";
-
-type QuotationItem = Database['public']['Tables']['quotation_requests']['Row'] & {
-  quotation_proposals: { count: number }[];
-};
+import { QuotationItem } from "@/hooks/useCustomerQuotations";
 
 interface DashboardStatsProps {
   quotations: QuotationItem[];

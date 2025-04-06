@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -124,8 +123,8 @@ const Register = () => {
                         placeholder="Full Name"
                         {...register("fullName" as any)}
                       />
-                      {errors.fullName && (
-                        <p className="text-sm text-destructive">{(errors as any).fullName?.message}</p>
+                      {errors.firstName && (
+                        <p className="text-sm text-destructive">{(errors as any).firstName?.message}</p>
                       )}
                     </div>
                     

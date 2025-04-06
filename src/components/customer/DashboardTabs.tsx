@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QuotationForm } from "@/components/customer/QuotationForm";
 import { QuotationList } from "@/components/customer/QuotationList";
-import { QuotationItem } from "@/hooks/useQuotations";
+import { QuotationItem } from "@/hooks/useCustomerQuotations";
 
 interface DashboardTabsProps {
   quotations: QuotationItem[];
