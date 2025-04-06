@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuestionnaire, QuestionnaireData } from "@/hooks/useQuestionnaire";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,10 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUploader } from "./questionnaire/FileUploader";
 import { FilesList } from "./questionnaire/FilesList";
-import { Loader } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Loader, Check } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const QuestionnaireProfile: React.FC = () => {
   const { 
@@ -28,27 +32,43 @@ export const QuestionnaireProfile: React.FC = () => {
   const [formData, setFormData] = useState<Partial<QuestionnaireData> | null>(null);
   const [attachments, setAttachments] = useState<{ name: string; size: number; id?: string }[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  const [showSubmitButton, setShowSubmitButton] = useState(false);
   
   useEffect(() => {
     const fetchAttachments = async () => {
       if (!questionnaire) return;
       
+      try {
+        const files = await getAttachments();
+        setAttachments(files.map(file => ({
+          name: file.name,
+          size: file.metadata?.size || 0,
+          id: file.id
+        })));
+      } catch (error) {
+        console.error("Error fetching attachments:", error);
+      }
+    };
+    
+    fetchAttachments();
+    
+    // Show submit button if questionnaire exists but is not completed
+    if (questionnaire && !questionnaire.is_completed) {
+      setShowSubmitButton(true);
+    } else {
+      setShowSubmitButton(false);
+    }
+  }, [questionnaire, getAttachments]);
+  
+  const loadFiles = async () => {
+    setIsLoadingFiles(true);
+    try {
       const files = await getAttachments();
       setAttachments(files.map(file => ({
         name: file.name,
         size: file.metadata?.size || 0,
         id: file.id
       })));
-    };
-    
-    fetchAttachments();
-  }, [questionnaire, getAttachments]);
-  
-  const loadFiles = async () => {
-    setIsLoadingFiles(true);
-    try {
-      const attachments = await getAttachments();
-      setAttachments(attachments);
     } catch (error) {
       console.error("Error loading files:", error);
     } finally {
@@ -94,6 +114,37 @@ export const QuestionnaireProfile: React.FC = () => {
     
     if (success) {
       setIsEditing(false);
+      
+      // Show submit button if not already submitted
+      if (questionnaire && !questionnaire.is_completed) {
+        setShowSubmitButton(true);
+      }
+    }
+  };
+
+  const handleSubmitProfile = async () => {
+    if (!questionnaire) return;
+    
+    try {
+      const { error } = await supabase
+        .from("property_questionnaires")
+        .update({ is_completed: true })
+        .eq("id", questionnaire.id);
+        
+      if (error) {
+        console.error("Error submitting profile:", error);
+        toast.error("Failed to submit your profile");
+        return;
+      }
+      
+      // Update local state
+      if (questionnaire) {
+        setShowSubmitButton(false);
+        toast.success("Your profile has been submitted successfully!");
+      }
+    } catch (error) {
+      console.error("Error in handleSubmitProfile:", error);
+      toast.error("An error occurred while submitting your profile");
     }
   };
   
@@ -263,7 +314,7 @@ export const QuestionnaireProfile: React.FC = () => {
                 </div>
               ) : (
                 <div className="mt-1 text-lg">
-                  {data?.interested_in_batteries ? "Yes" : "No"}
+                  • {data?.interested_in_batteries ? "Yes" : "No"}
                 </div>
               )}
             </div>
@@ -335,7 +386,7 @@ export const QuestionnaireProfile: React.FC = () => {
               </div>
             ) : (
               <div className="mt-1 text-lg">
-                {data?.willing_to_remove_trees ? "Yes" : "No"}
+                • {data?.willing_to_remove_trees ? "Yes" : "No"}
               </div>
             )}
           </div>
@@ -428,7 +479,7 @@ export const QuestionnaireProfile: React.FC = () => {
         )}
       </CardContent>
       
-      {isEditing && (
+      {isEditing ? (
         <CardFooter className="flex justify-end space-x-4">
           <Button variant="outline" onClick={handleCancel}>
             Cancel
@@ -437,7 +488,30 @@ export const QuestionnaireProfile: React.FC = () => {
             {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </CardFooter>
-      )}
+      ) : showSubmitButton && questionnaire && !questionnaire.is_completed ? (
+        <CardFooter className="flex justify-end">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button className="bg-green-600 hover:bg-green-700">
+                <Check className="mr-2 h-4 w-4" />
+                Submit Profile
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Submit your solar profile?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Your profile will be submitted to receive solar installation quotes. Are you ready to proceed?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleSubmitProfile}>Submit</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </CardFooter>
+      ) : null}
     </Card>
   );
 };

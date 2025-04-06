@@ -1,58 +1,69 @@
 
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { QuotationForm } from "@/components/customer/QuotationForm";
-import { QuotationList } from "@/components/customer/QuotationList";
-import { QuotationItem } from "@/hooks/useCustomerQuotations";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { PlusCircle, RefreshCw } from "lucide-react";
+import { QuotationList } from "./QuotationList";
+import { QuotationForm } from "./QuotationForm";
 
 interface DashboardTabsProps {
-  quotations: QuotationItem[];
+  quotations: any[];
   loading: boolean;
   onQuotationSubmitted: () => void;
   onRefresh: () => void;
-  deleteQuotation?: (id: string) => Promise<boolean>;
-  activeTab?: string;
-  onTabChange?: (value: string) => void;
+  deleteQuotation: (id: string) => Promise<void>;
+  activeTab: string;
+  onTabChange: (value: string) => void;
 }
 
-export const DashboardTabs: React.FC<DashboardTabsProps> = ({ 
-  quotations, 
-  loading, 
+export const DashboardTabs: React.FC<DashboardTabsProps> = ({
+  quotations,
+  loading,
   onQuotationSubmitted,
   onRefresh,
   deleteQuotation,
-  activeTab = "quotations",
+  activeTab,
   onTabChange
 }) => {
-  const handleTabChange = (value: string) => {
-    if (onTabChange) {
-      onTabChange(value);
-    }
-  };
-
   return (
-    <Tabs value={activeTab} onValueChange={handleTabChange}>
-      <TabsList className="mb-6">
-        <TabsTrigger value="quotations">My Quotation Requests</TabsTrigger>
-        <TabsTrigger value="new">Request New Quotation</TabsTrigger>
-        <TabsTrigger value="profile">My Solar Profile</TabsTrigger>
-      </TabsList>
+    <Tabs value={activeTab} onValueChange={onTabChange} className="w-full mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <TabsList>
+          <TabsTrigger value="quotations">My Quotations</TabsTrigger>
+          <TabsTrigger value="profile">My Solar Profile</TabsTrigger>
+        </TabsList>
+        
+        <div className="flex space-x-2">
+          {activeTab === "quotations" && (
+            <Button variant="outline" size="sm" onClick={onRefresh}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          )}
+        </div>
+      </div>
       
       <TabsContent value="quotations">
-        <QuotationList
-          quotations={quotations}
-          loading={loading}
-          onRefresh={onRefresh}
-          deleteQuotation={deleteQuotation}
-        />
-      </TabsContent>
-      
-      <TabsContent value="new">
-        <QuotationForm onSuccess={onQuotationSubmitted} />
+        <Card>
+          <CardHeader>
+            <CardTitle>My Quotation Requests</CardTitle>
+            <CardDescription>
+              View and manage your solar installation quotation requests
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <QuotationList
+              quotations={quotations}
+              loading={loading}
+              onDelete={deleteQuotation}
+            />
+          </CardContent>
+        </Card>
       </TabsContent>
       
       <TabsContent value="profile">
-        {/* Content rendered in the CustomerDashboard component */}
+        {/* Profile content is rendered in the CustomerDashboard component */}
       </TabsContent>
     </Tabs>
   );

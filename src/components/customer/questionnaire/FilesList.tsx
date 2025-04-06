@@ -31,6 +31,7 @@ export const FilesList: React.FC<FilesListProps> = ({ files, onDelete, getFileUr
   };
   
   const formatFileSize = (bytes: number) => {
+    if (!bytes || isNaN(bytes)) return '0 B';
     if (bytes < 1024) return bytes + ' B';
     else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
     else return (bytes / 1048576).toFixed(1) + ' MB';

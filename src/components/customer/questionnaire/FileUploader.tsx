@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
+import { toast } from "sonner";
 
 interface FileUploaderProps {
   onUpload: (file: File) => Promise<void>;
@@ -44,9 +45,30 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onUpload }) => {
   const uploadFile = async (file: File) => {
     try {
       setIsUploading(true);
+      
+      // Check file size (10MB limit)
+      const maxSizeInBytes = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSizeInBytes) {
+        toast.error(`File is too large. Maximum size is 10MB.`);
+        return;
+      }
+      
+      // Check file type
+      const allowedTypes = [
+        'image/jpeg', 'image/png', 'image/gif', 'application/pdf',
+        'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+      
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`File type not supported. Please upload images, PDFs, or documents.`);
+        return;
+      }
+      
       await onUpload(file);
+      toast.success(`${file.name} uploaded successfully!`);
     } catch (error) {
       console.error("Error uploading file:", error);
+      toast.error("Failed to upload file. Please try again.");
     } finally {
       setIsUploading(false);
     }
@@ -72,7 +94,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onUpload }) => {
           </p>
           <p className="text-xs text-muted-foreground">
             Upload property photos, electrical bills, or any other documents
-            related to your solar installation
+            related to your solar installation (Max 10MB)
           </p>
         </div>
         <Button
@@ -86,6 +108,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onUpload }) => {
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             onChange={handleFileChange}
             disabled={isUploading}
+            accept="image/jpeg,image/png,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           />
         </Button>
       </div>

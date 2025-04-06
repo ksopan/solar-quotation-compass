@@ -86,7 +86,7 @@ export const useQuestionnaire = () => {
 
   // Update questionnaire data
   const updateQuestionnaire = async (updatedData: Partial<QuestionnaireData>) => {
-    if (!user || !questionnaire) return;
+    if (!user || !questionnaire) return false;
     
     try {
       setIsSaving(true);
@@ -96,7 +96,6 @@ export const useQuestionnaire = () => {
         .from("property_questionnaires")
         .update({
           ...updatedData,
-          is_completed: true,
           updated_at: new Date().toISOString()
         })
         .eq("id", questionnaire.id)
@@ -111,8 +110,7 @@ export const useQuestionnaire = () => {
       // Update local state
       setQuestionnaire({ 
         ...questionnaire, 
-        ...updatedData, 
-        is_completed: true 
+        ...updatedData
       } as QuestionnaireData);
       
       toast.success("Your information has been updated");
@@ -139,7 +137,7 @@ export const useQuestionnaire = () => {
         .insert({
           ...data,
           customer_id: user.id,
-          is_completed: true
+          is_completed: false
         })
         .select()
         .single();
@@ -170,8 +168,24 @@ export const useQuestionnaire = () => {
     try {
       setIsSaving(true);
       
-      // Create a folder path with the user's ID
-      const filePath = `${user.id}/${questionnaire.id}/${file.name}`;
+      // Create a unique file name to avoid collisions
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${file.name}`;
+      
+      // Create a folder path with the user's ID and questionnaire ID
+      const filePath = `${user.id}/${questionnaire.id}/${fileName}`;
+      
+      console.log(`Uploading file ${file.name} to path ${filePath}`);
+      
+      // Check if the bucket exists
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(bucket => bucket.name === 'questionnaire_attachments');
+      
+      if (!bucketExists) {
+        console.error("Bucket 'questionnaire_attachments' doesn't exist");
+        toast.error("Storage configuration error. Please contact support.");
+        return null;
+      }
       
       const { data, error } = await supabase.storage
         .from("questionnaire_attachments")
@@ -187,7 +201,6 @@ export const useQuestionnaire = () => {
       }
       
       console.log("File uploaded:", data);
-      toast.success("File uploaded successfully");
       return data.path;
     } catch (error) {
       console.error("Error in uploadAttachment:", error);
