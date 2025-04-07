@@ -22,9 +22,15 @@ export const useQuestionnaireProfileHandlers = () => {
     console.log("🔑 Main handleEdit called in useQuestionnaireProfileHandlers");
     if (questionnaire) {
       console.log("📋 Setting form data to questionnaire data:", questionnaire);
-      setFormData({...questionnaire});
+      // Create a new object to ensure React detects the change
+      const newFormData = {...questionnaire};
+      setFormData(newFormData);
       console.log("✏️ Setting isEditing to TRUE");
-      setIsEditing(true);
+      // Force edit mode
+      setTimeout(() => {
+        setIsEditing(true);
+        console.log("✅ isEditing set to TRUE with timeout");
+      }, 0);
     } else {
       console.error("Cannot edit: questionnaire is null");
     }

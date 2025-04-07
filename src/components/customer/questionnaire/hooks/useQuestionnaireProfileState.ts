@@ -24,7 +24,7 @@ export const useQuestionnaireProfileState = () => {
   
   // Debug state changes
   useEffect(() => {
-    console.log("🔄 isEditing state changed:", isEditing);
+    console.log("🔄 isEditing state changed in useQuestionnaireProfileState:", isEditing);
   }, [isEditing]);
 
   useEffect(() => {
@@ -40,13 +40,13 @@ export const useQuestionnaireProfileState = () => {
     }
   }, [questionnaire]);
 
-  // Ensure the formData state is updated whenever the questionnaire changes
+  // Initialize formData with questionnaire data when first loading
   useEffect(() => {
-    if (questionnaire && !formData && !isEditing) {
-      console.log("🔄 Initializing form data with questionnaire data");
-      setFormData(questionnaire);
+    if (questionnaire && formData === null) {
+      console.log("🔄 Initializing form data with questionnaire data (initial)");
+      setFormData({...questionnaire});
     }
-  }, [questionnaire, formData, isEditing]);
+  }, [questionnaire, formData]);
   
   return {
     questionnaire,

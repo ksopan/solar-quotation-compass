@@ -53,8 +53,8 @@ export const QuestionnaireProfileContent: React.FC = () => {
     }
   }, [questionnaire, isEditing, formData]);
   
-  // Data source is either form data (when editing) or the questionnaire data
-  const data = isEditing ? formData : questionnaire;
+  // Make sure to use the correct data source
+  const displayData = isEditing ? formData : questionnaire;
   
   return (
     <Card className="w-full">
@@ -66,25 +66,25 @@ export const QuestionnaireProfileContent: React.FC = () => {
       <CardContent className="space-y-6">
         <PropertyInfoSection 
           isEditing={isEditing} 
-          data={data} 
+          data={displayData} 
           handleChange={handleChange} 
         />
         
         <BatterySection 
           isEditing={isEditing} 
-          data={data} 
+          data={displayData} 
           handleChange={handleChange} 
         />
         
         <PropertyConstraintsSection 
           isEditing={isEditing} 
-          data={data} 
+          data={displayData} 
           handleChange={handleChange} 
         />
         
         <ContactInfoSection 
           isEditing={isEditing} 
-          data={data} 
+          data={displayData} 
           handleChange={handleChange} 
         />
         

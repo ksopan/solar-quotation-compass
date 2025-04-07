@@ -68,7 +68,9 @@ export const useQuestionnaireFormHandlers = () => {
   
   const handleCancel = useCallback(() => {
     console.log("❌ Cancelling edit mode");
-    setFormData(questionnaire || {});
+    if (questionnaire) {
+      setFormData({...questionnaire}); // Reset form data to original
+    }
     setIsEditing(false);
   }, [questionnaire, setFormData, setIsEditing]);
   

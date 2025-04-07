@@ -13,7 +13,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   isEditing, 
   onEdit 
 }) => {
-  const handleEditClick = () => {
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent any default form behavior
+    e.stopPropagation(); // Stop event bubbling
     console.log("📝 Edit button clicked in ProfileHeader");
     onEdit();
   };
