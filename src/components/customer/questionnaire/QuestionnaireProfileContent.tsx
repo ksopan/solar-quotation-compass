@@ -38,8 +38,10 @@ export const QuestionnaireProfileContent: React.FC = () => {
   } = useQuestionnaireProfileHandlers();
   
   // Debug current render state  
-  console.log("🧩 QuestionnaireProfileContent rendering with isEditing:", isEditing);
-  console.log("📄 Form data in content:", formData);
+  useEffect(() => {
+    console.log("🧩 QuestionnaireProfileContent rendering with isEditing:", isEditing);
+    console.log("📄 Form data in content:", formData);
+  }, [isEditing, formData]);
   
   // Force a re-render when isEditing changes to ensure UI updates
   useEffect(() => {

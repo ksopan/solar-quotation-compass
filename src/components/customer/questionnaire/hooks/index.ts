@@ -33,11 +33,12 @@ export const useQuestionnaireProfileHandlers = () => {
       setFormData(newFormData);
       console.log("✏️ Setting isEditing to TRUE");
       
-      // Force React to re-render by using setTimeout
+      // Force React to re-render by using setTimeout with 0 delay
+      // This ensures the state update happens in the next event loop
       setTimeout(() => {
         setIsEditing(true);
-        console.log("✅ isEditing set to TRUE with timeout");
-      }, 10);
+        console.log("✅ isEditing set to TRUE with setTimeout");
+      }, 0);
     } else {
       console.error("Cannot edit: questionnaire is null");
     }
