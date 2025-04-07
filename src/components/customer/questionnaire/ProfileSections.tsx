@@ -5,29 +5,30 @@ import { BatterySection } from "./BatterySection";
 import { PropertyConstraintsSection } from "./PropertyConstraintsSection";
 import { ContactInfoSection } from "./ContactInfoSection";
 import { DocumentsSection } from "./DocumentsSection";
-import { useProfile } from "./ProfileContextProvider";
-import { QuestionnaireData } from "./types";
+import { useQuestionnaire } from "@/hooks/useQuestionnaire";
+import { QuestionnaireData } from "@/hooks/questionnaire/useQuestionnaireBase";
 
 interface ProfileSectionsProps {
   isEditing: boolean;
   displayData: Partial<QuestionnaireData>;
   questionnaire: QuestionnaireData | null;
+  handleChange: (field: keyof QuestionnaireData, value: any) => void;
 }
 
 export const ProfileSections: React.FC<ProfileSectionsProps> = ({
   isEditing,
   displayData,
-  questionnaire
+  questionnaire,
+  handleChange
 }) => {
   const { 
-    handleChange,
-    handleFileUpload,
-    handleFileDelete,
+    uploadAttachment,
+    deleteAttachment,
     getFileUrl,
     attachments,
     isLoadingFiles,
     isUploading
-  } = useProfile();
+  } = useQuestionnaire();
 
   return (
     <>
@@ -59,9 +60,9 @@ export const ProfileSections: React.FC<ProfileSectionsProps> = ({
         <DocumentsSection 
           questionnaire={questionnaire}
           isLoadingFiles={isLoadingFiles}
-          attachments={attachments}
-          handleFileUpload={handleFileUpload}
-          handleFileDelete={handleFileDelete}
+          attachments={attachments || []}
+          handleFileUpload={uploadAttachment}
+          handleFileDelete={deleteAttachment}
           getFileUrl={getFileUrl}
           isUploading={isUploading}
         />

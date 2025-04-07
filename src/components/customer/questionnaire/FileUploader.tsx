@@ -60,14 +60,28 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         Upload Document or Photo
       </Button>
       
-      {isUploading && (
+      {isUploading && selectedFile && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm text-purple-600 animate-pulse">
-              {selectedFile ? `Uploading ${selectedFile.name}` : 'Uploading file...'}
+              Uploading {selectedFile.name}
             </span>
             <span className="text-xs text-gray-500">
-              {selectedFile ? formatFileSize(selectedFile.size) : 'Please wait'}
+              {formatFileSize(selectedFile.size)}
+            </span>
+          </div>
+          <Progress value={100} className="h-1" />
+        </div>
+      )}
+      
+      {isUploading && !selectedFile && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-purple-600 animate-pulse">
+              Uploading file...
+            </span>
+            <span className="text-xs text-gray-500">
+              Please wait
             </span>
           </div>
           <Progress value={100} className="h-1" />

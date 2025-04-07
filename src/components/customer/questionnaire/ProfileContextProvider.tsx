@@ -7,6 +7,7 @@ import { useQuestionnaireData } from "./hooks/useQuestionnaireData";
 import { useQuestionnaireAttachmentsData } from "./hooks/useQuestionnaireAttachmentsData";
 import { useProfileHandlers } from "./hooks/useProfileHandlers";
 import { useFileHandlers } from "./hooks/useFileHandlers";
+import { useQuestionnaireProfileHandlers } from "./hooks";
 
 // Create context
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -22,15 +23,13 @@ export const ProfileProvider: React.FC<{children: React.ReactNode}> = ({ childre
   // Load attachments data
   useQuestionnaireAttachmentsData(state.questionnaire, dispatch);
   
-  // Get handlers
-  const profileHandlers = useProfileHandlers(user, state, dispatch);
-  const fileHandlers = useFileHandlers(user, state, dispatch);
+  // Get handlers from the new combined hook
+  const handlers = useQuestionnaireProfileHandlers();
 
   const value = {
     ...state,
     dispatch,
-    ...profileHandlers,
-    ...fileHandlers
+    ...handlers
   };
 
   return (
