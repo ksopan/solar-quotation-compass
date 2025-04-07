@@ -3,15 +3,16 @@ import React from "react";
 import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
-import useQuestionnaireStore from "./hooks/useQuestionnaireStore";
 
 interface ProfileHeaderProps {
+  isEditing: boolean;
   onEdit: () => void;
 }
 
-export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ onEdit }) => {
-  const isEditing = useQuestionnaireStore(state => state.isEditing);
-  
+export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ 
+  isEditing, 
+  onEdit 
+}) => {
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent any default form behavior
     e.stopPropagation(); // Stop event bubbling
@@ -34,9 +35,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ onEdit }) => {
         {!isEditing && (
           <Button 
             onClick={handleEditClick} 
-            variant="outline"
+            variant="default"
             type="button"
-            className="z-10 bg-blue-50 hover:bg-blue-100"
+            className="z-10"
           >
             <Edit className="mr-2 h-4 w-4" />
             Edit Profile

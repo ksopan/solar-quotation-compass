@@ -11,12 +11,10 @@ import { ContactInfoSection } from "./ContactInfoSection";
 import { DocumentsSection } from "./DocumentsSection";
 import { ProfileFooter } from "./ProfileFooter";
 
-// Import the refactored hooks and store
-import { useQuestionnaireProfileHandlers } from "./hooks";
-import useQuestionnaireStore from "./hooks/useQuestionnaireStore";
+// Import the refactored hooks
+import { useQuestionnaireProfileState, useQuestionnaireProfileHandlers } from "./hooks";
 
 export const QuestionnaireProfileContent: React.FC = () => {
-  // Get values from Zustand store
   const {
     questionnaire,
     isEditing,
@@ -24,10 +22,11 @@ export const QuestionnaireProfileContent: React.FC = () => {
     isSaving,
     attachments,
     isLoadingFiles,
-    showSubmitButton
-  } = useQuestionnaireStore();
+    isUploading,
+    showSubmitButton,
+    getFileUrl
+  } = useQuestionnaireProfileState();
   
-  // Get handlers
   const {
     handleEdit,
     handleChange,
@@ -35,9 +34,7 @@ export const QuestionnaireProfileContent: React.FC = () => {
     handleSubmitProfile,
     handleCancel,
     handleFileUpload,
-    handleFileDelete,
-    getFileUrl,
-    isUploading
+    handleFileDelete
   } = useQuestionnaireProfileHandlers();
   
   // Debug current render state  
@@ -60,66 +57,59 @@ export const QuestionnaireProfileContent: React.FC = () => {
   console.log("🔍 Current edit mode:", isEditing ? "EDITING" : "VIEW-ONLY");
   
   return (
-    <Card className="w-full relative">
-      <div className={isEditing ? "relative z-10" : ""}>
-        <ProfileHeader onEdit={handleEdit} />
-        
-        <CardContent className="space-y-6">
-          {/* Render all sections with explicit isEditing prop */}
-          <PropertyInfoSection 
-            isEditing={isEditing} 
-            data={displayData} 
-            handleChange={handleChange} 
-          />
-          
-          <BatterySection 
-            isEditing={isEditing} 
-            data={displayData} 
-            handleChange={handleChange} 
-          />
-          
-          <PropertyConstraintsSection 
-            isEditing={isEditing} 
-            data={displayData} 
-            handleChange={handleChange} 
-          />
-          
-          <ContactInfoSection 
-            isEditing={isEditing} 
-            data={displayData} 
-            handleChange={handleChange} 
-          />
-          
-          {questionnaire && (
-            <DocumentsSection 
-              questionnaire={questionnaire}
-              isLoadingFiles={isLoadingFiles}
-              attachments={attachments}
-              handleFileUpload={handleFileUpload}
-              handleFileDelete={handleFileDelete}
-              getFileUrl={getFileUrl}
-              isUploading={isUploading}
-            />
-          )}
-        </CardContent>
-        
-        <ProfileFooter 
-          isEditing={isEditing}
-          isSaving={isSaving}
-          showSubmitButton={showSubmitButton}
-          questionnaire={questionnaire}
-          handleCancel={handleCancel}
-          handleSave={handleSave}
-          handleSubmitProfile={handleSubmitProfile}
-        />
-      </div>
+    <Card className="w-full">
+      <ProfileHeader 
+        isEditing={isEditing} 
+        onEdit={handleEdit} 
+      />
       
-      {/* Debug indicator to show editing state */}
-      {isEditing && (
-        <div className="absolute top-0 right-0 bg-green-500 text-white px-2 py-1 text-xs rounded m-1">
-          Editing Mode
-        </div>
-      )}
+      <CardContent className="space-y-6">
+        <PropertyInfoSection 
+          isEditing={isEditing} 
+          data={displayData} 
+          handleChange={handleChange} 
+        />
+        
+        <BatterySection 
+          isEditing={isEditing} 
+          data={displayData} 
+          handleChange={handleChange} 
+        />
+        
+        <PropertyConstraintsSection 
+          isEditing={isEditing} 
+          data={displayData} 
+          handleChange={handleChange} 
+        />
+        
+        <ContactInfoSection 
+          isEditing={isEditing} 
+          data={displayData} 
+          handleChange={handleChange} 
+        />
+        
+        {questionnaire && (
+          <DocumentsSection 
+            questionnaire={questionnaire}
+            isLoadingFiles={isLoadingFiles}
+            attachments={attachments}
+            handleFileUpload={handleFileUpload}
+            handleFileDelete={handleFileDelete}
+            getFileUrl={getFileUrl}
+            isUploading={isUploading}
+          />
+        )}
+      </CardContent>
+      
+      <ProfileFooter 
+        isEditing={isEditing}
+        isSaving={isSaving}
+        showSubmitButton={showSubmitButton}
+        questionnaire={questionnaire}
+        handleCancel={handleCancel}
+        handleSave={handleSave}
+        handleSubmitProfile={handleSubmitProfile}
+      />
     </Card>
   );
 };

@@ -1,27 +1,19 @@
 
 import { useCallback } from "react";
 import { QuestionnaireData } from "@/hooks/useQuestionnaire";
+import { useQuestionnaireProfileState } from "./useQuestionnaireProfileState";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import useQuestionnaireStore from "./useQuestionnaireStore";
-import { useQuestionnaire } from "@/hooks/useQuestionnaire";
 
 export const useQuestionnaireFormHandlers = () => {
   const {
     questionnaire,
-    setQuestionnaire,
-    updateQuestionnaire,
-    createQuestionnaire
-  } = useQuestionnaire();
-  
-  // Use the Zustand store
-  const {
-    isEditing,
-    formData,
     setIsEditing,
     setFormData,
-    updateFormField
-  } = useQuestionnaireStore();
+    formData,
+    updateQuestionnaire,
+    createQuestionnaire
+  } = useQuestionnaireProfileState();
   
   // This function will be overridden by the one in index.ts
   const handleEdit = useCallback(() => {
@@ -38,8 +30,14 @@ export const useQuestionnaireFormHandlers = () => {
   
   const handleChange = useCallback((field: keyof QuestionnaireData, value: any) => {
     console.log(`🔄 Updating form field ${String(field)} to:`, value);
-    updateFormField(field, value);
-  }, [updateFormField]);
+    console.log("Current form data before update:", formData);
+    setFormData(prev => {
+      if (!prev) return { [field]: value };
+      const updated = { ...prev, [field]: value };
+      console.log("Updated form data:", updated);
+      return updated;
+    });
+  }, [formData, setFormData]);
   
   const handleSave = useCallback(async () => {
     if (!formData) return;
@@ -69,7 +67,6 @@ export const useQuestionnaireFormHandlers = () => {
     }
     
     if (success) {
-      console.log("✅ Profile saved successfully, exiting edit mode");
       setIsEditing(false);
       toast.success("Profile saved successfully!");
     }
@@ -80,7 +77,6 @@ export const useQuestionnaireFormHandlers = () => {
     if (questionnaire) {
       setFormData({...questionnaire}); // Reset form data to original
     }
-    console.log("🔙 Setting isEditing to FALSE");
     setIsEditing(false);
   }, [questionnaire, setFormData, setIsEditing]);
   
@@ -99,18 +95,12 @@ export const useQuestionnaireFormHandlers = () => {
         return;
       }
       
-      // Update the local state
-      setQuestionnaire({
-        ...questionnaire,
-        is_completed: true
-      });
-      
       toast.success("Your profile has been submitted successfully!");
     } catch (error) {
       console.error("Error in handleSubmitProfile:", error);
       toast.error("An error occurred while submitting your profile");
     }
-  }, [questionnaire, setQuestionnaire]);
+  }, [questionnaire]);
   
   const handleCreateProfile = useCallback(() => {
     console.log("🆕 Creating new profile");
@@ -127,7 +117,6 @@ export const useQuestionnaireFormHandlers = () => {
       last_name: "",
       email: ""
     });
-    console.log("🖊️ Setting isEditing to TRUE for new profile creation");
     setIsEditing(true);
   }, [setFormData, setIsEditing]);
   
