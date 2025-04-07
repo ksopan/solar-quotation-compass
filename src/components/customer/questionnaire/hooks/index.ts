@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { useQuestionnaireProfileState } from "./useQuestionnaireProfileState";
 import { useQuestionnaireFileHandlers } from "./useQuestionnaireFileHandlers";
@@ -9,7 +10,9 @@ export const useQuestionnaireProfileHandlers = () => {
     questionnaire,
     setFormData,
     setIsEditing,
-    isEditing
+    isEditing,
+    user,
+    supabase
   } = useQuestionnaireProfileState();
 
   // Get file and form handlers
@@ -32,11 +35,28 @@ export const useQuestionnaireProfileHandlers = () => {
     }
   }, [questionnaire, setFormData, setIsEditing]);
 
+  // Add getFileUrl if it's not provided by fileHandlers
+  const getFileUrl = useCallback((fileName: string) => {
+    if (!user) return null;
+
+    try {
+      const { data } = supabase.storage
+        .from('questionnaire_attachments')
+        .getPublicUrl(`${user.id}/${fileName}`);
+      return data.publicUrl;
+    } catch (error) {
+      console.error("Error in getFileUrl:", error);
+      return null;
+    }
+  }, [user, supabase]);
+
   return {
     ...fileHandlers,
     ...formHandlers,
     // Override the handleEdit with our optimized version
-    handleEdit
+    handleEdit,
+    // Ensure getFileUrl is included
+    getFileUrl: fileHandlers.getFileUrl || getFileUrl
   };
 };
 

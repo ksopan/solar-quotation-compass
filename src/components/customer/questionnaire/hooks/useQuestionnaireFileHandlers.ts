@@ -26,7 +26,9 @@ export const useQuestionnaireFileHandlers = () => {
       setIsUploading(true);
       const fileExt = file.name.split('.').pop();
       const timestamp = new Date().getTime();
-      const filePath = `${questionnaire.id}/${timestamp}-${file.name}`;
+      
+      // Use user ID as the folder name instead of questionnaire ID for proper RLS
+      const filePath = `${user.id}/${timestamp}-${file.name}`;
 
       const { data, error } = await supabase.storage
         .from('questionnaire_attachments')
@@ -63,7 +65,8 @@ export const useQuestionnaireFileHandlers = () => {
     if (!user || !questionnaire) return false;
 
     try {
-      const filePath = `${questionnaire.id}/${fileName}`;
+      // Use user ID instead of questionnaire ID
+      const filePath = `${user.id}/${fileName}`;
 
       const { error } = await supabase.storage
         .from('questionnaire_attachments')
@@ -86,20 +89,35 @@ export const useQuestionnaireFileHandlers = () => {
     }
   }, [user, questionnaire, setAttachments, supabase]);
 
+  // Get file URL
+  const getFileUrl = useCallback((fileName: string) => {
+    if (!user) return null;
+
+    try {
+      const { data } = supabase.storage
+        .from('questionnaire_attachments')
+        .getPublicUrl(`${user.id}/${fileName}`);
+      return data.publicUrl;
+    } catch (error) {
+      console.error("Error in getFileUrl:", error);
+      return null;
+    }
+  }, [user, supabase]);
+
   // Load files - for initial load or refresh
   const loadFiles = useCallback(async () => {
-    if (!questionnaire) {
+    if (!user) {
       setAttachments([]);
       return;
     }
     
     try {
       setIsLoadingFiles(true);
-      console.log("Loading files for questionnaire", questionnaire.id);
+      console.log("Loading files for user", user.id);
       
       const { data, error } = await supabase.storage
         .from('questionnaire_attachments')
-        .list(questionnaire.id);
+        .list(user.id);
         
       if (error) {
         console.error("Error listing files:", error);
@@ -123,12 +141,13 @@ export const useQuestionnaireFileHandlers = () => {
     } finally {
       setIsLoadingFiles(false);
     }
-  }, [questionnaire, setAttachments, setIsLoadingFiles, supabase]);
+  }, [user, setAttachments, setIsLoadingFiles, supabase]);
 
   return {
     loadFiles,
     handleFileUpload: uploadAttachment,
     handleFileDelete: deleteAttachment,
+    getFileUrl,
     isLoadingFiles
   };
 };

@@ -14,15 +14,16 @@ export const useFileHandlers = (
 ) => {
   // File upload handler
   const handleFileUpload = useCallback(async (file: File): Promise<string | null> => {
-    if (!user || !state.questionnaire) {
-      toast.error("Please save your profile first");
+    if (!user) {
+      toast.error("Please log in to upload files");
       return null;
     }
 
     try {
       dispatch({ type: 'SET_IS_UPLOADING', payload: true });
       const timestamp = new Date().getTime();
-      const filePath = `${state.questionnaire.id}/${timestamp}-${file.name}`;
+      // Use user ID instead of questionnaire ID
+      const filePath = `${user.id}/${timestamp}-${file.name}`;
 
       const { data, error } = await supabase.storage
         .from('questionnaire_attachments')
@@ -55,14 +56,15 @@ export const useFileHandlers = (
     } finally {
       dispatch({ type: 'SET_IS_UPLOADING', payload: false });
     }
-  }, [user, state.questionnaire, state.attachments, dispatch]);
+  }, [user, state.attachments, dispatch]);
 
   // File deletion handler
   const handleFileDelete = useCallback(async (fileName: string): Promise<boolean> => {
-    if (!user || !state.questionnaire) return false;
+    if (!user) return false;
 
     try {
-      const filePath = `${state.questionnaire.id}/${fileName}`;
+      // Use user ID instead of questionnaire ID
+      const filePath = `${user.id}/${fileName}`;
 
       const { error } = await supabase.storage
         .from('questionnaire_attachments')
@@ -86,22 +88,22 @@ export const useFileHandlers = (
       toast.error("An error occurred while deleting the file");
       return false;
     }
-  }, [user, state.questionnaire, state.attachments, dispatch]);
+  }, [user, state.attachments, dispatch]);
 
   // Get file URL helper
   const getFileUrl = useCallback((fileName: string): string | null => {
-    if (!state.questionnaire) return null;
+    if (!user) return null;
 
     try {
       const { data } = supabase.storage
         .from('questionnaire_attachments')
-        .getPublicUrl(`${state.questionnaire.id}/${fileName}`);
+        .getPublicUrl(`${user.id}/${fileName}`);
       return data.publicUrl;
     } catch (error) {
       console.error("Error in getFileUrl:", error);
       return null;
     }
-  }, [state.questionnaire]);
+  }, [user]);
 
   return {
     handleFileUpload,

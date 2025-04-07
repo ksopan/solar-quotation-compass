@@ -18,21 +18,21 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
 
-  // 🔁 Fetch attachments when questionnaire ID changes
+  // 🔁 Fetch attachments when user ID changes
   useEffect(() => {
     const fetchAttachments = async () => {
-      if (!user || !questionnaire?.id) {
+      if (!user) {
         setAttachments([]);
         return;
       }
 
       try {
         setIsLoadingFiles(true);
-        console.log("📂 Fetching attachments for questionnaire:", questionnaire.id);
+        console.log("📂 Fetching attachments for user:", user.id);
 
         const { data, error } = await supabase.storage
           .from('questionnaire_attachments')
-          .list(questionnaire.id);
+          .list(user.id);
 
         if (error) {
           console.error("❌ Error listing files:", error);
@@ -58,12 +58,12 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
     };
 
     fetchAttachments();
-  }, [user, questionnaire?.id]);
+  }, [user]);
 
   // Upload attachment for a questionnaire
   const uploadAttachment = async (file: File) => {
-    if (!user || !questionnaire) {
-      toast.error("You need to create a profile first");
+    if (!user) {
+      toast.error("You need to be logged in to upload files");
       return null;
     }
 
@@ -76,7 +76,7 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
     try {
       setIsUploading(true);
       const timestamp = new Date().getTime();
-      const filePath = `${questionnaire.id}/${timestamp}-${file.name}`;
+      const filePath = `${user.id}/${timestamp}-${file.name}`;
 
       const { data, error } = await supabase.storage
         .from('questionnaire_attachments')
@@ -112,10 +112,10 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
 
   // Delete attachment
   const deleteAttachment = async (fileName: string) => {
-    if (!user || !questionnaire) return false;
+    if (!user) return false;
 
     try {
-      const filePath = `${questionnaire.id}/${fileName}`;
+      const filePath = `${user.id}/${fileName}`;
 
       const { error } = await supabase.storage
         .from('questionnaire_attachments')
@@ -139,12 +139,12 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
 
   // Get file URL
   const getFileUrl = (fileName: string) => {
-    if (!questionnaire) return null;
+    if (!user) return null;
 
     try {
       const { data } = supabase.storage
         .from('questionnaire_attachments')
-        .getPublicUrl(`${questionnaire.id}/${fileName}`);
+        .getPublicUrl(`${user.id}/${fileName}`);
       return data.publicUrl;
     } catch (error) {
       console.error("Error in getFileUrl:", error);
