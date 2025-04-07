@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { useQuestionnaireProfileState } from "./useQuestionnaireProfileState";
 import { toast } from "sonner";
@@ -104,8 +105,16 @@ export const useQuestionnaireFileHandlers = () => {
         console.error("Error listing files:", error);
         toast.error("Failed to load your uploaded files");
         setAttachments([]);
+      } else if (data) {
+        // Convert the FileObject array to the expected format
+        const formattedData = data.map(file => ({
+          name: file.name,
+          size: file.metadata?.size || 0,
+          id: file.id
+        }));
+        setAttachments(formattedData);
       } else {
-        setAttachments(data || []);
+        setAttachments([]);
       }
     } catch (error) {
       console.error("Error loading files:", error);

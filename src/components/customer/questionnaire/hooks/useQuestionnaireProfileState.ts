@@ -1,46 +1,26 @@
+
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
-
-export interface QuestionnaireData {
-  id: string;
-  property_type: string;
-  ownership_status: string;
-  monthly_electric_bill: number;
-  interested_in_batteries: boolean;
-  battery_reason: string | null;
-  purchase_timeline: string;
-  willing_to_remove_trees: boolean;
-  roof_age_status: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  is_completed: boolean;
-  created_at: string;
-}
+import { QuestionnaireData } from "../types";
 
 export const useQuestionnaireProfileState = () => {
   const { user } = useAuth();
+  
+  // Main state
   const [questionnaire, setQuestionnaire] = useState<QuestionnaireData | null>(null);
+  const [formData, setFormData] = useState<Partial<QuestionnaireData> | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  // Keep editing state in this top-level hook
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [formData, setFormData] = useState<Partial<QuestionnaireData> | null>(null);
-  const [attachments, setAttachments] = useState<{ name: string; size: number; id?: string }[]>([]);
+  
+  // File-related state
+  const [attachments, setAttachments] = useState<Array<{name: string; size: number; id?: string;}>>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
-  const [showSubmitButton, setShowSubmitButton] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-
-  // Debug state changes
-  useEffect(() => {
-    console.log("🔄 isEditing state changed in useQuestionnaireProfileState:", isEditing);
-  }, [isEditing]);
-
-  useEffect(() => {
-    console.log("🔄 formData state changed:", formData);
-  }, [formData]);
+  
+  // UI state
+  const [showSubmitButton, setShowSubmitButton] = useState(false);
   
   // Fetch questionnaire data
   useEffect(() => {
@@ -51,33 +31,32 @@ export const useQuestionnaireProfileState = () => {
       }
       
       try {
-        setLoading(true);
         const { data, error } = await supabase
           .from("property_questionnaires")
           .select("*")
           .eq("customer_id", user.id)
           .order("created_at", { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
           
         if (error) {
-          if (error.code === "PGRST116") {
-            // No questionnaire found - this is not an error
-            console.log("No questionnaire found for user");
-            setQuestionnaire(null);
-          } else {
-            console.error("Error fetching questionnaire:", error);
-            toast.error("Failed to load your questionnaire data");
-          }
+          console.error("Error fetching questionnaire:", error);
+          setQuestionnaire(null);
         } else if (data) {
           console.log("Fetched questionnaire:", data);
           setQuestionnaire(data as QuestionnaireData);
-          // Initialize form data with questionnaire data
           setFormData({...data});
+          
+          // Set submit button visibility
+          if (data.is_completed === false) {
+            setShowSubmitButton(true);
+          }
+        } else {
+          setQuestionnaire(null);
         }
       } catch (error) {
         console.error("Error in fetchQuestionnaire:", error);
-        toast.error("An error occurred while loading your questionnaire data");
+        setQuestionnaire(null);
       } finally {
         setLoading(false);
       }
@@ -86,16 +65,7 @@ export const useQuestionnaireProfileState = () => {
     fetchQuestionnaire();
   }, [user]);
   
-  // Determine if we should show the submit button based on questionnaire completion status
-  useEffect(() => {
-    if (questionnaire && !questionnaire.is_completed) {
-      setShowSubmitButton(true);
-    } else {
-      setShowSubmitButton(false);
-    }
-  }, [questionnaire]);
-  
-  // Fetch attachments when questionnaire changes
+  // Fetch attachments 
   useEffect(() => {
     const fetchAttachments = async () => {
       if (!questionnaire) return;
@@ -109,8 +79,16 @@ export const useQuestionnaireProfileState = () => {
         if (error) {
           console.error("Error listing files:", error);
           setAttachments([]);
+        } else if (data) {
+          // Convert FileObject array to the expected format
+          const formattedData = data.map(file => ({
+            name: file.name,
+            size: file.metadata?.size || 0,
+            id: file.id
+          }));
+          setAttachments(formattedData);
         } else {
-          setAttachments(data || []);
+          setAttachments([]);
         }
       } catch (error) {
         console.error("Error fetching attachments:", error);
@@ -122,39 +100,34 @@ export const useQuestionnaireProfileState = () => {
     
     fetchAttachments();
   }, [questionnaire]);
-
-  // File URL helper function
-  const getFileUrl = (fileName: string) => {
-    if (!questionnaire) return null;
-
-    try {
-      const { data } = supabase.storage
-        .from('questionnaire_attachments')
-        .getPublicUrl(`${questionnaire.id}/${fileName}`);
-      return data.publicUrl;
-    } catch (error) {
-      console.error("Error in getFileUrl:", error);
-      return null;
-    }
-  };
-
+  
   return {
+    // User
     user,
+    
+    // State
     questionnaire,
+    formData,
+    isEditing,
     loading,
     isSaving,
-    isEditing,
-    setIsEditing,
-    formData,
-    setFormData,
     attachments,
-    setAttachments,
     isLoadingFiles,
-    setIsLoadingFiles,
-    showSubmitButton,
     isUploading,
+    showSubmitButton,
+    
+    // State setters
+    setQuestionnaire,
+    setFormData,
+    setIsEditing,
+    setLoading,
+    setIsSaving,
+    setAttachments,
+    setIsLoadingFiles,
     setIsUploading,
-    getFileUrl,
+    setShowSubmitButton,
+    
+    // Supabase instance
     supabase
   };
 };

@@ -1,5 +1,6 @@
+
 import { useCallback } from "react";
-import { QuestionnaireData } from "@/hooks/useQuestionnaire";
+import { QuestionnaireData } from "../types";
 import { useQuestionnaireProfileState } from "./useQuestionnaireProfileState";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +11,7 @@ export const useQuestionnaireFormHandlers = () => {
     setIsEditing,
     setFormData,
     formData,
-    setIsSaving
+    setIsSaving: setSaving
   } = useQuestionnaireProfileState();
   
   const handleEdit = useCallback(() => {
@@ -40,7 +41,7 @@ export const useQuestionnaireFormHandlers = () => {
   const updateQuestionnaire = useCallback(async (data: Partial<QuestionnaireData>) => {
     if (!questionnaire) return false;
     
-    setIsSaving(true);
+    setSaving(true);
     try {
       console.log("Updating questionnaire with:", data);
       
@@ -65,9 +66,9 @@ export const useQuestionnaireFormHandlers = () => {
       toast.error("An error occurred while saving your changes");
       return false;
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
-  }, [questionnaire, setIsSaving]);
+  }, [questionnaire, setSaving]);
   
   const handleSave = useCallback(async () => {
     if (!formData) return;
@@ -110,7 +111,7 @@ export const useQuestionnaireFormHandlers = () => {
   }, [questionnaire]);
   
   const createQuestionnaire = useCallback(async (data: Omit<QuestionnaireData, 'id' | 'created_at' | 'is_completed'>) => {
-    setIsSaving(true);
+    setSaving(true);
     try {
       const { data: newQuestionnaire, error } = await supabase
         .from("property_questionnaires")
@@ -134,9 +135,9 @@ export const useQuestionnaireFormHandlers = () => {
       toast.error("An error occurred while creating your profile");
       return null;
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
-  }, [setIsSaving]);
+  }, [setSaving]);
   
   const handleCreateProfile = useCallback(() => {
     console.log("🆕 Creating new profile");

@@ -10,8 +10,8 @@ interface DocumentsSectionProps {
   questionnaire: any;
   isLoadingFiles: boolean;
   attachments: Array<{name: string; size: number; id?: string;}>;
-  handleFileUpload: (file: File) => Promise<void>;
-  handleFileDelete: (fileName: string) => Promise<void>;
+  handleFileUpload: (file: File) => Promise<string | null>;
+  handleFileDelete: (fileName: string) => Promise<boolean>;
   getFileUrl: (fileName: string) => string | null;
   isUploading?: boolean;
 }

@@ -1,121 +1,52 @@
 
-import React, { useState } from "react";
+import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Loader } from "lucide-react";
-import { toast } from "sonner";
+import { Upload } from "lucide-react";
 
 interface FileUploaderProps {
-  onUpload: (file: File) => Promise<void>;
+  onUpload: (file: File) => Promise<string | null>;
 }
 
 export const FileUploader: React.FC<FileUploaderProps> = ({ onUpload }) => {
-  const [isUploading, setIsUploading] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
-  
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      await uploadFile(file);
+  const handleButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
   
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      await uploadFile(file);
-      e.target.value = ""; // Reset input
-    }
-  };
-  
-  const uploadFile = async (file: File) => {
-    try {
-      setIsUploading(true);
-      
-      // Check file size (5MB limit)
-      const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
-      if (file.size > maxSizeInBytes) {
-        toast.error(`File is too large. Maximum size is 5MB.`);
-        return;
-      }
-      
-      // Check file type
-      const allowedTypes = [
-        'image/jpeg', 'image/png', 'image/gif', 'application/pdf',
-        'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-      ];
-      
-      if (!allowedTypes.includes(file.type)) {
-        toast.error(`File type not supported. Please upload images, PDFs, or documents.`);
-        return;
-      }
-      
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
       await onUpload(file);
-      toast.success(`${file.name} uploaded successfully!`);
-    } catch (error) {
-      console.error("Error uploading file:", error);
-      toast.error("Failed to upload file. Please try again.");
-    } finally {
-      setIsUploading(false);
+      
+      // Clear the input so the same file can be uploaded again if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
   
   return (
-    <div 
-      className={`border-2 border-dashed rounded-md p-6 text-center ${
-        dragActive ? "border-primary bg-primary/5" : "border-gray-300"
-      }`}
-      onDragEnter={handleDrag}
-      onDragLeave={handleDrag}
-      onDragOver={handleDrag}
-      onDrop={handleDrop}
-    >
-      <div className="space-y-4">
-        <div className="flex justify-center">
-          {isUploading ? (
-            <Loader className="h-10 w-10 text-primary animate-spin" />
-          ) : (
-            <Upload className="h-10 w-10 text-muted-foreground" />
-          )}
-        </div>
-        <div className="space-y-2">
-          <p className="text-sm font-medium">
-            {isUploading ? "Uploading..." : "Drag and drop files here or click to upload"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Upload property photos, electrical bills, or any other documents
-            related to your solar installation (Max 5MB)
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          disabled={isUploading}
-          className="relative"
-        >
-          {isUploading ? "Uploading..." : "Select File"}
-          <input
-            type="file"
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            onChange={handleFileChange}
-            disabled={isUploading}
-            accept="image/jpeg,image/png,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-          />
-        </Button>
-      </div>
+    <div className="mb-4">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+        accept="image/*,.pdf,.doc,.docx"
+      />
+      <Button 
+        onClick={handleButtonClick}
+        type="button"
+        variant="outline"
+        className="flex items-center"
+      >
+        <Upload className="mr-2 h-4 w-4" />
+        Upload Document or Photo
+      </Button>
     </div>
   );
 };
