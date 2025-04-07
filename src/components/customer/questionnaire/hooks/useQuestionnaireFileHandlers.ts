@@ -1,78 +1,125 @@
-
 import { useCallback } from "react";
 import { useQuestionnaireProfileState } from "./useQuestionnaireProfileState";
 import { toast } from "sonner";
 
 export const useQuestionnaireFileHandlers = () => {
   const {
+    user,
     questionnaire,
     setAttachments,
-    uploadAttachment,
-    deleteAttachment,
+    isLoadingFiles,
+    setIsLoadingFiles,
     attachments,
-    setIsLoadingFiles
+    setIsUploading,
+    supabase
   } = useQuestionnaireProfileState();
   
-  // Load files - Modified to work with existing attachments
-  const loadFiles = useCallback(async () => {
-    try {
-      if (!questionnaire) {
-        setAttachments([]);
-        setIsLoadingFiles(false);
-        return;
-      }
-      
-      console.log("🔄 Loading files for questionnaire", questionnaire.id);
-      // We don't need to call a separate function as attachments are already loaded 
-      // in the useQuestionnaireAttachments hook and set in the state
-      
-    } catch (error) {
-      console.error("❌ Error loading files:", error);
-      toast.error("Failed to load your uploaded files");
-      setAttachments([]);
-    } finally {
-      // Set loading to false after a short delay to ensure attachments are loaded
-      setTimeout(() => {
-        setIsLoadingFiles(false);
-      }, 500);
+  // Upload attachment for a questionnaire
+  const uploadAttachment = useCallback(async (file: File) => {
+    if (!user || !questionnaire) {
+      toast.error("Please save your profile first");
+      return null;
     }
-  }, [questionnaire, setAttachments, setIsLoadingFiles]);
-  
-  // Handle file upload
-  const handleFileUpload = useCallback(async (file: File) => {
+
+    try {
+      setIsUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const timestamp = new Date().getTime();
+      const filePath = `${questionnaire.id}/${timestamp}-${file.name}`;
+
+      const { data, error } = await supabase.storage
+        .from('questionnaire_attachments')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        console.error("❌ Error uploading file:", error);
+        toast.error("Failed to upload file");
+        return null;
+      }
+
+      // Update attachments after successful upload
+      setAttachments(prev => [...prev, { 
+        name: `${timestamp}-${file.name}`, 
+        size: file.size 
+      }]);
+      
+      toast.success("File uploaded successfully");
+      return data.path;
+    } catch (error) {
+      console.error("❌ Error in uploadAttachment:", error);
+      toast.error("An error occurred while uploading the file");
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  }, [user, questionnaire, setAttachments, setIsUploading, supabase]);
+
+  // Delete attachment
+  const deleteAttachment = useCallback(async (fileName: string) => {
+    if (!user || !questionnaire) return false;
+
+    try {
+      const filePath = `${questionnaire.id}/${fileName}`;
+
+      const { error } = await supabase.storage
+        .from('questionnaire_attachments')
+        .remove([filePath]);
+
+      if (error) {
+        console.error("❌ Error deleting file:", error);
+        toast.error("Failed to delete file");
+        return false;
+      }
+
+      // Update attachments after successful deletion
+      setAttachments(prev => prev.filter(att => att.name !== fileName));
+      toast.success("File deleted successfully");
+      return true;
+    } catch (error) {
+      console.error("❌ Error in deleteAttachment:", error);
+      toast.error("An error occurred while deleting the file");
+      return false;
+    }
+  }, [user, questionnaire, setAttachments, supabase]);
+
+  // Load files - for initial load or refresh
+  const loadFiles = useCallback(async () => {
     if (!questionnaire) {
-      toast.error("Please create a profile first");
+      setAttachments([]);
       return;
     }
     
     try {
-      const result = await uploadAttachment(file);
-      if (result) {
-        toast.success("File uploaded successfully");
+      setIsLoadingFiles(true);
+      console.log("Loading files for questionnaire", questionnaire.id);
+      
+      const { data, error } = await supabase.storage
+        .from('questionnaire_attachments')
+        .list(questionnaire.id);
+        
+      if (error) {
+        console.error("Error listing files:", error);
+        toast.error("Failed to load your uploaded files");
+        setAttachments([]);
+      } else {
+        setAttachments(data || []);
       }
     } catch (error) {
-      console.error("❌ Error uploading file:", error);
-      toast.error("Failed to upload file");
+      console.error("Error loading files:", error);
+      toast.error("Failed to load your uploaded files");
+      setAttachments([]);
+    } finally {
+      setIsLoadingFiles(false);
     }
-  }, [questionnaire, uploadAttachment]);
-  
-  // Handle file deletion
-  const handleFileDelete = useCallback(async (fileName: string) => {
-    try {
-      const success = await deleteAttachment(fileName);
-      if (success) {
-        toast.success("File deleted successfully");
-      }
-    } catch (error) {
-      console.error("❌ Error deleting file:", error);
-      toast.error("Failed to delete file");
-    }
-  }, [deleteAttachment]);
-  
+  }, [questionnaire, setAttachments, setIsLoadingFiles, supabase]);
+
   return {
     loadFiles,
-    handleFileUpload,
-    handleFileDelete,
-    attachments
+    handleFileUpload: uploadAttachment,
+    handleFileDelete: deleteAttachment,
+    isLoadingFiles
   };
 };

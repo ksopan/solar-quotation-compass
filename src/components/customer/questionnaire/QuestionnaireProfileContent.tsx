@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 
 // Import all the section components
@@ -10,35 +9,34 @@ import { PropertyConstraintsSection } from "./PropertyConstraintsSection";
 import { ContactInfoSection } from "./ContactInfoSection";
 import { DocumentsSection } from "./DocumentsSection";
 import { ProfileFooter } from "./ProfileFooter";
+import { LoadingProfile } from "./LoadingProfile";
+import { EmptyProfile } from "./EmptyProfile";
 
-// Import the refactored hooks
-import { useQuestionnaireProfileState, useQuestionnaireProfileHandlers } from "./hooks";
+// Import the context hook
+import { useProfile } from "./ProfileContextProvider";
 
 export const QuestionnaireProfileContent: React.FC = () => {
-  // Use local state to ensure component updates
-  const [localIsEditing, setLocalIsEditing] = useState(false);
-  
+  // Use the profile context
   const {
     questionnaire,
     isEditing,
     formData,
+    loading,
     isSaving,
     attachments,
     isLoadingFiles,
     isUploading,
     showSubmitButton,
-    getFileUrl
-  } = useQuestionnaireProfileState();
-  
-  const {
     handleEdit,
     handleChange,
     handleSave,
     handleSubmitProfile,
     handleCancel,
     handleFileUpload,
-    handleFileDelete
-  } = useQuestionnaireProfileHandlers();
+    handleFileDelete,
+    getFileUrl,
+    handleCreateProfile
+  } = useProfile();
   
   // Debug current render state  
   useEffect(() => {
@@ -46,50 +44,56 @@ export const QuestionnaireProfileContent: React.FC = () => {
     console.log("📄 Form data in content:", formData);
   }, [isEditing, formData]);
   
-  // Update local state when global state changes
-  useEffect(() => {
-    console.log("🔄 isEditing changed in QuestionnaireProfileContent to:", isEditing);
-    setLocalIsEditing(isEditing);
-  }, [isEditing]);
+  // Show loading state if data is being fetched
+  if (loading) {
+    console.log("Showing loading state");
+    return <LoadingProfile />;
+  }
+  
+  // Show empty profile if no questionnaire and not in editing mode
+  if (!questionnaire && !isEditing) {
+    console.log("Showing empty profile");
+    return <EmptyProfile handleCreateProfile={handleCreateProfile} />;
+  }
   
   // Make sure to use the correct data source
-  const displayData = localIsEditing ? formData : questionnaire;
+  const displayData = isEditing ? formData : questionnaire;
   
   if (!displayData) {
     console.log("⚠️ No display data available");
     return <div>No data available</div>;
   }
   
-  console.log("🔍 Current edit mode:", localIsEditing ? "EDITING" : "VIEW-ONLY");
+  console.log("🔍 Current edit mode:", isEditing ? "EDITING" : "VIEW-ONLY");
   
   return (
     <Card className="w-full">
       <ProfileHeader 
-        isEditing={localIsEditing} 
+        isEditing={isEditing} 
         onEdit={handleEdit} 
       />
       
       <CardContent className="space-y-6">
         <PropertyInfoSection 
-          isEditing={localIsEditing} 
+          isEditing={isEditing} 
           data={displayData} 
           handleChange={handleChange} 
         />
         
         <BatterySection 
-          isEditing={localIsEditing} 
+          isEditing={isEditing} 
           data={displayData} 
           handleChange={handleChange} 
         />
         
         <PropertyConstraintsSection 
-          isEditing={localIsEditing} 
+          isEditing={isEditing} 
           data={displayData} 
           handleChange={handleChange} 
         />
         
         <ContactInfoSection 
-          isEditing={localIsEditing} 
+          isEditing={isEditing} 
           data={displayData} 
           handleChange={handleChange} 
         />
@@ -108,7 +112,7 @@ export const QuestionnaireProfileContent: React.FC = () => {
       </CardContent>
       
       <ProfileFooter 
-        isEditing={localIsEditing}
+        isEditing={isEditing}
         isSaving={isSaving}
         showSubmitButton={showSubmitButton}
         questionnaire={questionnaire}

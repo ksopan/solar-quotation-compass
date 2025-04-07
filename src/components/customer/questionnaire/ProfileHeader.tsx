@@ -1,4 +1,3 @@
-
 import React from "react";
 import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,12 +18,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     e.preventDefault(); // Prevent any default form behavior
     e.stopPropagation(); // Stop event bubbling
     console.log("📝 Edit button clicked in ProfileHeader");
-    
-    // Call the edit handler
     onEdit();
-    
-    // Debug after clicking
-    console.log("Edit button clicked - isEditing should change soon");
   };
 
   return (

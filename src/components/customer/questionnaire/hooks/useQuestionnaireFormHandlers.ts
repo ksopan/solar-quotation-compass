@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { QuestionnaireData } from "@/hooks/useQuestionnaire";
 import { useQuestionnaireProfileState } from "./useQuestionnaireProfileState";
@@ -11,26 +10,25 @@ export const useQuestionnaireFormHandlers = () => {
     setIsEditing,
     setFormData,
     formData,
-    updateQuestionnaire,
-    createQuestionnaire
+    setIsSaving
   } = useQuestionnaireProfileState();
   
-  // This function will be overridden by the one in index.ts
   const handleEdit = useCallback(() => {
-    console.log("⚠️ Secondary handleEdit called from useQuestionnaireFormHandlers");
+    console.log("handleEdit called from useQuestionnaireFormHandlers");
     if (questionnaire) {
-      console.log("Setting formData from secondary handler");
+      // Create a deep copy of the questionnaire data
       setFormData({...questionnaire});
-      console.log("Setting isEditing to TRUE from secondary handler");
+      // Set editing mode
       setIsEditing(true);
     } else {
-      console.error("Cannot edit: questionnaire is null (secondary handler)");
+      console.error("Cannot edit: questionnaire is null");
     }
   }, [questionnaire, setFormData, setIsEditing]);
   
   const handleChange = useCallback((field: keyof QuestionnaireData, value: any) => {
     console.log(`🔄 Updating form field ${String(field)} to:`, value);
     console.log("Current form data before update:", formData);
+    
     setFormData(prev => {
       if (!prev) return { [field]: value };
       const updated = { ...prev, [field]: value };
@@ -39,38 +37,47 @@ export const useQuestionnaireFormHandlers = () => {
     });
   }, [formData, setFormData]);
   
+  const updateQuestionnaire = useCallback(async (data: Partial<QuestionnaireData>) => {
+    if (!questionnaire) return false;
+    
+    setIsSaving(true);
+    try {
+      console.log("Updating questionnaire with:", data);
+      
+      const { error } = await supabase
+        .from("property_questionnaires")
+        .update({
+          ...data,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", questionnaire.id);
+        
+      if (error) {
+        console.error("Error updating questionnaire:", error);
+        toast.error("Failed to save your changes");
+        return false;
+      }
+      
+      toast.success("Profile saved successfully");
+      return true;
+    } catch (error) {
+      console.error("Error in updateQuestionnaire:", error);
+      toast.error("An error occurred while saving your changes");
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  }, [questionnaire, setIsSaving]);
+  
   const handleSave = useCallback(async () => {
     if (!formData) return;
     
-    let success = false;
-    
-    if (questionnaire) {
-      success = await updateQuestionnaire(formData);
-    } else {
-      const requiredFields = [
-        'property_type', 'ownership_status', 'monthly_electric_bill',
-        'interested_in_batteries', 'purchase_timeline', 'willing_to_remove_trees',
-        'roof_age_status', 'first_name', 'last_name', 'email'
-      ];
-      
-      const missingFields = requiredFields.filter(field => 
-        !formData[field as keyof QuestionnaireData]
-      );
-      
-      if (missingFields.length > 0) {
-        toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
-        return;
-      }
-      
-      const newQuestionnaire = await createQuestionnaire(formData as any);
-      success = !!newQuestionnaire;
-    }
-    
+    const success = await updateQuestionnaire(formData);
     if (success) {
       setIsEditing(false);
-      toast.success("Profile saved successfully!");
+      toast.success("Your profile has been updated");
     }
-  }, [formData, questionnaire, updateQuestionnaire, createQuestionnaire, setIsEditing]);
+  }, [formData, updateQuestionnaire, setIsEditing]);
   
   const handleCancel = useCallback(() => {
     console.log("❌ Cancelling edit mode");
@@ -102,6 +109,35 @@ export const useQuestionnaireFormHandlers = () => {
     }
   }, [questionnaire]);
   
+  const createQuestionnaire = useCallback(async (data: Omit<QuestionnaireData, 'id' | 'created_at' | 'is_completed'>) => {
+    setIsSaving(true);
+    try {
+      const { data: newQuestionnaire, error } = await supabase
+        .from("property_questionnaires")
+        .insert({
+          ...data,
+          is_completed: false
+        })
+        .select()
+        .single();
+        
+      if (error) {
+        console.error("Error creating questionnaire:", error);
+        toast.error("Failed to create your profile");
+        return null;
+      }
+      
+      toast.success("Your profile has been created");
+      return newQuestionnaire;
+    } catch (error) {
+      console.error("Error in createQuestionnaire:", error);
+      toast.error("An error occurred while creating your profile");
+      return null;
+    } finally {
+      setIsSaving(false);
+    }
+  }, [setIsSaving]);
+  
   const handleCreateProfile = useCallback(() => {
     console.log("🆕 Creating new profile");
     setFormData({
@@ -126,6 +162,8 @@ export const useQuestionnaireFormHandlers = () => {
     handleSave,
     handleCancel,
     handleSubmitProfile,
-    handleCreateProfile
+    handleCreateProfile,
+    updateQuestionnaire,
+    createQuestionnaire
   };
 };
