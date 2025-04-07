@@ -30,14 +30,21 @@ export const useQuestionnaireProfileHandlers = () => {
       console.log("📋 Setting form data to questionnaire data:", questionnaire);
       // Create a new object to ensure React detects the change
       const newFormData = {...questionnaire};
+      
+      // First update the form data, then set editing mode
       setFormData(newFormData);
       console.log("✏️ Setting isEditing to TRUE");
       
-      // Force React to re-render by using setTimeout
+      // Set editing mode immediately
+      setIsEditing(true);
+      console.log("✅ isEditing set to TRUE immediately");
+      
+      // Also set it again with a small delay to ensure UI updates
+      // This is a workaround for potential race conditions in React's state updates
       setTimeout(() => {
         setIsEditing(true);
         console.log("✅ isEditing set to TRUE with timeout");
-      }, 10);
+      }, 50);
     } else {
       console.error("Cannot edit: questionnaire is null");
     }

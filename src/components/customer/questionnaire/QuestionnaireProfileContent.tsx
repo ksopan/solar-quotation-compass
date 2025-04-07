@@ -57,59 +57,69 @@ export const QuestionnaireProfileContent: React.FC = () => {
   console.log("🔍 Current edit mode:", isEditing ? "EDITING" : "VIEW-ONLY");
   
   return (
-    <Card className="w-full">
-      <ProfileHeader 
-        isEditing={isEditing} 
-        onEdit={handleEdit} 
-      />
-      
-      <CardContent className="space-y-6">
-        <PropertyInfoSection 
+    <Card className="w-full relative">
+      <div className={isEditing ? "relative z-10" : ""}>
+        <ProfileHeader 
           isEditing={isEditing} 
-          data={displayData} 
-          handleChange={handleChange} 
+          onEdit={handleEdit} 
         />
         
-        <BatterySection 
-          isEditing={isEditing} 
-          data={displayData} 
-          handleChange={handleChange} 
-        />
-        
-        <PropertyConstraintsSection 
-          isEditing={isEditing} 
-          data={displayData} 
-          handleChange={handleChange} 
-        />
-        
-        <ContactInfoSection 
-          isEditing={isEditing} 
-          data={displayData} 
-          handleChange={handleChange} 
-        />
-        
-        {questionnaire && (
-          <DocumentsSection 
-            questionnaire={questionnaire}
-            isLoadingFiles={isLoadingFiles}
-            attachments={attachments}
-            handleFileUpload={handleFileUpload}
-            handleFileDelete={handleFileDelete}
-            getFileUrl={getFileUrl}
-            isUploading={isUploading}
+        <CardContent className="space-y-6">
+          {/* Render all sections with explicit isEditing prop */}
+          <PropertyInfoSection 
+            isEditing={isEditing} 
+            data={displayData} 
+            handleChange={handleChange} 
           />
-        )}
-      </CardContent>
+          
+          <BatterySection 
+            isEditing={isEditing} 
+            data={displayData} 
+            handleChange={handleChange} 
+          />
+          
+          <PropertyConstraintsSection 
+            isEditing={isEditing} 
+            data={displayData} 
+            handleChange={handleChange} 
+          />
+          
+          <ContactInfoSection 
+            isEditing={isEditing} 
+            data={displayData} 
+            handleChange={handleChange} 
+          />
+          
+          {questionnaire && (
+            <DocumentsSection 
+              questionnaire={questionnaire}
+              isLoadingFiles={isLoadingFiles}
+              attachments={attachments}
+              handleFileUpload={handleFileUpload}
+              handleFileDelete={handleFileDelete}
+              getFileUrl={getFileUrl}
+              isUploading={isUploading}
+            />
+          )}
+        </CardContent>
+        
+        <ProfileFooter 
+          isEditing={isEditing}
+          isSaving={isSaving}
+          showSubmitButton={showSubmitButton}
+          questionnaire={questionnaire}
+          handleCancel={handleCancel}
+          handleSave={handleSave}
+          handleSubmitProfile={handleSubmitProfile}
+        />
+      </div>
       
-      <ProfileFooter 
-        isEditing={isEditing}
-        isSaving={isSaving}
-        showSubmitButton={showSubmitButton}
-        questionnaire={questionnaire}
-        handleCancel={handleCancel}
-        handleSave={handleSave}
-        handleSubmitProfile={handleSubmitProfile}
-      />
+      {/* Debug indicator to show editing state */}
+      {isEditing && (
+        <div className="absolute top-0 right-0 bg-green-500 text-white px-2 py-1 text-xs rounded m-1">
+          Editing Mode
+        </div>
+      )}
     </Card>
   );
 };

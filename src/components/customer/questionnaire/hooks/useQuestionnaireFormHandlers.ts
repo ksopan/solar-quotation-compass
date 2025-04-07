@@ -31,8 +31,12 @@ export const useQuestionnaireFormHandlers = () => {
   const handleChange = useCallback((field: keyof QuestionnaireData, value: any) => {
     console.log(`🔄 Updating form field ${String(field)} to:`, value);
     console.log("Current form data before update:", formData);
+    
+    // Force React to detect the change with a new object reference
     setFormData(prev => {
       if (!prev) return { [field]: value };
+      
+      // Create a completely new object to ensure React detects the change
       const updated = { ...prev, [field]: value };
       console.log("Updated form data:", updated);
       return updated;
@@ -67,6 +71,7 @@ export const useQuestionnaireFormHandlers = () => {
     }
     
     if (success) {
+      console.log("✅ Profile saved successfully, exiting edit mode");
       setIsEditing(false);
       toast.success("Profile saved successfully!");
     }
@@ -77,6 +82,7 @@ export const useQuestionnaireFormHandlers = () => {
     if (questionnaire) {
       setFormData({...questionnaire}); // Reset form data to original
     }
+    console.log("🔙 Setting isEditing to FALSE");
     setIsEditing(false);
   }, [questionnaire, setFormData, setIsEditing]);
   
@@ -117,6 +123,7 @@ export const useQuestionnaireFormHandlers = () => {
       last_name: "",
       email: ""
     });
+    console.log("🖊️ Setting isEditing to TRUE for new profile creation");
     setIsEditing(true);
   }, [setFormData, setIsEditing]);
   

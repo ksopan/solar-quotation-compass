@@ -31,6 +31,20 @@ export const useQuestionnaireProfileState = () => {
     console.log("🔄 formData state changed:", formData);
   }, [formData]);
   
+  // Force a full re-render when isEditing changes
+  useEffect(() => {
+    if (isEditing) {
+      console.log("🔁 Forcing re-render due to editing state change");
+      // Using a small timeout to ensure React has time to process the state change
+      const timer = setTimeout(() => {
+        console.log("⚡ Re-render triggered");
+        // This is just to force a re-render
+        setFormData(currentFormData => ({...currentFormData}));
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isEditing]);
+  
   // Determine if we should show the submit button based on questionnaire completion status
   useEffect(() => {
     if (questionnaire && !questionnaire.is_completed) {

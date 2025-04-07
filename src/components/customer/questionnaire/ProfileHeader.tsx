@@ -35,9 +35,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         {!isEditing && (
           <Button 
             onClick={handleEditClick} 
-            variant="default"
+            variant="outline"
             type="button"
-            className="z-10"
+            className="z-10 bg-blue-50 hover:bg-blue-100"
           >
             <Edit className="mr-2 h-4 w-4" />
             Edit Profile
