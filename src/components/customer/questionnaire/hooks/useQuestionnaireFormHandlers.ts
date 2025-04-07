@@ -19,8 +19,12 @@ export const useQuestionnaireFormHandlers = () => {
   const handleEdit = useCallback(() => {
     console.log("⚠️ Secondary handleEdit called from useQuestionnaireFormHandlers");
     if (questionnaire) {
-      setFormData(questionnaire);
+      console.log("Setting formData from secondary handler");
+      setFormData({...questionnaire});
+      console.log("Setting isEditing to TRUE from secondary handler");
       setIsEditing(true);
+    } else {
+      console.error("Cannot edit: questionnaire is null (secondary handler)");
     }
   }, [questionnaire, setFormData, setIsEditing]);
   
@@ -58,6 +62,7 @@ export const useQuestionnaireFormHandlers = () => {
     
     if (success) {
       setIsEditing(false);
+      toast.success("Profile saved successfully!");
     }
   }, [formData, questionnaire, updateQuestionnaire, createQuestionnaire, setIsEditing]);
   

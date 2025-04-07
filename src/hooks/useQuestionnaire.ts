@@ -15,6 +15,8 @@ export const useQuestionnaire = () => {
   const { updateQuestionnaire, createQuestionnaire } = useQuestionnaireActions();
   const { uploadAttachment, deleteAttachment, getFileUrl, isUploading } = useQuestionnaireAttachments();
 
+  console.log("useQuestionnaire called, questionnaire:", questionnaire?.id, "loading:", loading);
+
   // Use useMemo to ensure stable references for all returned values
   return useMemo(() => ({
     questionnaire,

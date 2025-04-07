@@ -29,6 +29,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <Button 
             onClick={handleEditClick} 
             variant="default"
+            type="button"
           >
             <Edit className="mr-2 h-4 w-4" />
             Edit Profile

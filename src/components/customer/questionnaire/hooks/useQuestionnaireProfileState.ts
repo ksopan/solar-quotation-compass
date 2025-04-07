@@ -40,13 +40,13 @@ export const useQuestionnaireProfileState = () => {
     }
   }, [questionnaire]);
 
-  // Update formData whenever editing starts
+  // Ensure the formData state is updated whenever the questionnaire changes
   useEffect(() => {
-    if (isEditing && questionnaire) {
-      console.log("🔄 Updating form data with questionnaire data because isEditing is true");
+    if (questionnaire && !formData && !isEditing) {
+      console.log("🔄 Initializing form data with questionnaire data");
       setFormData(questionnaire);
     }
-  }, [isEditing, questionnaire]);
+  }, [questionnaire, formData, isEditing]);
   
   return {
     questionnaire,

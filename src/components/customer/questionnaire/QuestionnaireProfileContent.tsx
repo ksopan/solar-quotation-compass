@@ -46,6 +46,13 @@ export const QuestionnaireProfileContent: React.FC = () => {
     console.log("🔄 isEditing changed in QuestionnaireProfileContent to:", isEditing);
   }, [isEditing]);
   
+  // Use this to initialize form data if needed
+  useEffect(() => {
+    if (questionnaire && isEditing && !formData) {
+      console.log("⚠️ Form data is null but editing is true, initializing with questionnaire");
+    }
+  }, [questionnaire, isEditing, formData]);
+  
   // Data source is either form data (when editing) or the questionnaire data
   const data = isEditing ? formData : questionnaire;
   

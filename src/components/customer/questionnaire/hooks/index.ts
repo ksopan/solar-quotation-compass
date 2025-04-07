@@ -22,9 +22,11 @@ export const useQuestionnaireProfileHandlers = () => {
     console.log("🔑 Main handleEdit called in useQuestionnaireProfileHandlers");
     if (questionnaire) {
       console.log("📋 Setting form data to questionnaire data:", questionnaire);
-      setFormData(questionnaire);
+      setFormData({...questionnaire});
       console.log("✏️ Setting isEditing to TRUE");
       setIsEditing(true);
+    } else {
+      console.error("Cannot edit: questionnaire is null");
     }
   }, [questionnaire, setFormData, setIsEditing]);
 
