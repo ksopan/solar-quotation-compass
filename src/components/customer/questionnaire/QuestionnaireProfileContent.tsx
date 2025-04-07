@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 
 // Import all the section components
@@ -15,6 +15,9 @@ import { ProfileFooter } from "./ProfileFooter";
 import { useQuestionnaireProfileState, useQuestionnaireProfileHandlers } from "./hooks";
 
 export const QuestionnaireProfileContent: React.FC = () => {
+  // Use local state to ensure component updates
+  const [localIsEditing, setLocalIsEditing] = useState(false);
+  
   const {
     questionnaire,
     isEditing,
@@ -43,49 +46,50 @@ export const QuestionnaireProfileContent: React.FC = () => {
     console.log("📄 Form data in content:", formData);
   }, [isEditing, formData]);
   
-  // Force a re-render when isEditing changes to ensure UI updates
+  // Update local state when global state changes
   useEffect(() => {
     console.log("🔄 isEditing changed in QuestionnaireProfileContent to:", isEditing);
+    setLocalIsEditing(isEditing);
   }, [isEditing]);
   
   // Make sure to use the correct data source
-  const displayData = isEditing ? formData : questionnaire;
+  const displayData = localIsEditing ? formData : questionnaire;
   
   if (!displayData) {
     console.log("⚠️ No display data available");
     return <div>No data available</div>;
   }
   
-  console.log("🔍 Current edit mode:", isEditing ? "EDITING" : "VIEW-ONLY");
+  console.log("🔍 Current edit mode:", localIsEditing ? "EDITING" : "VIEW-ONLY");
   
   return (
     <Card className="w-full">
       <ProfileHeader 
-        isEditing={isEditing} 
+        isEditing={localIsEditing} 
         onEdit={handleEdit} 
       />
       
       <CardContent className="space-y-6">
         <PropertyInfoSection 
-          isEditing={isEditing} 
+          isEditing={localIsEditing} 
           data={displayData} 
           handleChange={handleChange} 
         />
         
         <BatterySection 
-          isEditing={isEditing} 
+          isEditing={localIsEditing} 
           data={displayData} 
           handleChange={handleChange} 
         />
         
         <PropertyConstraintsSection 
-          isEditing={isEditing} 
+          isEditing={localIsEditing} 
           data={displayData} 
           handleChange={handleChange} 
         />
         
         <ContactInfoSection 
-          isEditing={isEditing} 
+          isEditing={localIsEditing} 
           data={displayData} 
           handleChange={handleChange} 
         />
@@ -104,7 +108,7 @@ export const QuestionnaireProfileContent: React.FC = () => {
       </CardContent>
       
       <ProfileFooter 
-        isEditing={isEditing}
+        isEditing={localIsEditing}
         isSaving={isSaving}
         showSubmitButton={showSubmitButton}
         questionnaire={questionnaire}

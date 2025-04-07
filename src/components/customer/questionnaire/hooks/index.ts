@@ -33,23 +33,21 @@ export const useQuestionnaireProfileHandlers = () => {
       setFormData(newFormData);
       console.log("✏️ Setting isEditing to TRUE");
       
-      // Set isEditing directly and then force a re-render with setTimeout
-      setIsEditing(true);
+      // Set isEditing directly with a function to ensure latest state
+      setIsEditing(() => true);
       
-      // This additional setTimeout ensures the UI updates correctly
+      // Force a refresh at the component level
       setTimeout(() => {
-        console.log("✅ isEditing state check:", isEditing);
-        // Force a state update by using this technique
-        setIsEditing(prevState => {
-          console.log("🔄 Inside state updater, current value:", prevState);
-          return true; // Always ensure it's true
+        // Force the state update using a functional update
+        setIsEditing(current => {
+          console.log("🔁 Force updating isEditing, current value:", current);
+          return true;
         });
-        console.log("✅ isEditing double-checked with setTimeout");
-      }, 50); // Slightly longer timeout to ensure the first state update has happened
+      }, 10);
     } else {
       console.error("Cannot edit: questionnaire is null");
     }
-  }, [questionnaire, setFormData, setIsEditing, isEditing]);
+  }, [questionnaire, setFormData, setIsEditing]);
 
   return {
     ...fileHandlers,

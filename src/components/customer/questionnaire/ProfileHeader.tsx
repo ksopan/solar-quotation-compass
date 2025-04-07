@@ -13,6 +13,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   isEditing, 
   onEdit 
 }) => {
+  console.log("💼 ProfileHeader rendering with isEditing:", isEditing);
+  
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent any default form behavior
     e.stopPropagation(); // Stop event bubbling
