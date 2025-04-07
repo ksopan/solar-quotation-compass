@@ -17,7 +17,8 @@ export const useQuestionnaireData = (
       }
       
       try {
-        const { data, error } = await supabase
+        // First, try to find questionnaires explicitly associated with this user
+        let { data, error } = await supabase
           .from("property_questionnaires")
           .select("*")
           .eq("customer_id", user.id)
@@ -27,14 +28,49 @@ export const useQuestionnaireData = (
           
         if (error) {
           if (error.code === "PGRST116") {
-            // No questionnaire found - this is not an error
-            console.log("No questionnaire found for user");
-            dispatch({ type: 'SET_QUESTIONNAIRE', payload: null });
+            console.log("No questionnaire directly associated with user. Checking for unassociated questionnaires...");
+            
+            // Check session storage for a questionnaire ID
+            const sessionQuestionnaireId = sessionStorage.getItem("questionnaire_id");
+            
+            if (sessionQuestionnaireId) {
+              // Try to get that questionnaire
+              const { data: unassociatedData, error: unassociatedError } = await supabase
+                .from("property_questionnaires")
+                .select("*")
+                .eq("id", sessionQuestionnaireId)
+                .single();
+                
+              if (!unassociatedError && unassociatedData) {
+                console.log("Found unassociated questionnaire, associating with user:", user.id);
+                
+                // Associate it with this user
+                const { error: updateError } = await supabase
+                  .from("property_questionnaires")
+                  .update({ customer_id: user.id })
+                  .eq("id", sessionQuestionnaireId);
+                  
+                if (updateError) {
+                  console.error("Error associating questionnaire with user:", updateError);
+                } else {
+                  console.log("Successfully associated questionnaire with user");
+                  data = { ...unassociatedData, customer_id: user.id };
+                  sessionStorage.removeItem("questionnaire_id");
+                }
+              }
+            }
+            
+            if (!data) {
+              // No questionnaire found, let the user create one
+              dispatch({ type: 'SET_QUESTIONNAIRE', payload: null });
+            }
           } else {
             console.error("Error fetching questionnaire:", error);
             toast.error("Failed to load your questionnaire data");
           }
-        } else if (data) {
+        }
+        
+        if (data) {
           console.log("Fetched questionnaire:", data);
           dispatch({ type: 'SET_QUESTIONNAIRE', payload: data as QuestionnaireData });
           dispatch({ type: 'SET_FORM_DATA', payload: {...data} });

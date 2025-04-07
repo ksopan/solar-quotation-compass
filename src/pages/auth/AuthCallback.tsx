@@ -6,6 +6,7 @@ import { MainLayout } from "@/components/layouts/MainLayout";
 import { User } from "@/contexts/auth/types";
 import { transformUserData } from "@/contexts/auth/authUtils";
 import { isProfileComplete } from "@/contexts/auth/authUtils";
+import { toast } from "sonner";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -31,17 +32,34 @@ const AuthCallback = () => {
         if (questionnaireId && data.session.user) {
           setMessage("Associating your questionnaire data...");
           try {
-            // Associate questionnaire with the authenticated user
-            await supabase
+            // First check if the questionnaire exists and is not already associated
+            const { data: questionnaireData, error: fetchError } = await supabase
               .from("property_questionnaires")
-              .update({ 
-                customer_id: data.session.user.id,
-                is_completed: true
-              })
-              .eq("id", questionnaireId);
+              .select("customer_id")
+              .eq("id", questionnaireId)
+              .single();
               
-            console.log("Associated questionnaire with user after OAuth");
-            localStorage.removeItem("questionnaire_id");
+            if (fetchError) {
+              console.error("Error fetching questionnaire:", fetchError);
+            } else if (!questionnaireData.customer_id) {
+              // Only update if the customer_id is null
+              const { error: updateError } = await supabase
+                .from("property_questionnaires")
+                .update({ 
+                  customer_id: data.session.user.id,
+                  is_completed: true
+                })
+                .eq("id", questionnaireId);
+                
+              if (updateError) {
+                console.error("Error associating questionnaire after OAuth:", updateError);
+                toast.error("Failed to associate your questionnaire data");
+              } else {
+                console.log("Associated questionnaire with user after OAuth");
+                toast.success("Your questionnaire has been saved to your account");
+                localStorage.removeItem("questionnaire_id");
+              }
+            }
           } catch (err) {
             console.error("Error associating questionnaire after OAuth:", err);
           }

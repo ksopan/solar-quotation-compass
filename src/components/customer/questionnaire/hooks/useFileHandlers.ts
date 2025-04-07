@@ -22,9 +22,29 @@ export const useFileHandlers = (
     try {
       dispatch({ type: 'SET_IS_UPLOADING', payload: true });
       const timestamp = new Date().getTime();
-      // Use user ID instead of questionnaire ID
+      // Use user ID for storage path
       const filePath = `${user.id}/${timestamp}-${file.name}`;
+      
+      // Check if the bucket exists first
+      const { data: buckets, error: bucketsError } = await supabase
+        .storage
+        .listBuckets();
+        
+      if (bucketsError) {
+        console.error("Error listing buckets:", bucketsError);
+        toast.error("Error accessing storage");
+        return null;
+      }
+      
+      // Check if the bucket exists
+      const bucketExists = buckets.some(bucket => bucket.name === 'questionnaire_attachments');
+      if (!bucketExists) {
+        console.error("Storage bucket 'questionnaire_attachments' does not exist");
+        toast.error("Upload configuration error. Please contact support.");
+        return null;
+      }
 
+      console.log("Uploading file to path:", filePath);
       const { data, error } = await supabase.storage
         .from('questionnaire_attachments')
         .upload(filePath, file, {
@@ -34,17 +54,19 @@ export const useFileHandlers = (
 
       if (error) {
         console.error("❌ Error uploading file:", error);
-        toast.error("Failed to upload file");
+        toast.error(`Failed to upload file: ${error.message}`);
         return null;
       }
 
       // Update attachments after successful upload
+      const newAttachment = { 
+        name: `${timestamp}-${file.name}`, 
+        size: file.size 
+      };
+      
       dispatch({ 
         type: 'SET_ATTACHMENTS', 
-        payload: [
-          ...state.attachments, 
-          { name: `${timestamp}-${file.name}`, size: file.size }
-        ] 
+        payload: [...state.attachments, newAttachment] 
       });
       
       toast.success("File uploaded successfully");
@@ -63,7 +85,7 @@ export const useFileHandlers = (
     if (!user) return false;
 
     try {
-      // Use user ID instead of questionnaire ID
+      // Use user ID for storage path
       const filePath = `${user.id}/${fileName}`;
 
       const { error } = await supabase.storage

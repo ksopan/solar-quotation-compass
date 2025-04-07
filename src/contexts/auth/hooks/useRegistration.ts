@@ -56,16 +56,32 @@ export const useRegistration = (
         const questionnaireId = sessionStorage.getItem("questionnaire_id");
         if (questionnaireId && userData.role === "customer") {
           console.log("Associating questionnaire with new user:", data.user.id);
-          const { error: updateError } = await supabase
+          
+          // First check if questionnaire exists and is not already associated
+          const { data: questionnaireData, error: fetchError } = await supabase
             .from("property_questionnaires")
-            .update({ customer_id: data.user.id, is_completed: true })
-            .eq("id", questionnaireId);
+            .select("customer_id")
+            .eq("id", questionnaireId)
+            .single();
             
-          if (updateError) {
-            console.error("Error associating questionnaire with user:", updateError);
-          } else {
-            console.log("Successfully associated questionnaire with user");
-            sessionStorage.removeItem("questionnaire_id");
+          if (fetchError) {
+            console.error("Error fetching questionnaire:", fetchError);
+          } else if (!questionnaireData.customer_id) {
+            // Only update if the customer_id is null
+            const { error: updateError } = await supabase
+              .from("property_questionnaires")
+              .update({ 
+                customer_id: data.user.id, 
+                is_completed: true 
+              })
+              .eq("id", questionnaireId);
+              
+            if (updateError) {
+              console.error("Error associating questionnaire with user:", updateError);
+            } else {
+              console.log("Successfully associated questionnaire with user");
+              sessionStorage.removeItem("questionnaire_id");
+            }
           }
         }
         

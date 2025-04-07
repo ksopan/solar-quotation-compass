@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { QuestionnaireData } from '../types';
 import { useAuth } from "@/contexts/auth";
+import { toast } from "sonner";
 
 export const useQuestionnaireAttachmentsData = (
   questionnaire: QuestionnaireData | null,
@@ -17,9 +18,10 @@ export const useQuestionnaireAttachmentsData = (
       
       try {
         dispatch({ type: 'SET_IS_LOADING_FILES', payload: true });
+        
         const { data, error } = await supabase.storage
           .from('questionnaire_attachments')
-          .list(user.id); // Use user.id instead of questionnaire.id
+          .list(user.id);
           
         if (error) {
           console.error("Error listing files:", error);
@@ -45,5 +47,5 @@ export const useQuestionnaireAttachmentsData = (
     };
     
     fetchAttachments();
-  }, [user, dispatch]); // Changed dependency from questionnaire to user
+  }, [user, dispatch]);
 };

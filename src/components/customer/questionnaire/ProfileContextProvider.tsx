@@ -23,14 +23,18 @@ export const ProfileProvider: React.FC<{children: React.ReactNode}> = ({ childre
   // Load attachments data
   useQuestionnaireAttachmentsData(state.questionnaire, dispatch);
   
-  // Get all handlers from the combined hook
-  const handlers = useQuestionnaireProfileHandlers();
+  // Get profile handlers
+  const profileHandlers = useProfileHandlers(user, state, dispatch);
   
-  // Make sure we include getFileUrl in the context value
+  // Get file handlers
+  const fileHandlers = useFileHandlers(user, state, dispatch);
+  
+  // Make sure we include all handlers in the context value
   const value: ProfileContextType = {
     ...state,
     dispatch,
-    ...handlers
+    ...profileHandlers,
+    ...fileHandlers
   };
 
   return (
