@@ -1,9 +1,16 @@
 
+import { useState } from "react";
 import { toast } from "sonner";
-import { useQuestionnaireBase, QuestionnaireData } from "./useQuestionnaireBase";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/auth";
+import { QuestionnaireData } from "./useQuestionnaireBase";
 
-export const useQuestionnaireActions = () => {
-  const { user, questionnaire, setQuestionnaire, setIsSaving, supabase } = useQuestionnaireBase();
+export const useQuestionnaireActions = (
+  questionnaire: QuestionnaireData | null,
+  setQuestionnaire: (questionnaire: QuestionnaireData | null) => void
+) => {
+  const { user } = useAuth();
+  const [isSaving, setIsSaving] = useState(false);
   
   // Update questionnaire data
   const updateQuestionnaire = async (updatedData: Partial<QuestionnaireData>) => {
@@ -82,5 +89,9 @@ export const useQuestionnaireActions = () => {
     }
   };
 
-  return { updateQuestionnaire, createQuestionnaire };
+  return { 
+    updateQuestionnaire, 
+    createQuestionnaire,
+    isSaving
+  };
 };

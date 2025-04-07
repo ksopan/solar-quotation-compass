@@ -1,17 +1,30 @@
+
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useQuestionnaireBase } from "./useQuestionnaireBase";
+import { supabase } from "@/integrations/supabase/client";
+import { QuestionnaireData } from "./useQuestionnaireBase";
+import { useAuth } from "@/contexts/auth";
+import { formatFileSize } from "@/lib/utils";
 
-export const useQuestionnaireAttachments = () => {
-  const { user, questionnaire, supabase } = useQuestionnaireBase();
-  const [attachments, setAttachments] = useState<any[]>([]);
+type Attachment = {
+  name: string;
+  size: number;
+  id?: string;
+};
+
+export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | null) => {
+  const { user } = useAuth();
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
 
-  // 🔁 Fetch attachments only once when questionnaire ID is available
+  // 🔁 Fetch attachments when questionnaire ID changes
   useEffect(() => {
     const fetchAttachments = async () => {
-      if (!user || !questionnaire?.id) return;
+      if (!user || !questionnaire?.id) {
+        setAttachments([]);
+        return;
+      }
 
       try {
         setIsLoadingFiles(true);
@@ -27,7 +40,13 @@ export const useQuestionnaireAttachments = () => {
           setAttachments([]);
         } else {
           console.log("✅ Fetched attachments:", data);
-          setAttachments(data || []);
+          // Transform FileObject into the expected format with the required size property
+          const formattedData = data.map(file => ({
+            name: file.name,
+            size: file.metadata?.size || 0,
+            id: file.id
+          }));
+          setAttachments(formattedData);
         }
       } catch (err) {
         console.error("❌ Error in getAttachments:", err);
@@ -39,7 +58,7 @@ export const useQuestionnaireAttachments = () => {
     };
 
     fetchAttachments();
-  }, [user, questionnaire?.id, supabase]);
+  }, [user, questionnaire?.id]);
 
   // Upload attachment for a questionnaire
   const uploadAttachment = async (file: File) => {
@@ -56,7 +75,6 @@ export const useQuestionnaireAttachments = () => {
 
     try {
       setIsUploading(true);
-      const fileExt = file.name.split('.').pop();
       const timestamp = new Date().getTime();
       const filePath = `${questionnaire.id}/${timestamp}-${file.name}`;
 
@@ -76,8 +94,11 @@ export const useQuestionnaireAttachments = () => {
       toast.success("File uploaded successfully");
       console.log("📤 File uploaded successfully:", data.path);
 
-      // ✅ Refresh the attachments after upload
-      setAttachments(prev => [...prev, { name: `${timestamp}-${file.name}` }]);
+      // Add the new file to our local state
+      setAttachments(prev => [...prev, { 
+        name: `${timestamp}-${file.name}`, 
+        size: file.size 
+      }]);
 
       return data.path;
     } catch (error) {
