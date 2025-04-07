@@ -1,6 +1,7 @@
 
-import { useState, useEffect } from "react";
-import { useQuestionnaire, QuestionnaireData } from "@/hooks/useQuestionnaire";
+import { useEffect } from "react";
+import { useQuestionnaire } from "@/hooks/useQuestionnaire";
+import useQuestionnaireStore from "./useQuestionnaireStore";
 
 export const useQuestionnaireProfileState = () => {
   const { 
@@ -15,68 +16,46 @@ export const useQuestionnaireProfileState = () => {
     getFileUrl
   } = useQuestionnaire();
   
-  // Create state variables with useState
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [formData, setFormData] = useState<Partial<QuestionnaireData> | null>(null);
-  const [attachments, setAttachments] = useState<{ name: string; size: number; id?: string }[]>([]);
-  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
-  const [showSubmitButton, setShowSubmitButton] = useState(false);
+  // Get state from Zustand store
+  const store = useQuestionnaireStore();
   
   // Debug state changes
   useEffect(() => {
-    console.log("🔄 isEditing state changed in useQuestionnaireProfileState:", isEditing);
-  }, [isEditing]);
+    console.log("🔄 isEditing state changed in useQuestionnaireProfileState:", store.isEditing);
+  }, [store.isEditing]);
 
   useEffect(() => {
-    console.log("🔄 formData state changed:", formData);
-  }, [formData]);
+    console.log("🔄 formData state changed:", store.formData);
+  }, [store.formData]);
   
-  // Force a full re-render when isEditing changes
+  // Update store when questionnaire changes
   useEffect(() => {
-    if (isEditing) {
-      console.log("🔁 Forcing re-render due to editing state change");
-      // Using a small timeout to ensure React has time to process the state change
-      const timer = setTimeout(() => {
-        console.log("⚡ Re-render triggered");
-        // This is just to force a re-render
-        setFormData(currentFormData => ({...currentFormData}));
-      }, 50);
-      return () => clearTimeout(timer);
+    if (questionnaire) {
+      store.setQuestionnaire(questionnaire);
+      
+      // Only initialize form data if it hasn't been set yet
+      if (store.formData === null) {
+        console.log("🔄 Initializing form data with questionnaire data (initial)");
+        store.setFormData({...questionnaire});
+      }
     }
-  }, [isEditing]);
-  
-  // Determine if we should show the submit button based on questionnaire completion status
-  useEffect(() => {
-    if (questionnaire && !questionnaire.is_completed) {
-      setShowSubmitButton(true);
-    } else {
-      setShowSubmitButton(false);
-    }
-  }, [questionnaire]);
-
-  // Initialize formData with questionnaire data when first loading
-  useEffect(() => {
-    if (questionnaire && formData === null) {
-      console.log("🔄 Initializing form data with questionnaire data (initial)");
-      setFormData({...questionnaire});
-    }
-  }, [questionnaire, formData]);
+  }, [questionnaire, store]);
   
   return {
     questionnaire,
     loading: questionnaireLoading, 
     isSaving,
     isUploading,
-    isEditing,
-    setIsEditing,
-    formData,
-    setFormData,
-    attachments,
-    setAttachments,
-    isLoadingFiles,
-    setIsLoadingFiles,
-    showSubmitButton,
-    setShowSubmitButton,
+    isEditing: store.isEditing,
+    setIsEditing: store.setIsEditing,
+    formData: store.formData,
+    setFormData: store.setFormData,
+    attachments: store.attachments,
+    setAttachments: store.setAttachments,
+    isLoadingFiles: store.isLoadingFiles,
+    setIsLoadingFiles: store.setIsLoadingFiles,
+    showSubmitButton: store.showSubmitButton,
+    setShowSubmitButton: store.setShowSubmitButton,
     updateQuestionnaire,
     createQuestionnaire,
     uploadAttachment,

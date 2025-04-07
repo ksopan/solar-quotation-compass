@@ -1,19 +1,41 @@
 
 import { useCallback, useEffect } from "react";
-import { useQuestionnaireProfileState } from "./useQuestionnaireProfileState";
 import { useQuestionnaireFileHandlers } from "./useQuestionnaireFileHandlers";
 import { useQuestionnaireFormHandlers } from "./useQuestionnaireFormHandlers";
+import { useQuestionnaire } from "@/hooks/useQuestionnaire";
+import useQuestionnaireStore from "./useQuestionnaireStore";
 
 export const useQuestionnaireProfileHandlers = () => {
-  // Get state from the state hook
+  // Get the questionnaire data from the API hook
   const {
     questionnaire,
+    isSaving,
+    isUploading,
+    getFileUrl
+  } = useQuestionnaire();
+  
+  // Get state from the Zustand store
+  const {
     setFormData,
     setIsEditing,
+    setQuestionnaire,
+    setIsSaving,
     setIsLoadingFiles,
     isEditing
-  } = useQuestionnaireProfileState();
-
+  } = useQuestionnaireStore();
+  
+  // Update store when questionnaire changes
+  useEffect(() => {
+    if (questionnaire) {
+      setQuestionnaire(questionnaire);
+    }
+  }, [questionnaire, setQuestionnaire]);
+  
+  // Sync isSaving with store
+  useEffect(() => {
+    setIsSaving(isSaving);
+  }, [isSaving, setIsSaving]);
+  
   // For debugging
   useEffect(() => {
     console.log("🔍 Current editing state in handlers:", isEditing);
@@ -55,8 +77,11 @@ export const useQuestionnaireProfileHandlers = () => {
     ...formHandlers,
     handleEdit, // Override the handleEdit from formHandlers
     loadFiles: fileHandlers.loadFiles,
-    setIsLoadingFiles
+    setIsLoadingFiles,
+    isUploading,
+    getFileUrl
   };
 };
 
 export { useQuestionnaireProfileState } from "./useQuestionnaireProfileState";
+export { default as useQuestionnaireStore } from "./useQuestionnaireStore";

@@ -11,10 +11,12 @@ import { ContactInfoSection } from "./ContactInfoSection";
 import { DocumentsSection } from "./DocumentsSection";
 import { ProfileFooter } from "./ProfileFooter";
 
-// Import the refactored hooks
-import { useQuestionnaireProfileState, useQuestionnaireProfileHandlers } from "./hooks";
+// Import the refactored hooks and store
+import { useQuestionnaireProfileHandlers } from "./hooks";
+import useQuestionnaireStore from "./hooks/useQuestionnaireStore";
 
 export const QuestionnaireProfileContent: React.FC = () => {
+  // Get values from Zustand store
   const {
     questionnaire,
     isEditing,
@@ -22,11 +24,10 @@ export const QuestionnaireProfileContent: React.FC = () => {
     isSaving,
     attachments,
     isLoadingFiles,
-    isUploading,
-    showSubmitButton,
-    getFileUrl
-  } = useQuestionnaireProfileState();
+    showSubmitButton
+  } = useQuestionnaireStore();
   
+  // Get handlers
   const {
     handleEdit,
     handleChange,
@@ -34,7 +35,9 @@ export const QuestionnaireProfileContent: React.FC = () => {
     handleSubmitProfile,
     handleCancel,
     handleFileUpload,
-    handleFileDelete
+    handleFileDelete,
+    getFileUrl,
+    isUploading
   } = useQuestionnaireProfileHandlers();
   
   // Debug current render state  
@@ -59,10 +62,7 @@ export const QuestionnaireProfileContent: React.FC = () => {
   return (
     <Card className="w-full relative">
       <div className={isEditing ? "relative z-10" : ""}>
-        <ProfileHeader 
-          isEditing={isEditing} 
-          onEdit={handleEdit} 
-        />
+        <ProfileHeader onEdit={handleEdit} />
         
         <CardContent className="space-y-6">
           {/* Render all sections with explicit isEditing prop */}
