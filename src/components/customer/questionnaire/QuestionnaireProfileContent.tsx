@@ -46,15 +46,15 @@ export const QuestionnaireProfileContent: React.FC = () => {
     console.log("🔄 isEditing changed in QuestionnaireProfileContent to:", isEditing);
   }, [isEditing]);
   
-  // Use this to initialize form data if needed
-  useEffect(() => {
-    if (questionnaire && isEditing && !formData) {
-      console.log("⚠️ Form data is null but editing is true, initializing with questionnaire");
-    }
-  }, [questionnaire, isEditing, formData]);
-  
   // Make sure to use the correct data source
   const displayData = isEditing ? formData : questionnaire;
+  
+  if (!displayData) {
+    console.log("⚠️ No display data available");
+    return <div>No data available</div>;
+  }
+  
+  console.log("🔍 Current edit mode:", isEditing ? "EDITING" : "VIEW-ONLY");
   
   return (
     <Card className="w-full">

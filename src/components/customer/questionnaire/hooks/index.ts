@@ -1,5 +1,5 @@
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useQuestionnaireProfileState } from "./useQuestionnaireProfileState";
 import { useQuestionnaireFileHandlers } from "./useQuestionnaireFileHandlers";
 import { useQuestionnaireFormHandlers } from "./useQuestionnaireFormHandlers";
@@ -10,8 +10,14 @@ export const useQuestionnaireProfileHandlers = () => {
     questionnaire,
     setFormData,
     setIsEditing,
-    setIsLoadingFiles
+    setIsLoadingFiles,
+    isEditing
   } = useQuestionnaireProfileState();
+
+  // For debugging
+  useEffect(() => {
+    console.log("🔍 Current editing state in handlers:", isEditing);
+  }, [isEditing]);
 
   // Get file and form handlers
   const fileHandlers = useQuestionnaireFileHandlers();
@@ -26,11 +32,12 @@ export const useQuestionnaireProfileHandlers = () => {
       const newFormData = {...questionnaire};
       setFormData(newFormData);
       console.log("✏️ Setting isEditing to TRUE");
-      // Force edit mode
+      
+      // Force React to re-render by using setTimeout
       setTimeout(() => {
         setIsEditing(true);
         console.log("✅ isEditing set to TRUE with timeout");
-      }, 0);
+      }, 10);
     } else {
       console.error("Cannot edit: questionnaire is null");
     }

@@ -30,8 +30,14 @@ export const useQuestionnaireFormHandlers = () => {
   
   const handleChange = useCallback((field: keyof QuestionnaireData, value: any) => {
     console.log(`🔄 Updating form field ${String(field)} to:`, value);
-    setFormData(prev => prev ? { ...prev, [field]: value } : { [field]: value });
-  }, [setFormData]);
+    console.log("Current form data before update:", formData);
+    setFormData(prev => {
+      if (!prev) return { [field]: value };
+      const updated = { ...prev, [field]: value };
+      console.log("Updated form data:", updated);
+      return updated;
+    });
+  }, [formData, setFormData]);
   
   const handleSave = useCallback(async () => {
     if (!formData) return;

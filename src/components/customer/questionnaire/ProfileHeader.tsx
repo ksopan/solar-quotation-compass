@@ -17,7 +17,12 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     e.preventDefault(); // Prevent any default form behavior
     e.stopPropagation(); // Stop event bubbling
     console.log("📝 Edit button clicked in ProfileHeader");
+    
+    // Call the edit handler
     onEdit();
+    
+    // Debug after clicking
+    console.log("Edit button clicked - isEditing should change soon");
   };
 
   return (
@@ -32,6 +37,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             onClick={handleEditClick} 
             variant="default"
             type="button"
+            className="z-10"
           >
             <Edit className="mr-2 h-4 w-4" />
             Edit Profile
