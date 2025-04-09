@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,9 +18,13 @@ import { supabase } from "@/integrations/supabase/client";
 const Register = () => {
   const { register: authRegister, loginWithOAuth } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"customer" | "vendor" | "admin">("customer");
   const [questionnaireId, setQuestionnaireId] = useState<string | null>(null);
+
+  // Get pre-filled values from location state
+  const preFilledValues = location.state || {};
 
   const {
     register,
@@ -38,7 +42,9 @@ const Register = () => {
     ),
     defaultValues: {
       role: "customer" as const,
-      email: "",
+      email: preFilledValues.email || "",
+      firstName: preFilledValues.firstName || "",
+      lastName: preFilledValues.lastName || "",
       password: "",
       confirmPassword: ""
     }
@@ -50,37 +56,55 @@ const Register = () => {
     if (storedQuestionnaireId) {
       setQuestionnaireId(storedQuestionnaireId);
       
-      // Fetch the questionnaire data to pre-fill the form
-      const fetchQuestionnaireData = async () => {
-        try {
-          const { data, error } = await supabase
-            .from("property_questionnaires")
-            .select("*")
-            .eq("id", storedQuestionnaireId)
-            .single();
+      // If no state was passed via navigation, fetch the questionnaire data to pre-fill the form
+      if (!preFilledValues.email) {
+        const fetchQuestionnaireData = async () => {
+          try {
+            const { data, error } = await supabase
+              .from("property_questionnaires")
+              .select("*")
+              .eq("id", storedQuestionnaireId)
+              .single();
+              
+            if (error) {
+              console.error("Error fetching questionnaire data:", error);
+              return;
+            }
             
-          if (error) {
-            console.error("Error fetching questionnaire data:", error);
-            return;
+            if (data) {
+              // Pre-fill the registration form with questionnaire data
+              setValue("email", data.email);
+              setValue("firstName", data.first_name);
+              setValue("lastName", data.last_name);
+              
+              // Set active tab to customer since questionnaire is for customers
+              setActiveTab("customer");
+            }
+          } catch (error) {
+            console.error("Error in fetchQuestionnaireData:", error);
           }
-          
-          if (data) {
-            // Pre-fill the registration form with questionnaire data
-            setValue("email", data.email);
-            setValue("firstName", data.first_name);
-            setValue("lastName", data.last_name);
-            
-            // Set active tab to customer since questionnaire is for customers
-            setActiveTab("customer");
-          }
-        } catch (error) {
-          console.error("Error in fetchQuestionnaireData:", error);
-        }
-      };
-      
-      fetchQuestionnaireData();
+        };
+        
+        fetchQuestionnaireData();
+      }
     }
-  }, [setValue]);
+  }, [setValue, preFilledValues]);
+
+  // Apply pre-filled values from location state when component mounts
+  useEffect(() => {
+    if (preFilledValues.email) {
+      setValue("email", preFilledValues.email);
+    }
+    if (preFilledValues.firstName) {
+      setValue("firstName", preFilledValues.firstName);
+    }
+    if (preFilledValues.lastName) {
+      setValue("lastName", preFilledValues.lastName);
+    }
+    if (preFilledValues.email) {
+      setActiveTab("customer"); // Force customer tab for questionnaire completions
+    }
+  }, [setValue, preFilledValues]);
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
@@ -93,7 +117,7 @@ const Register = () => {
         role: registrationData.role
       });
       
-      // If there's a questionnaire ID, associate it with the new user
+      // If there's a questionnaire ID, association will be handled in the auth hook after registration
       if (questionnaireId) {
         // This will be handled in the auth hook after successful registration
         sessionStorage.removeItem("questionnaire_id");
@@ -106,6 +130,11 @@ const Register = () => {
   };
 
   const handleTabChange = (value: string) => {
+    // If we're coming from a questionnaire, don't allow changing the tab
+    if (questionnaireId || preFilledValues.email) {
+      return;
+    }
+    
     setActiveTab(value as "customer" | "vendor" | "admin");
     reset({
       role: value as "customer" | "vendor" | "admin",
@@ -120,6 +149,13 @@ const Register = () => {
     if (questionnaireId) {
       localStorage.setItem("questionnaire_id", questionnaireId);
     }
+    
+    // Store questionnaire data in localStorage for OAuth flow
+    const questionnaireDataStr = sessionStorage.getItem("questionnaire_data");
+    if (questionnaireDataStr) {
+      localStorage.setItem("questionnaire_data", questionnaireDataStr);
+    }
+    
     loginWithOAuth(provider);
   };
 
@@ -146,11 +182,30 @@ const Register = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="customer" value={activeTab} onValueChange={handleTabChange}>
+            <Tabs 
+              defaultValue="customer" 
+              value={activeTab} 
+              onValueChange={handleTabChange}
+            >
               <TabsList className="grid w-full grid-cols-3 mb-6">
-                <TabsTrigger value="customer">Customer</TabsTrigger>
-                <TabsTrigger value="vendor">Vendor</TabsTrigger>
-                <TabsTrigger value="admin">Admin</TabsTrigger>
+                <TabsTrigger 
+                  value="customer" 
+                  disabled={!!questionnaireId || !!preFilledValues.email}
+                >
+                  Customer
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="vendor" 
+                  disabled={!!questionnaireId || !!preFilledValues.email}
+                >
+                  Vendor
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="admin" 
+                  disabled={!!questionnaireId || !!preFilledValues.email}
+                >
+                  Admin
+                </TabsTrigger>
               </TabsList>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

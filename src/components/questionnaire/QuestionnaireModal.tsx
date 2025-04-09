@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -114,12 +113,26 @@ export const QuestionnaireModal: React.FC<QuestionnaireModalProps> = ({
       // Store ID in session storage for later association
       if (data?.id) {
         sessionStorage.setItem("questionnaire_id", data.id);
+        
+        // Also store the complete questionnaire data for creating quotation request
+        sessionStorage.setItem("questionnaire_data", JSON.stringify({
+          ...formData,
+          id: data.id
+        }));
       }
 
       // Success! Redirect to register page
       toast.success("Thank you for your submission!");
       onOpenChange(false);
-      setTimeout(() => navigate("/register"), 500);
+      
+      // Pre-fill the registration form with the questionnaire data
+      setTimeout(() => navigate("/register", {
+        state: {
+          email: formData.email,
+          firstName: formData.first_name,
+          lastName: formData.last_name
+        }
+      }), 500);
     } catch (error) {
       console.error("Error submitting questionnaire:", error);
       toast.error("Failed to submit your questionnaire. Please try again.");

@@ -94,8 +94,47 @@ export const useRegistration = (
       }
 
       if (data.user) {
-        // Check if there's a questionnaire ID in session storage and associate it with the user
+        // Check if there's a questionnaire data in session storage and process it
+        const questionnaireDataStr = sessionStorage.getItem("questionnaire_data");
         const questionnaireId = sessionStorage.getItem("questionnaire_id");
+        
+        if (questionnaireDataStr && userData.role === "customer") {
+          try {
+            const questionnaireData = JSON.parse(questionnaireDataStr);
+            console.log("Creating quotation request from questionnaire data:", questionnaireData);
+            
+            // Create a quotation request from the questionnaire data
+            const { error: quotationError } = await supabase
+              .from("quotation_requests")
+              .insert({
+                customer_id: data.user.id,
+                location: questionnaireData.address || userData.address || "Not specified",
+                roof_type: "unknown", // Default value, could be improved with more questionnaire data
+                roof_area: 0, // Default value, could be improved with more questionnaire data
+                energy_usage: questionnaireData.monthly_electric_bill || 0,
+                additional_notes: `Property type: ${questionnaireData.property_type}
+Ownership status: ${questionnaireData.ownership_status}
+Interested in batteries: ${questionnaireData.interested_in_batteries ? 'Yes' : 'No'}
+${questionnaireData.battery_reason ? 'Battery reason: ' + questionnaireData.battery_reason : ''}
+Purchase timeline: ${questionnaireData.purchase_timeline}
+Willing to remove trees: ${questionnaireData.willing_to_remove_trees ? 'Yes' : 'No'}
+Roof age status: ${questionnaireData.roof_age_status}`
+              });
+              
+            if (quotationError) {
+              console.error("Error creating quotation request:", quotationError);
+            } else {
+              console.log("Successfully created quotation request from questionnaire");
+            }
+            
+            // Clear the questionnaire data from session storage
+            sessionStorage.removeItem("questionnaire_data");
+          } catch (parseError) {
+            console.error("Error parsing questionnaire data:", parseError);
+          }
+        }
+        
+        // Update the questionnaire with the user ID if there's a questionnaire ID
         if (questionnaireId && userData.role === "customer") {
           console.log("Associating questionnaire with new user:", data.user.id);
           
