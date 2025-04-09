@@ -72,7 +72,8 @@ Roof age status: ${questionnaireData.roof_age_status}`
         }
         
         // Check user's role to redirect to appropriate dashboard
-        const { data: { role } } = session.user;
+        const userMetadata = session.user.user_metadata;
+        const role = userMetadata?.role;
         
         // Redirect based on user role
         toast.success("Successfully authenticated!");
