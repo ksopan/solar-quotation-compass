@@ -15,6 +15,8 @@ import { AdminRegistrationForm } from "@/components/register/AdminRegistrationFo
 import { SocialLoginButtons } from "./SocialLoginButtons";
 import { customerSchema, vendorSchema, adminSchema, RegisterFormValues } from "@/components/register/registerSchemas";
 import { Link } from "react-router-dom";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const RegisterContainer = () => {
   const { register: authRegister, loginWithOAuth } = useAuth();
@@ -23,6 +25,7 @@ const RegisterContainer = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"customer" | "vendor" | "admin">("customer");
   const [questionnaireId, setQuestionnaireId] = useState<string | null>(null);
+  const [showEmailInfoAlert, setShowEmailInfoAlert] = useState(false);
 
   // Get pre-filled values from location state
   const preFilledValues = location.state || {};
@@ -109,6 +112,7 @@ const RegisterContainer = () => {
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
+    setShowEmailInfoAlert(true);
     try {
       const { confirmPassword, ...registrationData } = data;
       // Ensure password is passed as string and is required
@@ -125,6 +129,7 @@ const RegisterContainer = () => {
       }
     } catch (error) {
       // Error is already handled in the register function
+      setShowEmailInfoAlert(false);
     } finally {
       setIsLoading(false);
     }
@@ -181,6 +186,16 @@ const RegisterContainer = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {showEmailInfoAlert && (
+          <Alert variant="default" className="mb-4 border-green-200 bg-green-50 text-green-800">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Check your email</AlertTitle>
+            <AlertDescription>
+              A confirmation email has been sent to your email address. Please check your inbox (and spam/junk folder) to confirm your account.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <Tabs 
           defaultValue="customer" 
           value={activeTab} 
@@ -230,12 +245,15 @@ const RegisterContainer = () => {
           <SocialLoginButtons onOAuthRegister={handleOAuthRegister} />
         )}
       </CardContent>
-      <CardFooter className="flex justify-center">
+      <CardFooter className="flex flex-col justify-center space-y-2">
         <p className="text-sm text-center text-muted-foreground">
           Already have an account?{" "}
           <Link to="/login" className="text-primary underline">
             Login
           </Link>
+        </p>
+        <p className="text-xs text-center text-muted-foreground">
+          After registering, please check your email (including spam/junk folder) to confirm your account.
         </p>
       </CardFooter>
     </Card>

@@ -168,7 +168,7 @@ Roof age status: ${questionnaireData.roof_age_status}`
         
         // Email/password signup (always requires email confirmation)
         toast.success("Registration successful!", {
-          description: "Please check your email to confirm your account before logging in."
+          description: "Please check your email (including spam/junk folder) to confirm your account before logging in."
         });
         
         // Sign out immediately for email/password registration
