@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -49,7 +50,7 @@ export const useRegistration = (
       
       // If email exists in any profile table, don't allow registration
       if (existingUsers || existingVendors || existingAdmins) {
-        toast.error("Registration failed", {
+        toast.error("Email already in use", {
           description: "This email is already registered. Please log in or use a different email address."
         });
         setLoading(false);
@@ -89,6 +90,14 @@ export const useRegistration = (
       });
 
       if (error) {
+        // Handle duplicate email error from auth.signUp
+        if (error.message.includes("already registered")) {
+          toast.error("Email already in use", {
+            description: "This email is already registered. Please log in or use a different email address."
+          });
+          setLoading(false);
+          return;
+        }
         throw new Error(error.message);
       }
 
