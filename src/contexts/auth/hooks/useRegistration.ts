@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -15,28 +14,6 @@ export const useRegistration = (
   const register = async (userData: Partial<User> & { password: string; role: UserRole }) => {
     setLoading(true);
     try {
-      // Check if the email already exists in auth system by querying users
-      // Using the proper parameter format for listUsers
-      const { data: authData, error: authError } = await supabase.auth.admin.listUsers({
-        page: 1,
-        perPage: 1,
-        query: userData.email
-      });
-      
-      if (authError) {
-        console.error("Error checking existing user in auth:", authError);
-      }
-      
-      // If email exists in auth system, don't allow registration
-      // Check if any users were found with that email
-      if (authData?.users && authData.users.some(user => user.email === userData.email)) {
-        toast.error("Registration failed", {
-          description: "This email is already registered. Please log in or use a different email address."
-        });
-        setLoading(false);
-        return;
-      }
-
       // First check if the email already exists in profile tables
       const { data: existingUsers, error: searchError } = await supabase
         .from("customer_profiles")
