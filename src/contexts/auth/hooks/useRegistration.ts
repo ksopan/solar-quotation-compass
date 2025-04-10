@@ -80,6 +80,27 @@ export const useRegistration = (
         userMetadata.fullName = userData.fullName || "";
       }
 
+      // Check if the email exists in auth.users before trying to sign up
+      const { data: { users: existingAuthUsers }, error: authSearchError } = await supabase.auth.admin.listUsers({
+        page: 1,
+        perPage: 1,
+        filter: {
+          email: userData.email
+        }
+      });
+      
+      if (authSearchError) {
+        console.error("Error checking existing auth users:", authSearchError);
+      }
+      
+      if (existingAuthUsers && existingAuthUsers.length > 0) {
+        toast.error("Email already in use", {
+          description: "This email is already registered. Please log in or use a different email address."
+        });
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email: userData.email!,
         password: userData.password,
