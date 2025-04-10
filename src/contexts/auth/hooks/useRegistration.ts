@@ -15,7 +15,28 @@ export const useRegistration = (
   const register = async (userData: Partial<User> & { password: string; role: UserRole }) => {
     setLoading(true);
     try {
-      // First check if the email already exists
+      // First check if the email already exists in auth system
+      const { data: authData, error: authError } = await supabase.auth.admin
+        .listUsers({ 
+          filter: { 
+            email: userData.email
+          } 
+        });
+      
+      if (authError) {
+        console.error("Error checking existing user in auth:", authError);
+      }
+      
+      // If email exists in auth system, don't allow registration
+      if (authData?.users?.length > 0) {
+        toast.error("Registration failed", {
+          description: "This email is already registered. Please log in or use a different email address."
+        });
+        setLoading(false);
+        return;
+      }
+
+      // First check if the email already exists in profile tables
       const { data: existingUsers, error: searchError } = await supabase
         .from("customer_profiles")
         .select("email")
@@ -51,7 +72,7 @@ export const useRegistration = (
       // If email exists in any profile table, don't allow registration
       if (existingUsers || existingVendors || existingAdmins) {
         toast.error("Registration failed", {
-          description: "This email is already registered. Please use a different email or try to log in."
+          description: "This email is already registered. Please log in or use a different email address."
         });
         setLoading(false);
         return;

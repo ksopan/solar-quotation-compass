@@ -7,10 +7,13 @@ import { User } from "@/contexts/auth/types";
 import { transformUserData } from "@/contexts/auth/authUtils";
 import { isProfileComplete } from "@/contexts/auth/authUtils";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
   const [message, setMessage] = useState("Processing login...");
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -20,6 +23,16 @@ const AuthCallback = () => {
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
+          // Check if the error is related to email confirmation
+          if (error.message.includes("Email not confirmed")) {
+            setShowEmailConfirmation(true);
+            setMessage("Please confirm your email address");
+            toast.error("Email not confirmed", {
+              description: "Please check your inbox and confirm your email before logging in."
+            });
+            setTimeout(() => navigate("/login"), 5000);
+            return;
+          }
           throw error;
         }
         
@@ -95,6 +108,16 @@ const AuthCallback = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
           <h1 className="text-2xl font-bold">{message}</h1>
           <p className="text-muted-foreground">Please wait while we complete your authentication.</p>
+          
+          {showEmailConfirmation && (
+            <Alert className="mt-8 max-w-md mx-auto">
+              <InfoIcon className="h-4 w-4" />
+              <AlertDescription>
+                You need to confirm your email address before logging in. 
+                Please check your inbox (and spam folder) for a confirmation email.
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
       </div>
     </MainLayout>
