@@ -44,10 +44,40 @@ const ResetPassword = () => {
       setIsVerifying(true);
       
       try {
-        // When a user clicks the reset link in their email, Supabase adds the token to the URL
-        // The SDK will automatically extract and use these tokens
+        console.log("Checking for recovery session...");
         
-        // Just check if we have a basic user session from the URL
+        // Check URL for fragments - this is how Supabase provides the tokens
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+        const type = hashParams.get("type");
+        
+        // Log for debugging (don't log full tokens in production)
+        console.log("URL hash params:", { 
+          hasAccessToken: !!accessToken, 
+          hasRefreshToken: !!refreshToken, 
+          type 
+        });
+        
+        // If we have tokens in the URL fragment, set the session
+        if (accessToken && type === "recovery") {
+          console.log("Found recovery token in URL, setting session");
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          });
+          
+          if (error) {
+            throw new Error("Invalid or expired recovery link: " + error.message);
+          }
+          
+          // Remove the URL fragments for security
+          if (window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }
+        
+        // Check if we have a valid session
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -58,8 +88,9 @@ const ResetPassword = () => {
           throw new Error("No valid session found. Please request a new password reset link.");
         }
         
-        // Good to go - the URL contains valid tokens
+        // Good to go - we have a valid session
         setError(null);
+        console.log("Valid recovery session confirmed");
       } catch (err: any) {
         console.error("Password reset verification error:", err);
         setError(err.message || "Failed to verify password reset request");
@@ -75,7 +106,7 @@ const ResetPassword = () => {
     setIsLoading(true);
     
     try {
-      // We only need the new password, Supabase will handle the rest based on the auth tokens
+      console.log("Updating password...");
       const { error } = await supabase.auth.updateUser({
         password: values.password,
       });

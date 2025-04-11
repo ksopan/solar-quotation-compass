@@ -60,8 +60,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onRoleChange }) => {
     
     try {
       setIsResetLoading(true);
+      // Use the current origin (whether local or deployed) for the redirect
+      const redirectUrl = `${window.location.origin}/reset-password`;
+      console.log("Password reset redirect URL:", redirectUrl);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: redirectUrl
       });
       
       if (error) {

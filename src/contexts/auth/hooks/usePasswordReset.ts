@@ -9,8 +9,12 @@ export const usePasswordReset = () => {
   const sendPasswordResetEmail = async (email: string) => {
     setLoading(true);
     try {
+      // Use the current origin (whether local or deployed) for the redirect
+      const redirectUrl = `${window.location.origin}/reset-password`;
+      console.log("Setting password reset redirect to:", redirectUrl);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: redirectUrl
       });
 
       if (error) throw error;
