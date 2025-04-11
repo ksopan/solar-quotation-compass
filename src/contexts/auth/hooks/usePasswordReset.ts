@@ -13,8 +13,10 @@ export const usePasswordReset = () => {
       const redirectUrl = `${window.location.origin}/reset-password`;
       console.log("Setting password reset redirect to:", redirectUrl);
       
+      // Add the current timestamp to ensure a fresh link
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl
+        redirectTo: redirectUrl,
+        captchaToken: Date.now().toString() // Adding a unique parameter to prevent caching
       });
 
       if (error) throw error;

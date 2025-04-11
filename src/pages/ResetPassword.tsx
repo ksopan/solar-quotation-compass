@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { usePasswordReset } from "@/contexts/auth/hooks";
 
 const resetPasswordSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -25,6 +26,7 @@ type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { updatePassword } = usePasswordReset();
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,17 +48,34 @@ const ResetPassword = () => {
       try {
         console.log("Checking for recovery session...");
         
+        // First check for error params in the URL - this happens when the link has expired
+        const errorParam = searchParams.get("error");
+        const errorDescription = searchParams.get("error_description");
+        
+        if (errorParam) {
+          throw new Error(errorDescription || `Password reset error: ${errorParam}`);
+        }
+        
         // Check URL for fragments - this is how Supabase provides the tokens
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get("access_token");
         const refreshToken = hashParams.get("refresh_token");
         const type = hashParams.get("type");
         
+        // Also check for errors in hash params
+        const errorHash = hashParams.get("error");
+        const errorDescHash = hashParams.get("error_description");
+        
+        if (errorHash) {
+          throw new Error(errorDescHash || `Password reset error: ${errorHash}`);
+        }
+        
         // Log for debugging (don't log full tokens in production)
         console.log("URL hash params:", { 
           hasAccessToken: !!accessToken, 
           hasRefreshToken: !!refreshToken, 
-          type 
+          type,
+          error: errorHash
         });
         
         // If we have tokens in the URL fragment, set the session
@@ -100,35 +119,24 @@ const ResetPassword = () => {
     };
     
     verifyPasswordResetRequest();
-  }, []);
+  }, [searchParams]);
   
   const onSubmit = async (values: ResetPasswordValues) => {
     setIsLoading(true);
     
     try {
       console.log("Updating password...");
-      const { error } = await supabase.auth.updateUser({
-        password: values.password,
-      });
+      const success = await updatePassword(values.password);
       
-      if (error) {
-        throw error;
+      if (success) {
+        // Sign out after password reset
+        await supabase.auth.signOut();
+        
+        // Redirect to login page
+        navigate("/login");
       }
-      
-      toast.success("Password updated successfully", {
-        description: "You can now log in with your new password",
-      });
-      
-      // Sign out after password reset
-      await supabase.auth.signOut();
-      
-      // Redirect to login page
-      navigate("/login");
     } catch (err: any) {
       console.error("Password reset error:", err);
-      toast.error("Failed to reset password", {
-        description: err.message || "Please try again or request a new reset link",
-      });
     } finally {
       setIsLoading(false);
     }

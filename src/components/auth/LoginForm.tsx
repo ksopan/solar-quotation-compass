@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -11,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { usePasswordReset } from "@/contexts/auth/hooks";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email format"),
@@ -27,6 +26,7 @@ interface LoginFormProps {
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onRoleChange }) => {
   const { login } = useAuth();
+  const { sendPasswordResetEmail } = usePasswordReset();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isResetLoading, setIsResetLoading] = useState(false);
@@ -60,25 +60,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onRoleChange }) => {
     
     try {
       setIsResetLoading(true);
-      // Use the current origin (whether local or deployed) for the redirect
-      const redirectUrl = `${window.location.origin}/reset-password`;
-      console.log("Password reset redirect URL:", redirectUrl);
-      
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast.success("Password reset email sent", {
-        description: "Please check your email for the reset link"
-      });
+      await sendPasswordResetEmail(email);
     } catch (error: any) {
-      toast.error("Failed to send reset email", {
-        description: error.message || "Please try again later"
-      });
+      console.error("Password reset error:", error);
     } finally {
       setIsResetLoading(false);
     }
