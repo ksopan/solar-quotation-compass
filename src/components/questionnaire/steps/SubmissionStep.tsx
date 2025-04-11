@@ -1,8 +1,7 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight } from "lucide-react";
-import { QuestionnaireData } from "../QuestionnaireModal";
+import { QuestionnaireData } from "../context/QuestionnaireContext";
 
 interface SubmissionStepProps {
   formData: QuestionnaireData;
