@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -44,13 +43,11 @@ const Register = () => {
     }
   });
 
-  // Check for a questionnaire ID in session storage on component mount
   useEffect(() => {
     const storedQuestionnaireId = sessionStorage.getItem("questionnaire_id");
     if (storedQuestionnaireId) {
       setQuestionnaireId(storedQuestionnaireId);
       
-      // Fetch the questionnaire data to pre-fill the form
       const fetchQuestionnaireData = async () => {
         try {
           const { data, error } = await supabase
@@ -65,12 +62,10 @@ const Register = () => {
           }
           
           if (data) {
-            // Pre-fill the registration form with questionnaire data
             setValue("email", data.email);
             setValue("firstName", data.first_name);
             setValue("lastName", data.last_name);
             
-            // Set active tab to customer since questionnaire is for customers
             setActiveTab("customer");
           }
         } catch (error) {
@@ -86,20 +81,16 @@ const Register = () => {
     setIsLoading(true);
     try {
       const { confirmPassword, ...registrationData } = data;
-      // Ensure password is passed as string and is required
       await authRegister({
         ...registrationData,
         password: registrationData.password,
         role: registrationData.role
       });
       
-      // If there's a questionnaire ID, associate it with the new user
       if (questionnaireId) {
-        // This will be handled in the auth hook after successful registration
         sessionStorage.removeItem("questionnaire_id");
       }
     } catch (error) {
-      // Error is already handled in the register function
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +107,6 @@ const Register = () => {
   };
 
   const handleOAuthRegister = (provider: "google" | "twitter") => {
-    // Store questionnaire ID in localStorage before OAuth flow
     if (questionnaireId) {
       localStorage.setItem("questionnaire_id", questionnaireId);
     }

@@ -88,7 +88,7 @@ export const QuestionnaireModal: React.FC<QuestionnaireModalProps> = ({
       setIsSubmitting(true);
       console.log("Submitting questionnaire:", formData);
 
-      // Store in Supabase
+      // Store in Supabase without linking to a user yet
       const { data, error } = await supabase
         .from("property_questionnaires")
         .insert({
@@ -102,7 +102,9 @@ export const QuestionnaireModal: React.FC<QuestionnaireModalProps> = ({
           roof_age_status: formData.roof_age_status,
           first_name: formData.first_name,
           last_name: formData.last_name,
-          email: formData.email
+          email: formData.email,
+          is_completed: false, // Mark as incomplete until verification
+          customer_id: null // Will be linked after registration
         })
         .select("id")
         .single();
@@ -114,12 +116,15 @@ export const QuestionnaireModal: React.FC<QuestionnaireModalProps> = ({
       // Store ID in session storage for later association
       if (data?.id) {
         sessionStorage.setItem("questionnaire_id", data.id);
+        console.log("Saved questionnaire ID to session storage:", data.id);
       }
 
       // Success! Redirect to register page
-      toast.success("Thank you for your submission!");
+      toast.success("Thank you for your submission! Please create an account to receive solar quotes.");
       onOpenChange(false);
-      setTimeout(() => navigate("/register"), 500);
+      
+      // Redirect to registration with a brief delay for toast to be visible
+      setTimeout(() => navigate("/register"), 1000);
     } catch (error) {
       console.error("Error submitting questionnaire:", error);
       toast.error("Failed to submit your questionnaire. Please try again.");
