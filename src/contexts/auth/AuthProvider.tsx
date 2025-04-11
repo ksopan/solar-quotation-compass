@@ -10,7 +10,15 @@ export const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, setUser, loading, setLoading } = useAuthSetup();
   
-  const { login, loginWithOAuth, register, updateProfile, logout } = useAuthMethods(setUser, setLoading);
+  const { 
+    login, 
+    loginWithOAuth, 
+    register, 
+    updateProfile, 
+    logout, 
+    sendPasswordResetEmail, 
+    updatePassword 
+  } = useAuthMethods(setUser, setLoading);
 
   // Check if user profile is complete
   const checkProfileComplete = () => {
@@ -26,7 +34,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logout, 
       register, 
       updateProfile,
-      isProfileComplete: checkProfileComplete
+      isProfileComplete: checkProfileComplete,
+      sendPasswordResetEmail,
+      updatePassword
     }}>
       {children}
     </AuthContext.Provider>

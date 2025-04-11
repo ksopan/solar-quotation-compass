@@ -1,4 +1,3 @@
-
 export type UserRole = "customer" | "vendor" | "admin";
 
 export interface User {
@@ -18,8 +17,10 @@ export interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string, role: UserRole) => Promise<void>;
   loginWithOAuth: (provider: "google" | "twitter") => Promise<void>;
-  logout: () => void;
-  register: (userData: Partial<User> & { password: string, role: UserRole }) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (userData: Partial<User> & { password: string; role: UserRole }) => Promise<void>;
   updateProfile: (userData: Partial<User>) => Promise<void>;
   isProfileComplete: () => boolean;
+  sendPasswordResetEmail: (email: string) => Promise<boolean>;
+  updatePassword: (newPassword: string) => Promise<boolean>;
 }

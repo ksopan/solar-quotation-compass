@@ -13,6 +13,7 @@ import QuotationDetails from "./pages/QuotationDetails";
 import CompleteProfile from "./pages/CompleteProfile";
 import AuthCallback from "./pages/auth/AuthCallback";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             
             {/* Protected routes */}
             <Route path="/complete-profile" element={

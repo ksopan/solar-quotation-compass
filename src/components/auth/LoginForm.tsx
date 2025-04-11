@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email format"),
@@ -28,6 +29,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onRoleChange }) => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [isResetLoading, setIsResetLoading] = useState(false);
 
   const {
     register,
@@ -49,16 +51,33 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onRoleChange }) => {
     onRoleChange(value);
   };
 
-  const handlePasswordReset = () => {
+  const handlePasswordReset = async () => {
     const email = watch("email");
     if (!email) {
       toast.error("Please enter your email address first");
       return;
     }
     
-    toast.info("Password reset functionality will be added soon.");
-    // In a real implementation, you would call:
-    // supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
+    try {
+      setIsResetLoading(true);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success("Password reset email sent", {
+        description: "Please check your email for the reset link"
+      });
+    } catch (error: any) {
+      toast.error("Failed to send reset email", {
+        description: error.message || "Please try again later"
+      });
+    } finally {
+      setIsResetLoading(false);
+    }
   };
 
   const onSubmit = async (data: LoginFormValues) => {
@@ -104,8 +123,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onRoleChange }) => {
             className="px-0 text-sm" 
             type="button"
             onClick={handlePasswordReset}
+            disabled={isResetLoading}
           >
-            Forgot password?
+            {isResetLoading ? "Sending..." : "Forgot password?"}
           </Button>
         </div>
       </div>
