@@ -124,7 +124,7 @@ export const useRegistration = (
           }
         }
         
-        // Email/password signup (always requires email confirmation)
+        // At this point, we know it's a genuinely new registration
         toast.success("Registration successful!", {
           description: "Please check your email to confirm your account before logging in."
         });
