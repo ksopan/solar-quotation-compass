@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -15,7 +14,25 @@ export const useRegistration = (
   const register = async (userData: Partial<User> & { password: string; role: UserRole }) => {
     setLoading(true);
     try {
-      // Step 1: Check profile tables for this email
+      // Step 1: First, try a sign-in with the email to see if it already exists
+      const { error: signInError } = await supabase.auth.signInWithOtp({
+        email: userData.email!,
+        options: {
+          shouldCreateUser: false // Don't create a new user if not exists
+        }
+      });
+
+      // If the error contains "Email not found" then the email doesn't exist
+      // Otherwise, the email exists and we should show the appropriate message
+      if (!signInError || !signInError.message.includes("Email not found")) {
+        toast.error("Email already in use", {
+          description: "This email is already registered. Please log in or use a different email address."
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Also check profile tables for this email as a backup check
       const [customerResponse, vendorResponse, adminResponse] = await Promise.all([
         supabase.from("customer_profiles").select("email").eq("email", userData.email!).maybeSingle(),
         supabase.from("vendor_profiles").select("email").eq("email", userData.email!).maybeSingle(),
@@ -31,7 +48,7 @@ export const useRegistration = (
         return;
       }
 
-      // Step 2: Prepare metadata based on role
+      // Step 3: Prepare metadata based on role
       const userMetadata: Record<string, any> = {
         role: userData.role
       };
@@ -54,7 +71,7 @@ export const useRegistration = (
         userMetadata.fullName = userData.fullName || "";
       }
 
-      // Step 3: Attempt to sign up
+      // Step 4: Attempt to sign up
       const { data, error } = await supabase.auth.signUp({
         email: userData.email!,
         password: userData.password,
@@ -66,7 +83,7 @@ export const useRegistration = (
 
       if (error) {
         // Handle duplicate email error from auth.signUp
-        if (error.message.toLowerCase().includes("already") && error.message.toLowerCase().includes("registered")) {
+        if (error.message.toLowerCase().includes("already") || error.message.toLowerCase().includes("registered")) {
           toast.error("Email already in use", {
             description: "This email is already registered. Please log in or use a different email address."
           });
@@ -76,7 +93,20 @@ export const useRegistration = (
         throw new Error(error.message);
       }
 
+      // Step 5: Check if user was actually created or if it already existed
       if (data.user) {
+        const { id, email_confirmed_at, created_at } = data.user;
+        
+        // If email is already confirmed or the timestamps are significantly different,
+        // this indicates an existing user (signup returns the user even if already exists)
+        if (email_confirmed_at) {
+          toast.error("Email already in use", {
+            description: "This email is already registered. Please log in or use a different email address."
+          });
+          setLoading(false);
+          return;
+        }
+        
         // Check if there's a questionnaire ID in session storage and associate it with the user
         const questionnaireId = sessionStorage.getItem("questionnaire_id");
         if (questionnaireId && userData.role === "customer") {

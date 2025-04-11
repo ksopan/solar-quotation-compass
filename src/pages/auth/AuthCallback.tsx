@@ -20,6 +20,31 @@ const AuthCallback = () => {
       try {
         setMessage("Completing authentication...");
         
+        // Check URL parameters for error indications
+        const urlParams = new URLSearchParams(window.location.search);
+        const errorCode = urlParams.get('error_code');
+        const errorDescription = urlParams.get('error_description');
+        
+        if (errorCode || errorDescription) {
+          if (errorCode === 'email_already_in_use' || 
+              (errorDescription && (
+                errorDescription.includes('already in use') || 
+                errorDescription.includes('already registered')
+              ))) {
+            toast.error("Email already in use", {
+              description: "This email is already registered. Please log in or use a different email address."
+            });
+            setTimeout(() => navigate("/login"), 2000);
+            return;
+          } else {
+            toast.error("Authentication failed", {
+              description: errorDescription || "Could not complete the authentication process."
+            });
+            setTimeout(() => navigate("/login"), 2000);
+            return;
+          }
+        }
+
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -37,20 +62,11 @@ const AuthCallback = () => {
         }
         
         if (!data.session) {
-          const urlParams = new URLSearchParams(window.location.search);
-          const errorCode = urlParams.get('error_code');
-          const errorDescription = urlParams.get('error_description');
-          
-          if (errorCode === 'email_already_in_use' || (errorDescription && errorDescription.includes('already in use'))) {
-            toast.error("Email already in use", {
-              description: "This email is already registered. Please log in or use a different email address."
-            });
-          } else {
-            toast.error("Authentication failed", {
-              description: errorDescription || "Could not complete the authentication process."
-            });
-          }
-          
+          // No session but also no error means likely an email confirmation flow
+          // or another flow that doesn't immediately create a session
+          toast.info("Authentication pending", {
+            description: "Please follow the instructions in your email to complete the process."
+          });
           setTimeout(() => navigate("/login"), 2000);
           return;
         }
