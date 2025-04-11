@@ -15,41 +15,15 @@ export const useRegistration = (
   const register = async (userData: Partial<User> & { password: string; role: UserRole }) => {
     setLoading(true);
     try {
-      // First check if the email already exists in profile tables
-      const { data: existingUsers, error: searchError } = await supabase
-        .from("customer_profiles")
-        .select("email")
-        .eq("email", userData.email!)
-        .maybeSingle();
-        
-      if (searchError) {
-        console.error("Error checking existing email:", searchError);
-      }
-      
-      // Also check in vendor_profiles
-      const { data: existingVendors, error: vendorSearchError } = await supabase
-        .from("vendor_profiles")
-        .select("email")
-        .eq("email", userData.email!)
-        .maybeSingle();
-        
-      if (vendorSearchError) {
-        console.error("Error checking existing email in vendors:", vendorSearchError);
-      }
-      
-      // Also check in admin_profiles
-      const { data: existingAdmins, error: adminSearchError } = await supabase
-        .from("admin_profiles")
-        .select("email")
-        .eq("email", userData.email!)
-        .maybeSingle();
-        
-      if (adminSearchError) {
-        console.error("Error checking existing email in admins:", adminSearchError);
-      }
+      // Step 1: Check profile tables for this email
+      const [customerResponse, vendorResponse, adminResponse] = await Promise.all([
+        supabase.from("customer_profiles").select("email").eq("email", userData.email!).maybeSingle(),
+        supabase.from("vendor_profiles").select("email").eq("email", userData.email!).maybeSingle(),
+        supabase.from("admin_profiles").select("email").eq("email", userData.email!).maybeSingle()
+      ]);
       
       // If email exists in any profile table, don't allow registration
-      if (existingUsers || existingVendors || existingAdmins) {
+      if (customerResponse.data || vendorResponse.data || adminResponse.data) {
         toast.error("Email already in use", {
           description: "This email is already registered. Please log in or use a different email address."
         });
@@ -57,7 +31,7 @@ export const useRegistration = (
         return;
       }
 
-      // Prepare metadata based on role
+      // Step 2: Prepare metadata based on role
       const userMetadata: Record<string, any> = {
         role: userData.role
       };
@@ -80,27 +54,7 @@ export const useRegistration = (
         userMetadata.fullName = userData.fullName || "";
       }
 
-      // Check if the email exists in auth.users before trying to sign up
-      const { data: { users: existingAuthUsers }, error: authSearchError } = await supabase.auth.admin.listUsers({
-        page: 1,
-        perPage: 1,
-        filter: {
-          email: userData.email
-        }
-      });
-      
-      if (authSearchError) {
-        console.error("Error checking existing auth users:", authSearchError);
-      }
-      
-      if (existingAuthUsers && existingAuthUsers.length > 0) {
-        toast.error("Email already in use", {
-          description: "This email is already registered. Please log in or use a different email address."
-        });
-        setLoading(false);
-        return;
-      }
-
+      // Step 3: Attempt to sign up
       const { data, error } = await supabase.auth.signUp({
         email: userData.email!,
         password: userData.password,
@@ -112,7 +66,7 @@ export const useRegistration = (
 
       if (error) {
         // Handle duplicate email error from auth.signUp
-        if (error.message.includes("already registered")) {
+        if (error.message.toLowerCase().includes("already") && error.message.toLowerCase().includes("registered")) {
           toast.error("Email already in use", {
             description: "This email is already registered. Please log in or use a different email address."
           });
