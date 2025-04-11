@@ -15,7 +15,7 @@ export const useRegistration = (
   const register = async (userData: Partial<User> & { password: string; role: UserRole }) => {
     setLoading(true);
     try {
-      // Step 1: First, check profile tables for this email as a backup check
+      // Step 1: Check profile tables for this email
       const [customerResponse, vendorResponse, adminResponse] = await Promise.all([
         supabase.from("customer_profiles").select("email").eq("email", userData.email!).maybeSingle(),
         supabase.from("vendor_profiles").select("email").eq("email", userData.email!).maybeSingle(),
@@ -31,7 +31,36 @@ export const useRegistration = (
         return;
       }
 
-      // Step 2: Prepare metadata based on role
+      // Step 2: Directly check if this email can sign in 
+      // This is a more reliable way to see if it exists in the auth system
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: userData.email!,
+        password: "ThisIsADeliberatelyIncorrectPassword123!@#"  // Use a complex password that won't match
+      });
+      
+      // If there's no "Invalid login credentials" error, the email exists
+      // This checks if we got an error but it's NOT the expected "invalid login" error
+      if (signInError) {
+        if (!signInError.message.includes("Invalid login credentials")) {
+          // This is likely a "User already registered" scenario
+          toast.error("Email already in use", {
+            description: "This email is already registered. Please log in or use a different email address."
+          });
+          setLoading(false);
+          return;
+        }
+      } else if (signInData.user) {
+        // Somehow managed to log in - this is also an indication the account already exists
+        toast.error("Email already in use", {
+          description: "This email is already registered. Please log in or use a different email address."
+        });
+        // Sign out since we might have managed to sign in
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
+
+      // Step 3: Prepare metadata based on role
       const userMetadata: Record<string, any> = {
         role: userData.role
       };
@@ -54,7 +83,7 @@ export const useRegistration = (
         userMetadata.fullName = userData.fullName || "";
       }
 
-      // Step 3: Attempt to sign up
+      // Step 4: Attempt to sign up
       const { data, error } = await supabase.auth.signUp({
         email: userData.email!,
         password: userData.password,
@@ -65,27 +94,24 @@ export const useRegistration = (
       });
 
       if (error) {
-        // Handle duplicate email error from auth.signUp
+        // Handle any signup errors, especially duplicate emails
         if (error.message.toLowerCase().includes("already") || 
+            error.message.toLowerCase().includes("exist") || 
             error.message.toLowerCase().includes("registered")) {
           toast.error("Email already in use", {
             description: "This email is already registered. Please log in or use a different email address."
           });
-        } else {
-          throw new Error(error.message);
+          setLoading(false);
+          return;
         }
-        setLoading(false);
-        return;
+        throw new Error(error.message);
       }
 
-      // Check for identityData.email_confirmed_at
-      // If it's not null, it means the user has already confirmed their email in the past
-      if (data.user?.identities?.[0]?.identity_data?.email_confirmed_at) {
+      // Important: Check if user already exists but confirmation is needed
+      if (data.user?.identities?.length === 0) {
         toast.error("Email already in use", {
           description: "This email is already registered. Please log in or use a different email address."
         });
-        // Make sure to sign out if we detected an existing confirmed user
-        await supabase.auth.signOut();
         setLoading(false);
         return;
       }
@@ -124,7 +150,7 @@ export const useRegistration = (
           }
         }
         
-        // At this point, we know it's a genuinely new registration
+        // Email/password signup (always requires email confirmation)
         toast.success("Registration successful!", {
           description: "Please check your email to confirm your account before logging in."
         });
@@ -137,6 +163,7 @@ export const useRegistration = (
       }
     } catch (err) {
       handleAuthError(err, "Registration failed");
+      throw err;
     } finally {
       setLoading(false);
     }
