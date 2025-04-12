@@ -12,14 +12,21 @@ export const useRegistration = (
 ) => {
   const navigate = useNavigate();
 
-  const register = async (userData: Partial<User> & { password: string; role: UserRole }) => {
+  const register = async (userData: Partial<User> & { 
+    password: string; 
+    role: UserRole;
+    questionnaireData?: any;
+  }) => {
     setLoading(true);
     try {
+      // Extract questionnaire data if provided
+      const { questionnaireData, ...registrationData } = userData;
+      
       // Step 1: Check profile tables for this email
       const [customerResponse, vendorResponse, adminResponse] = await Promise.all([
-        supabase.from("customer_profiles").select("email").eq("email", userData.email!).maybeSingle(),
-        supabase.from("vendor_profiles").select("email").eq("email", userData.email!).maybeSingle(),
-        supabase.from("admin_profiles").select("email").eq("email", userData.email!).maybeSingle()
+        supabase.from("customer_profiles").select("email").eq("email", registrationData.email!).maybeSingle(),
+        supabase.from("vendor_profiles").select("email").eq("email", registrationData.email!).maybeSingle(),
+        supabase.from("admin_profiles").select("email").eq("email", registrationData.email!).maybeSingle()
       ]);
       
       // If email exists in any profile table, don't allow registration
@@ -34,12 +41,11 @@ export const useRegistration = (
       // Step 2: Directly check if this email can sign in 
       // This is a more reliable way to see if it exists in the auth system
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: userData.email!,
+        email: registrationData.email!,
         password: "ThisIsADeliberatelyIncorrectPassword123!@#"  // Use a complex password that won't match
       });
       
       // If there's no "Invalid login credentials" error, the email exists
-      // This checks if we got an error but it's NOT the expected "invalid login" error
       if (signInError) {
         if (!signInError.message.includes("Invalid login credentials")) {
           // This is likely a "User already registered" scenario
@@ -62,31 +68,31 @@ export const useRegistration = (
 
       // Step 3: Prepare metadata based on role
       const userMetadata: Record<string, any> = {
-        role: userData.role
+        role: registrationData.role
       };
 
       // Add appropriate fields based on role
-      if (userData.role === "customer" || userData.role === "vendor") {
-        userMetadata.firstName = userData.firstName || "";
-        userMetadata.lastName = userData.lastName || "";
-        userMetadata.address = userData.address || "";
-        userMetadata.phone = userData.phone || "";
+      if (registrationData.role === "customer" || registrationData.role === "vendor") {
+        userMetadata.firstName = registrationData.firstName || "";
+        userMetadata.lastName = registrationData.lastName || "";
+        userMetadata.address = registrationData.address || "";
+        userMetadata.phone = registrationData.phone || "";
       }
       
       // Add company name for vendors
-      if (userData.role === "vendor") {
-        userMetadata.companyName = userData.companyName || "";
+      if (registrationData.role === "vendor") {
+        userMetadata.companyName = registrationData.companyName || "";
       }
 
       // Admin fields
-      if (userData.role === "admin") {
-        userMetadata.fullName = userData.fullName || "";
+      if (registrationData.role === "admin") {
+        userMetadata.fullName = registrationData.fullName || "";
       }
 
       // Step 4: Attempt to sign up
       const { data, error } = await supabase.auth.signUp({
-        email: userData.email!,
-        password: userData.password,
+        email: registrationData.email!,
+        password: registrationData.password,
         options: {
           data: userMetadata,
           emailRedirectTo: `${window.location.origin}/login`
@@ -117,36 +123,36 @@ export const useRegistration = (
       }
 
       if (data.user) {
-        // Check if there's a questionnaire ID in session storage and associate it with the user
-        const questionnaireId = sessionStorage.getItem("questionnaire_id");
-        if (questionnaireId && userData.role === "customer") {
-          console.log("Associating questionnaire with new user:", data.user.id);
+        // Step 5: If we have questionnaire data, save it now with the user's ID
+        if (questionnaireData && registrationData.role === "customer") {
+          console.log("Saving questionnaire data for new user:", data.user.id);
           
-          // First check if questionnaire exists and is not already associated
-          const { data: questionnaireData, error: fetchError } = await supabase
-            .from("property_questionnaires")
-            .select("customer_id")
-            .eq("id", questionnaireId)
-            .single();
-            
-          if (fetchError) {
-            console.error("Error fetching questionnaire:", fetchError);
-          } else if (!questionnaireData.customer_id) {
-            // Only update if the customer_id is null
-            const { error: updateError } = await supabase
+          try {
+            const { error: insertError } = await supabase
               .from("property_questionnaires")
-              .update({ 
-                customer_id: data.user.id, 
-                is_completed: true 
-              })
-              .eq("id", questionnaireId);
+              .insert({
+                property_type: questionnaireData.property_type,
+                ownership_status: questionnaireData.ownership_status,
+                monthly_electric_bill: questionnaireData.monthly_electric_bill,
+                interested_in_batteries: questionnaireData.interested_in_batteries,
+                battery_reason: questionnaireData.battery_reason,
+                purchase_timeline: questionnaireData.purchase_timeline,
+                willing_to_remove_trees: questionnaireData.willing_to_remove_trees,
+                roof_age_status: questionnaireData.roof_age_status,
+                first_name: questionnaireData.first_name,
+                last_name: questionnaireData.last_name,
+                email: questionnaireData.email,
+                customer_id: data.user.id,
+                is_completed: true // Mark as completed since it's linked to a user
+              });
               
-            if (updateError) {
-              console.error("Error associating questionnaire with user:", updateError);
+            if (insertError) {
+              console.error("Error saving questionnaire data:", insertError);
             } else {
-              console.log("Successfully associated questionnaire with user");
-              sessionStorage.removeItem("questionnaire_id");
+              console.log("Successfully saved questionnaire with user ID");
             }
+          } catch (saveError) {
+            console.error("Error in questionnaire save operation:", saveError);
           }
         }
         

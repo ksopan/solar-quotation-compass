@@ -71,41 +71,42 @@ const AuthCallback = () => {
           return;
         }
         
-        // Check for questionnaire ID in localStorage from OAuth flow
-        const questionnaireId = localStorage.getItem("questionnaire_id");
-        if (questionnaireId && data.session.user) {
-          setMessage("Associating your questionnaire data...");
+        // Check for questionnaire data in localStorage from OAuth flow
+        const questionnaireData = localStorage.getItem("questionnaire_data");
+        if (questionnaireData && data.session.user) {
+          setMessage("Processing your questionnaire data...");
           try {
-            // First check if the questionnaire exists and is not already associated
-            const { data: questionnaireData, error: fetchError } = await supabase
+            const parsedData = JSON.parse(questionnaireData);
+            
+            // Save questionnaire data with user ID
+            const { error: insertError } = await supabase
               .from("property_questionnaires")
-              .select("customer_id")
-              .eq("id", questionnaireId)
-              .single();
+              .insert({
+                property_type: parsedData.property_type,
+                ownership_status: parsedData.ownership_status,
+                monthly_electric_bill: parsedData.monthly_electric_bill,
+                interested_in_batteries: parsedData.interested_in_batteries,
+                battery_reason: parsedData.battery_reason,
+                purchase_timeline: parsedData.purchase_timeline,
+                willing_to_remove_trees: parsedData.willing_to_remove_trees,
+                roof_age_status: parsedData.roof_age_status,
+                first_name: parsedData.first_name,
+                last_name: parsedData.last_name,
+                email: parsedData.email,
+                customer_id: data.session.user.id,
+                is_completed: true
+              });
               
-            if (fetchError) {
-              console.error("Error fetching questionnaire:", fetchError);
-            } else if (!questionnaireData.customer_id) {
-              // Only update if the customer_id is null
-              const { error: updateError } = await supabase
-                .from("property_questionnaires")
-                .update({ 
-                  customer_id: data.session.user.id,
-                  is_completed: true
-                })
-                .eq("id", questionnaireId);
-                
-              if (updateError) {
-                console.error("Error associating questionnaire after OAuth:", updateError);
-                toast.error("Failed to associate your questionnaire data");
-              } else {
-                console.log("Associated questionnaire with user after OAuth");
-                toast.success("Your questionnaire has been saved to your account");
-                localStorage.removeItem("questionnaire_id");
-              }
+            if (insertError) {
+              console.error("Error saving questionnaire data after OAuth:", insertError);
+              toast.error("Failed to process your questionnaire data");
+            } else {
+              console.log("Successfully saved questionnaire with user ID after OAuth");
+              toast.success("Your questionnaire has been saved to your account");
+              localStorage.removeItem("questionnaire_data");
             }
           } catch (err) {
-            console.error("Error associating questionnaire after OAuth:", err);
+            console.error("Error processing questionnaire data after OAuth:", err);
           }
         }
         

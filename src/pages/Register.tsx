@@ -12,14 +12,13 @@ import { VendorRegistrationForm } from "@/components/register/VendorRegistration
 import { AdminRegistrationForm } from "@/components/register/AdminRegistrationForm";
 import { customerSchema, vendorSchema, adminSchema, RegisterFormValues } from "@/components/register/registerSchemas";
 import { Home } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
   const { register: authRegister, loginWithOAuth } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"customer" | "vendor" | "admin">("customer");
-  const [questionnaireId, setQuestionnaireId] = useState<string | null>(null);
+  const [questionnaireData, setQuestionnaireData] = useState<any | null>(null);
 
   const {
     register,
@@ -44,36 +43,22 @@ const Register = () => {
   });
 
   useEffect(() => {
-    const storedQuestionnaireId = sessionStorage.getItem("questionnaire_id");
-    if (storedQuestionnaireId) {
-      setQuestionnaireId(storedQuestionnaireId);
-      
-      const fetchQuestionnaireData = async () => {
-        try {
-          const { data, error } = await supabase
-            .from("property_questionnaires")
-            .select("*")
-            .eq("id", storedQuestionnaireId)
-            .single();
-            
-          if (error) {
-            console.error("Error fetching questionnaire data:", error);
-            return;
-          }
+    const storedQuestionnaireData = sessionStorage.getItem("questionnaire_data");
+    if (storedQuestionnaireData) {
+      try {
+        const parsedData = JSON.parse(storedQuestionnaireData);
+        setQuestionnaireData(parsedData);
+        
+        if (parsedData) {
+          setValue("email", parsedData.email || "");
+          setValue("firstName", parsedData.first_name || "");
+          setValue("lastName", parsedData.last_name || "");
           
-          if (data) {
-            setValue("email", data.email);
-            setValue("firstName", data.first_name);
-            setValue("lastName", data.last_name);
-            
-            setActiveTab("customer");
-          }
-        } catch (error) {
-          console.error("Error in fetchQuestionnaireData:", error);
+          setActiveTab("customer");
         }
-      };
-      
-      fetchQuestionnaireData();
+      } catch (error) {
+        console.error("Error parsing questionnaire data:", error);
+      }
     }
   }, [setValue]);
 
@@ -81,14 +66,16 @@ const Register = () => {
     setIsLoading(true);
     try {
       const { confirmPassword, ...registrationData } = data;
+      
       await authRegister({
         ...registrationData,
         password: registrationData.password,
-        role: registrationData.role
+        role: registrationData.role,
+        questionnaireData: questionnaireData
       });
       
-      if (questionnaireId) {
-        sessionStorage.removeItem("questionnaire_id");
+      if (questionnaireData) {
+        sessionStorage.removeItem("questionnaire_data");
       }
     } catch (error) {
     } finally {
@@ -104,11 +91,17 @@ const Register = () => {
       password: "",
       confirmPassword: ""
     });
+    
+    if (value === "customer" && questionnaireData) {
+      setValue("email", questionnaireData.email || "");
+      setValue("firstName", questionnaireData.first_name || "");
+      setValue("lastName", questionnaireData.last_name || "");
+    }
   };
 
   const handleOAuthRegister = (provider: "google" | "twitter") => {
-    if (questionnaireId) {
-      localStorage.setItem("questionnaire_id", questionnaireId);
+    if (questionnaireData) {
+      localStorage.setItem("questionnaire_data", JSON.stringify(questionnaireData));
     }
     loginWithOAuth(provider);
   };
@@ -130,7 +123,7 @@ const Register = () => {
               </Button>
             </div>
             <CardDescription className="text-center">
-              {questionnaireId 
+              {questionnaireData 
                 ? "Complete your registration to view your solar quotes" 
                 : "Create an account to get started"}
             </CardDescription>
