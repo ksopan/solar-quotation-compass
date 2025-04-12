@@ -1,14 +1,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User } from "@supabase/supabase-js";
+import { User as SupabaseUser } from "@supabase/supabase-js";
+import { User as AuthUser } from "@/contexts/auth/types";
 
 /**
  * Processes OAuth questionnaire ID from localStorage if present
  * @param user The authenticated user
  * @returns Promise resolving when OAuth flow is handled
  */
-export const handleOAuthQuestionnaire = async (user: User | null): Promise<void> => {
+export const handleOAuthQuestionnaire = async (user: AuthUser | SupabaseUser | null): Promise<void> => {
   if (!user) return;
   
   // Check if there's a questionnaire ID in localStorage (from OAuth flow)

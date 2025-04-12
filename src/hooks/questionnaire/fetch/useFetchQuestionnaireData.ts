@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { User as SupabaseUser } from "@supabase/supabase-js";
+import { User as AuthUser } from "@/contexts/auth/types";
 import { toast } from "sonner";
 import { QuestionnaireData } from "../useQuestionnaireBase";
 
@@ -9,7 +10,7 @@ import { QuestionnaireData } from "../useQuestionnaireBase";
  * @param user The authenticated user
  * @returns Promise with the questionnaire data or null
  */
-export const fetchQuestionnaireData = async (user: User | null): Promise<QuestionnaireData | null> => {
+export const fetchQuestionnaireData = async (user: AuthUser | SupabaseUser | null): Promise<QuestionnaireData | null> => {
   if (!user) return null;
   
   try {

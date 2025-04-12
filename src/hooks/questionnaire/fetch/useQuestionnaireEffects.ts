@@ -1,12 +1,13 @@
 
 import { useEffect } from "react";
-import { User } from "@supabase/supabase-js";
+import { User as SupabaseUser } from "@supabase/supabase-js";
+import { User as AuthUser } from "@/contexts/auth/types";
 import { handleOAuthQuestionnaire } from "./useOAuthFlow";
 import { fetchQuestionnaireData } from "./useFetchQuestionnaireData";
 import { QuestionnaireData } from "../useQuestionnaireBase";
 
 type QuestionnaireEffectsProps = {
-  user: User | null;
+  user: AuthUser | null;
   setQuestionnaire: (questionnaire: QuestionnaireData | null) => void;
   setLoading: (loading: boolean) => void;
 };
