@@ -137,17 +137,26 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
     }
   };
 
-  // Get file URL
+  // Get file URL with improved error handling
   const getFileUrl = (fileName: string) => {
-    if (!user) return null;
+    if (!user) {
+      console.warn("No user found when attempting to get file URL");
+      return null;
+    }
 
     try {
-      const { data } = supabase.storage
+      const { data, error } = supabase.storage
         .from('questionnaire_attachments')
         .getPublicUrl(`${user.id}/${fileName}`);
+
+      if (error) {
+        console.error("Error getting file URL:", error);
+        return null;
+      }
+
       return data.publicUrl;
     } catch (error) {
-      console.error("Error in getFileUrl:", error);
+      console.error("Unexpected error in getFileUrl:", error);
       return null;
     }
   };
