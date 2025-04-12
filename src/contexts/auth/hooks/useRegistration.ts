@@ -22,7 +22,7 @@ export const useRegistration = (
       // Extract questionnaire data if provided
       const { questionnaireData, ...registrationData } = userData;
       
-      // Step 1: Check profile tables for this email
+      // Step 1: Check profile tables for this email - this is more reliable than auth.users
       const [customerResponse, vendorResponse, adminResponse] = await Promise.all([
         supabase.from("customer_profiles").select("email").eq("email", registrationData.email!).maybeSingle(),
         supabase.from("vendor_profiles").select("email").eq("email", registrationData.email!).maybeSingle(),
@@ -34,34 +34,6 @@ export const useRegistration = (
         toast.error("Email already in use", {
           description: "This email is already registered. Please log in or use a different email address."
         });
-        setLoading(false);
-        return;
-      }
-
-      // Step 2: Directly check if this email can sign in 
-      // This is a more reliable way to see if it exists in the auth system
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: registrationData.email!,
-        password: "ThisIsADeliberatelyIncorrectPassword123!@#"  // Use a complex password that won't match
-      });
-      
-      // If there's no "Invalid login credentials" error, the email exists
-      if (signInError) {
-        if (!signInError.message.includes("Invalid login credentials")) {
-          // This is likely a "User already registered" scenario
-          toast.error("Email already in use", {
-            description: "This email is already registered. Please log in or use a different email address."
-          });
-          setLoading(false);
-          return;
-        }
-      } else if (signInData.user) {
-        // Somehow managed to log in - this is also an indication the account already exists
-        toast.error("Email already in use", {
-          description: "This email is already registered. Please log in or use a different email address."
-        });
-        // Sign out since we might have managed to sign in
-        await supabase.auth.signOut();
         setLoading(false);
         return;
       }
