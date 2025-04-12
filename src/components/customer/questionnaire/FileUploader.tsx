@@ -27,8 +27,15 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     const files = e.target.files;
     if (files && files.length > 0) {
       const file = files[0];
+      console.log("Selected file:", file.name, "size:", file.size);
       setSelectedFile(file);
-      await onUpload(file);
+      
+      // Upload file
+      try {
+        await onUpload(file);
+      } catch (error) {
+        console.error("Error uploading file:", error);
+      }
       
       // Clear the input so the same file can be uploaded again if needed
       if (fileInputRef.current) {

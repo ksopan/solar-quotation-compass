@@ -3,22 +3,20 @@ import React from "react";
 import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
-import { useQuestionnaireFormHandlers } from "./hooks/useQuestionnaireFormHandlers";
 
 interface ProfileHeaderProps {
   isEditing: boolean;
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ isEditing }) => {
-  const { handleEdit } = useQuestionnaireFormHandlers();
-  
-  console.log("💼 ProfileHeader rendering with isEditing:", isEditing);
-  
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent any default form behavior
     e.stopPropagation(); // Stop event bubbling
     console.log("📝 Edit button clicked in ProfileHeader");
-    handleEdit();
+    
+    // Use direct dispatch to QuestionnaireProfileContent via a custom event
+    const event = new CustomEvent('questionnaire:edit', { bubbles: true });
+    document.dispatchEvent(event);
   };
 
   return (

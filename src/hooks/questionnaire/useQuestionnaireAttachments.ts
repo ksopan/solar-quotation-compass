@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,9 +75,13 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
 
     try {
       setIsUploading(true);
+      console.log("🔄 Starting file upload for:", file.name);
+      
       const timestamp = new Date().getTime();
       const filePath = `${user.id}/${timestamp}-${file.name}`;
 
+      console.log("📤 Uploading to path:", filePath);
+      
       const { data, error } = await supabase.storage
         .from('questionnaire_attachments')
         .upload(filePath, file, {
@@ -86,7 +91,7 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
 
       if (error) {
         console.error("❌ Error uploading file:", error);
-        toast.error("Failed to upload file");
+        toast.error("Failed to upload file: " + error.message);
         return null;
       }
 
@@ -115,6 +120,7 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
 
     try {
       const filePath = `${user.id}/${fileName}`;
+      console.log("🗑️ Deleting file at path:", filePath);
 
       const { error } = await supabase.storage
         .from('questionnaire_attachments')
@@ -122,7 +128,7 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
 
       if (error) {
         console.error("❌ Error deleting file:", error);
-        toast.error("Failed to delete file");
+        toast.error("Failed to delete file: " + error.message);
         return false;
       }
 

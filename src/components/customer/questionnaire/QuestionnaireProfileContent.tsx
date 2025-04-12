@@ -35,8 +35,23 @@ export const QuestionnaireProfileContent: React.FC = () => {
     }
   }, [questionnaire, formData]);
   
+  // Set up event listener for custom edit event
+  React.useEffect(() => {
+    const handleEditEvent = () => {
+      console.log("🔥 Edit event received in QuestionnaireProfileContent");
+      handleEdit();
+    };
+    
+    document.addEventListener('questionnaire:edit', handleEditEvent);
+    
+    return () => {
+      document.removeEventListener('questionnaire:edit', handleEditEvent);
+    };
+  }, [questionnaire]); // Re-add when questionnaire changes
+  
   // Handler functions
   const handleEdit = () => {
+    console.log("🔑 handleEdit called in QuestionnaireProfileContent");
     if (questionnaire) {
       setFormData({...questionnaire});
       setIsEditing(true);
@@ -44,6 +59,7 @@ export const QuestionnaireProfileContent: React.FC = () => {
   };
   
   const handleChange = (field: any, value: any) => {
+    console.log(`Field ${field} changing to:`, value);
     setFormData(prev => ({...prev, [field]: value}));
   };
   
