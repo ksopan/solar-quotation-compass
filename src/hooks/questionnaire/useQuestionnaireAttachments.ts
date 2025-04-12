@@ -30,14 +30,44 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
         setIsLoadingFiles(true);
         console.log("📂 Fetching attachments for user:", user.id);
 
+        // First check if the bucket exists
+        const { data: buckets, error: bucketsError } = await supabase
+          .storage
+          .listBuckets();
+          
+        if (bucketsError) {
+          console.error("❌ Error listing buckets:", bucketsError);
+          toast.error("Failed to access storage system");
+          setAttachments([]);
+          return;
+        }
+        
+        // Check if our bucket exists
+        const bucketExists = buckets.some(bucket => bucket.name === 'questionnaire_attachments');
+        if (!bucketExists) {
+          console.error("⚠️ Storage bucket 'questionnaire_attachments' does not exist");
+          toast.error("Storage system not properly configured");
+          setAttachments([]);
+          return;
+        }
+
         const { data, error } = await supabase.storage
           .from('questionnaire_attachments')
-          .list(user.id);
+          .list(user.id, {
+            sortBy: { column: 'name', order: 'asc' }
+          });
 
         if (error) {
           console.error("❌ Error listing files:", error);
-          toast.error("Failed to load attachments");
-          setAttachments([]);
+          
+          // If the folder doesn't exist yet, this is not an error
+          if (error.message.includes("The specified key does not exist")) {
+            console.log("📁 No files folder exists yet for this user - this is normal for new users");
+            setAttachments([]);
+          } else {
+            toast.error("Failed to load attachments");
+            setAttachments([]);
+          }
         } else {
           console.log("✅ Fetched attachments:", data);
           // Transform FileObject into the expected format with the required size property
@@ -78,13 +108,41 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
       console.log("🔄 Starting file upload for:", file.name);
       
       const timestamp = new Date().getTime();
-      const filePath = `${user.id}/${timestamp}-${file.name}`;
-
-      console.log("📤 Uploading to path:", filePath);
+      const fileName = `${timestamp}-${file.name}`;
+      
+      // First check if the user's folder exists, if not, create an empty file to initialize it
+      try {
+        const { data: checkFolder } = await supabase.storage
+          .from('questionnaire_attachments')
+          .list(user.id);
+          
+        if (!checkFolder || checkFolder.length === 0) {
+          console.log("📁 Creating user folder for the first time");
+          // Create a tiny placeholder file to ensure the folder exists
+          const placeholderContent = new Blob([""], { type: "text/plain" });
+          await supabase.storage
+            .from('questionnaire_attachments')
+            .upload(`${user.id}/.folder`, placeholderContent, {
+              upsert: true
+            });
+        }
+      } catch (folderError) {
+        console.log("📁 Initializing user folder");
+        // Create a tiny placeholder file to ensure the folder exists
+        const placeholderContent = new Blob([""], { type: "text/plain" });
+        await supabase.storage
+          .from('questionnaire_attachments')
+          .upload(`${user.id}/.folder`, placeholderContent, {
+            upsert: true
+          });
+      }
+      
+      // Now upload the actual file
+      console.log("📤 Uploading to path:", `${user.id}/${fileName}`);
       
       const { data, error } = await supabase.storage
         .from('questionnaire_attachments')
-        .upload(filePath, file, {
+        .upload(`${user.id}/${fileName}`, file, {
           cacheControl: '3600',
           upsert: false
         });
@@ -100,7 +158,7 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
 
       // Add the new file to our local state
       setAttachments(prev => [...prev, { 
-        name: `${timestamp}-${file.name}`, 
+        name: fileName, 
         size: file.size 
       }]);
 
