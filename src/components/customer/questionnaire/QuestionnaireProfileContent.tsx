@@ -47,7 +47,7 @@ export const QuestionnaireProfileContent: React.FC = () => {
     return () => {
       document.removeEventListener('questionnaire:edit', handleEditEvent);
     };
-  }, [questionnaire]); // Re-add when questionnaire changes
+  }, []);  // Remove questionnaire dependency to avoid re-registering listener
   
   // Handler functions
   const handleEdit = () => {
