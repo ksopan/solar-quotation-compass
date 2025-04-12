@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -145,14 +144,9 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
     }
 
     try {
-      const { data, error } = supabase.storage
+      const { data } = supabase.storage
         .from('questionnaire_attachments')
         .getPublicUrl(`${user.id}/${fileName}`);
-
-      if (error) {
-        console.error("Error getting file URL:", error);
-        return null;
-      }
 
       return data.publicUrl;
     } catch (error) {

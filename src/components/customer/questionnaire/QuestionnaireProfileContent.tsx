@@ -114,7 +114,6 @@ export const QuestionnaireProfileContent: React.FC = () => {
     <Card className="w-full">
       <ProfileHeader 
         isEditing={isEditing} 
-        onEdit={handleEdit} 
       />
       
       <CardContent className="space-y-6">
