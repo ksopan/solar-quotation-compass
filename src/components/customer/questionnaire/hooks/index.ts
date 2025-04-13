@@ -60,4 +60,10 @@ export const useQuestionnaireProfileHandlers = () => {
   };
 };
 
+// Export all hooks for direct use if needed
 export { useQuestionnaireProfileState } from "./useQuestionnaireProfileState";
+export { useQuestionnaireFormHandlers } from "./useQuestionnaireFormHandlers";
+export { useQuestionnaireFormState } from "./useQuestionnaireFormState";
+export { useQuestionnaireUpdate } from "./useQuestionnaireUpdate";
+export { useQuestionnaireCreate } from "./useQuestionnaireCreate";
+export { useQuestionnaireFileHandlers } from "./useQuestionnaireFileHandlers";
