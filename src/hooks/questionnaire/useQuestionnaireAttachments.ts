@@ -31,7 +31,7 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
         console.log("📂 Fetching attachments for user:", user.id);
 
         const { data, error } = await supabase.storage
-          .from('quotation_document_files')  // Updated bucket name
+          .from('quotation_document_files')  // Use the quotation_document_files bucket
           .list(user.id);
 
         if (error) {
@@ -83,7 +83,7 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
       console.log("📤 Uploading to path:", filePath);
       
       const { data, error } = await supabase.storage
-        .from('quotation_document_files')  // Updated bucket name
+        .from('quotation_document_files')  // Use the quotation_document_files bucket
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
@@ -123,7 +123,7 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
       console.log("🗑️ Deleting file at path:", filePath);
 
       const { error } = await supabase.storage
-        .from('quotation_document_files')  // Updated bucket name
+        .from('quotation_document_files')  // Use the quotation_document_files bucket
         .remove([filePath]);
 
       if (error) {
@@ -151,7 +151,7 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
 
     try {
       const { data } = supabase.storage
-        .from('quotation_document_files')  // Updated bucket name
+        .from('quotation_document_files')  // Use the quotation_document_files bucket
         .getPublicUrl(`${user.id}/${fileName}`);
 
       return data.publicUrl;

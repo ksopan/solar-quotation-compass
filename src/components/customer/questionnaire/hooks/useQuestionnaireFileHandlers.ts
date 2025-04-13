@@ -24,14 +24,13 @@ export const useQuestionnaireFileHandlers = () => {
 
     try {
       setIsUploading(true);
-      const fileExt = file.name.split('.').pop();
       const timestamp = new Date().getTime();
       
       // Use user ID as the folder name instead of questionnaire ID for proper RLS
       const filePath = `${user.id}/${timestamp}-${file.name}`;
 
       const { data, error } = await supabase.storage
-        .from('quotation_document_files')  // Updated bucket name
+        .from('quotation_document_files')  // Use quotation_document_files bucket
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
@@ -69,7 +68,7 @@ export const useQuestionnaireFileHandlers = () => {
       const filePath = `${user.id}/${fileName}`;
 
       const { error } = await supabase.storage
-        .from('quotation_document_files')  // Updated bucket name
+        .from('quotation_document_files')  // Use quotation_document_files bucket
         .remove([filePath]);
 
       if (error) {
@@ -95,7 +94,7 @@ export const useQuestionnaireFileHandlers = () => {
 
     try {
       const { data } = supabase.storage
-        .from('quotation_document_files')  // Updated bucket name
+        .from('quotation_document_files')  // Use quotation_document_files bucket
         .getPublicUrl(`${user.id}/${fileName}`);
       return data.publicUrl;
     } catch (error) {
@@ -116,7 +115,7 @@ export const useQuestionnaireFileHandlers = () => {
       console.log("Loading files for user", user.id);
       
       const { data, error } = await supabase.storage
-        .from('quotation_document_files')  // Updated bucket name
+        .from('quotation_document_files')  // Use quotation_document_files bucket
         .list(user.id);
         
       if (error) {
