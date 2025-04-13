@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { MainLayout } from "@/components/layouts/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Search, Filter } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useVendorQuotations } from "@/hooks/useVendorQuotations";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
@@ -51,37 +51,16 @@ const QuotationRequests = () => {
             </Button>
             <h1 className="text-3xl font-bold">All Property Questionnaires</h1>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-1" /> Filter
-            </Button>
-            <Button variant="outline">
-              <Search className="h-4 w-4 mr-1" /> Search
-            </Button>
-          </div>
+          <QuestionnaireFilters />
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : questionnaires.length === 0 ? (
-          <Card>
-            <CardContent className="py-8">
-              <div className="text-center">
-                <p className="text-muted-foreground">No property questionnaires found</p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <QuestionnairesTable 
-            questionnaires={questionnaires}
-            loading={loading}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        )}
+        <QuestionnairesTable 
+          questionnaires={questionnaires}
+          loading={loading}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </div>
     </MainLayout>
   );
