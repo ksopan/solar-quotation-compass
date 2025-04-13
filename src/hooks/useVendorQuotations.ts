@@ -5,14 +5,14 @@ import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 import { User } from "@supabase/supabase-js";
 
-type VendorQuotationItem = Database['public']['Tables']['quotation_requests']['Row'] & {
+type PropertyQuestionnaireItem = Database['public']['Tables']['property_questionnaires']['Row'] & {
   customerName?: string;
   customerEmail?: string;
   hasProposal?: boolean;
 };
 
 export const useVendorQuotations = (user: User | null) => {
-  const [quotations, setQuotations] = useState<VendorQuotationItem[]>([]);
+  const [questionnaires, setQuestionnaires] = useState<PropertyQuestionnaireItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [stats, setStats] = useState({
     newRequests: 0,
@@ -21,80 +21,77 @@ export const useVendorQuotations = (user: User | null) => {
     potentialCustomers: 0
   });
 
-  const fetchQuotations = async (page = 1, limit = 10) => {
+  const fetchQuestionnaires = async (page = 1, limit = 10) => {
     if (!user) return;
     
     try {
       setLoading(true);
       
-      console.log("Fetching quotations for vendor:", user.id);
+      console.log("Fetching questionnaires for vendor:", user.id);
       
       // Calculate pagination range
       const from = (page - 1) * limit;
       const to = from + limit - 1;
       
-      // Fetch the quotations with pagination
-      const { data: quotations, error, count } = await supabase
-        .from("quotation_requests")
+      // Fetch the questionnaires with pagination
+      const { data: questionnaires, error, count } = await supabase
+        .from("property_questionnaires")
         .select(`
           id, 
           customer_id,
-          location, 
-          roof_type, 
-          energy_usage, 
-          roof_area, 
+          first_name,
+          last_name,
+          email,
+          property_type,
+          ownership_status,
+          monthly_electric_bill,
+          roof_age_status,
+          purchase_timeline,
+          interested_in_batteries,
+          battery_reason,
+          willing_to_remove_trees,
           created_at,
           updated_at,
-          status,
-          additional_notes,
-          budget
+          is_completed
         `, { count: 'exact' })
+        .eq('is_completed', true) // Only fetch completed questionnaires
         .order('created_at', { ascending: false })
         .range(from, to);
         
       if (error) {
-        console.error("Quotation fetch error:", error);
-        toast.error("Failed to load quotation requests");
-        return { quotations: [], totalPages: 0 };
+        console.error("Questionnaire fetch error:", error);
+        toast.error("Failed to load property questionnaires");
+        return { questionnaires: [], totalPages: 0 };
       }
       
-      console.log("Fetched quotations:", quotations);
+      console.log("Fetched questionnaires:", questionnaires);
       
-      let processedQuotations: VendorQuotationItem[] = [];
+      let processedQuestionnaires: PropertyQuestionnaireItem[] = [];
       
-      // Get customer details for each quotation
-      if (quotations && quotations.length > 0) {
-        processedQuotations = await Promise.all(
-          quotations.map(async (quotation) => {
-            // Get customer profile info
-            const { data: customerData, error: customerError } = await supabase
-              .from("customer_profiles")
-              .select("first_name, last_name, email")
-              .eq("id", quotation.customer_id)
-              .single();
-              
-            if (customerError) {
-              console.error("Error fetching customer:", customerError);
-              return {
-                ...quotation, // This includes all the quotation request properties
-                customerName: "Unknown Customer",
-                customerEmail: ""
-              };
-            }
+      // Process questionnaires to check if vendor has submitted a proposal
+      if (questionnaires && questionnaires.length > 0) {
+        processedQuestionnaires = await Promise.all(
+          questionnaires.map(async (questionnaire) => {
+            // Prepare customer name from the questionnaire data itself
+            const customerName = `${questionnaire.first_name} ${questionnaire.last_name}`;
             
-            // Check if the vendor has already submitted a proposal
+            // Check if the vendor has already submitted a proposal for this questionnaire
             const { data: proposalData, error: proposalError } = await supabase
               .from("quotation_proposals")
               .select("id")
-              .eq("quotation_request_id", quotation.id)
+              .eq("quotation_request_id", questionnaire.id)
               .eq("vendor_id", user.id);
+              
+            if (proposalError) {
+              console.error("Error checking proposal:", proposalError);
+            }
               
             const hasProposal = proposalData && proposalData.length > 0;
               
             return {
-              ...quotation, // This includes all the quotation request properties
-              customerName: `${customerData.first_name} ${customerData.last_name}`,
-              customerEmail: customerData.email,
+              ...questionnaire,
+              customerName,
+              customerEmail: questionnaire.email,
               hasProposal
             };
           })
@@ -104,15 +101,15 @@ export const useVendorQuotations = (user: User | null) => {
       // Update stats
       fetchStats();
       
-      setQuotations(processedQuotations);
+      setQuestionnaires(processedQuestionnaires);
       return { 
-        quotations: processedQuotations, 
+        questionnaires: processedQuestionnaires, 
         totalPages: count ? Math.ceil(count / limit) : 0 
       };
     } catch (error) {
-      console.error("Error in fetchQuotations:", error);
-      toast.error("An error occurred while loading quotation requests");
-      return { quotations: [], totalPages: 0 };
+      console.error("Error in fetchQuestionnaires:", error);
+      toast.error("An error occurred while loading property questionnaires");
+      return { questionnaires: [], totalPages: 0 };
     } finally {
       setLoading(false);
     }
@@ -122,11 +119,11 @@ export const useVendorQuotations = (user: User | null) => {
     if (!user) return;
     
     try {
-      // Count of new/unviewed requests
+      // Count of new/unviewed completed questionnaires
       const { count: newCount, error: newError } = await supabase
-        .from("quotation_requests")
+        .from("property_questionnaires")
         .select("id", { count: 'exact' })
-        .eq("status", "pending");
+        .eq("is_completed", true);
         
       // Count of submitted quotes by this vendor
       const { count: submittedCount, error: submittedError } = await supabase
@@ -134,10 +131,11 @@ export const useVendorQuotations = (user: User | null) => {
         .select("id", { count: 'exact' })
         .eq("vendor_id", user.id);
         
-      // Count of all potential customers
+      // Count of all potential customers with completed questionnaires
       const { count: totalCount, error: totalError } = await supabase
-        .from("quotation_requests")
-        .select("id", { count: 'exact' });
+        .from("property_questionnaires")
+        .select("id", { count: 'exact' })
+        .eq("is_completed", true);
         
       setStats({
         newRequests: newCount || 0,
@@ -152,17 +150,17 @@ export const useVendorQuotations = (user: User | null) => {
 
   useEffect(() => {
     if (user) {
-      fetchQuotations();
+      fetchQuestionnaires();
     }
   }, [user]);
 
   return { 
-    quotations, 
+    questionnaires, 
     loading, 
     stats,
-    fetchQuotations,
+    fetchQuestionnaires,
     fetchStats 
   };
 };
 
-export type { VendorQuotationItem };
+export type { PropertyQuestionnaireItem };
