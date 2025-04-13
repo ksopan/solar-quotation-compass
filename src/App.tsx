@@ -14,6 +14,7 @@ import CompleteProfile from "./pages/CompleteProfile";
 import AuthCallback from "./pages/auth/AuthCallback";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ResetPassword from "./pages/ResetPassword";
+import QuotationRequests from "./pages/QuotationRequests";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,11 @@ const App = () => (
             <Route path="/quotation/:id" element={
               <ProtectedRoute>
                 <QuotationDetails />
+              </ProtectedRoute>
+            } />
+            <Route path="/quotation-requests" element={
+              <ProtectedRoute>
+                <QuotationRequests />
               </ProtectedRoute>
             } />
             
