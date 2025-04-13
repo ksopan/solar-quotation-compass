@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
 import { useVendorQuotations } from "@/hooks/useVendorQuotations";
 import { DashboardStats } from "@/components/vendor/DashboardStats";
@@ -9,19 +9,21 @@ import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
 
 const VendorDashboard = () => {
   const { user } = useAuth();
-  const { questionnaires, loading, stats, fetchQuestionnaires } = useVendorQuotations(user);
-  
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 10;
+  
+  // Destructure only what we need from the hook
+  const { loading, stats, fetchQuestionnaires } = useVendorQuotations(user);
+  const [questionnaires, setQuestionnaires] = useState([]);
 
-  // Fetch questionnaires with pagination
+  // Fetch questionnaires with pagination only when needed
   useEffect(() => {
     if (user) {
       const loadData = async () => {
         const result = await fetchQuestionnaires(currentPage, itemsPerPage);
         if (result) {
+          setQuestionnaires(result.questionnaires);
           setTotalPages(result.totalPages);
         }
       };
@@ -32,14 +34,14 @@ const VendorDashboard = () => {
 
   if (!user) return null;
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Welcome, {user.companyName}!</h1>
+        <h1 className="text-3xl font-bold">Welcome, {user.companyName || 'Vendor'}!</h1>
         <Button onClick={() => window.location.href = "/quotation-requests"}>View All Requests</Button>
       </div>
 

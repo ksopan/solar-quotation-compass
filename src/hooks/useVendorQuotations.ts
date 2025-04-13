@@ -1,9 +1,9 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
-import { User } from "@/contexts/auth/types"; // Changed: Import our custom User type
+import { User } from "@/contexts/auth/types"; // Using our custom User type
 
 type PropertyQuestionnaireItem = Database['public']['Tables']['property_questionnaires']['Row'] & {
   customerName?: string;
@@ -21,8 +21,9 @@ export const useVendorQuotations = (user: User | null) => {
     potentialCustomers: 0
   });
 
-  const fetchQuestionnaires = async (page = 1, limit = 10) => {
-    if (!user) return;
+  // Use useCallback to prevent recreation on every render
+  const fetchQuestionnaires = useCallback(async (page = 1, limit = 10) => {
+    if (!user) return null;
     
     try {
       setLoading(true);
@@ -61,7 +62,7 @@ export const useVendorQuotations = (user: User | null) => {
       if (error) {
         console.error("Questionnaire fetch error:", error);
         toast.error("Failed to load property questionnaires");
-        return { questionnaires: [], totalPages: 0 };
+        return null;
       }
       
       console.log("Fetched questionnaires:", questionnaires);
@@ -80,13 +81,14 @@ export const useVendorQuotations = (user: User | null) => {
               .from("quotation_proposals")
               .select("id")
               .eq("quotation_request_id", questionnaire.id)
-              .eq("vendor_id", user.id);
+              .eq("vendor_id", user.id)
+              .single();
               
-            if (proposalError) {
+            if (proposalError && proposalError.code !== 'PGRST116') { // Ignore not found errors
               console.error("Error checking proposal:", proposalError);
             }
               
-            const hasProposal = proposalData && proposalData.length > 0;
+            const hasProposal = !!proposalData;
               
             return {
               ...questionnaire,
@@ -102,6 +104,8 @@ export const useVendorQuotations = (user: User | null) => {
       fetchStats();
       
       setQuestionnaires(processedQuestionnaires);
+      setLoading(false);
+      
       return { 
         questionnaires: processedQuestionnaires, 
         totalPages: count ? Math.ceil(count / limit) : 0 
@@ -109,13 +113,12 @@ export const useVendorQuotations = (user: User | null) => {
     } catch (error) {
       console.error("Error in fetchQuestionnaires:", error);
       toast.error("An error occurred while loading property questionnaires");
-      return { questionnaires: [], totalPages: 0 };
-    } finally {
       setLoading(false);
+      return null;
     }
-  };
+  }, [user]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -125,17 +128,23 @@ export const useVendorQuotations = (user: User | null) => {
         .select("id", { count: 'exact' })
         .eq("is_completed", true);
         
+      if (newError) console.error("Error fetching new count:", newError);
+        
       // Count of submitted quotes by this vendor
       const { count: submittedCount, error: submittedError } = await supabase
         .from("quotation_proposals")
         .select("id", { count: 'exact' })
         .eq("vendor_id", user.id);
         
+      if (submittedError) console.error("Error fetching submitted count:", submittedError);
+        
       // Count of all potential customers with completed questionnaires
       const { count: totalCount, error: totalError } = await supabase
         .from("property_questionnaires")
         .select("id", { count: 'exact' })
         .eq("is_completed", true);
+        
+      if (totalError) console.error("Error fetching total count:", totalError);
         
       setStats({
         newRequests: newCount || 0,
@@ -146,13 +155,14 @@ export const useVendorQuotations = (user: User | null) => {
     } catch (error) {
       console.error("Error fetching stats:", error);
     }
-  };
+  }, [user]);
 
+  // Initial fetch when component mounts
   useEffect(() => {
     if (user) {
       fetchQuestionnaires();
     }
-  }, [user]);
+  }, [user, fetchQuestionnaires]);
 
   return { 
     questionnaires, 

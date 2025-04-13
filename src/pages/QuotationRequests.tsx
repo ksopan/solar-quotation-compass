@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ const QuotationRequests = () => {
   const { fetchQuestionnaires, loading } = useVendorQuotations(user);
   const [questionnaires, setQuestionnaires] = useState([]);
 
-  // Fetch questionnaires
+  // Fetch questionnaires with correct dependency array
   useEffect(() => {
     if (!user) return;
 
