@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { QuestionnaireData } from '../types';
+import { QuestionnaireData } from '../components/customer/questionnaire/types'; // Updated import path
 
 export const useFileHandlers = (
   user: any,
