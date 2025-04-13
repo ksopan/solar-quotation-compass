@@ -43,9 +43,11 @@ export const useVendorQuotations = (user: User | null) => {
           roof_type, 
           energy_usage, 
           roof_area, 
-          created_at, 
+          created_at,
+          updated_at,
           status,
-          additional_notes
+          additional_notes,
+          budget
         `, { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(from, to);
@@ -74,7 +76,7 @@ export const useVendorQuotations = (user: User | null) => {
             if (customerError) {
               console.error("Error fetching customer:", customerError);
               return {
-                ...quotation,
+                ...quotation, // This includes all the quotation request properties
                 customerName: "Unknown Customer",
                 customerEmail: ""
               };
@@ -90,7 +92,7 @@ export const useVendorQuotations = (user: User | null) => {
             const hasProposal = proposalData && proposalData.length > 0;
               
             return {
-              ...quotation,
+              ...quotation, // This includes all the quotation request properties
               customerName: `${customerData.first_name} ${customerData.last_name}`,
               customerEmail: customerData.email,
               hasProposal
