@@ -4,15 +4,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { supabase } from "@/integrations/supabase/client";
-import { format, parseISO } from "date-fns";
-import { toast } from "sonner";
-import { Search, Filter, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Search, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useVendorQuotations, PropertyQuestionnaireItem } from "@/hooks/useVendorQuotations";
+import { useVendorQuotations } from "@/hooks/useVendorQuotations";
+import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
+import { QuestionnaireFilters } from "@/components/vendor/QuestionnaireFilters";
 
 const QuotationRequests = () => {
   const { user } = useAuth();
@@ -22,7 +18,7 @@ const QuotationRequests = () => {
   const itemsPerPage = 15; // More items per page in the dedicated view
   
   const { fetchQuestionnaires, loading } = useVendorQuotations(user);
-  const [questionnaires, setQuestionnaires] = useState<PropertyQuestionnaireItem[]>([]);
+  const [questionnaires, setQuestionnaires] = useState([]);
 
   // Fetch questionnaires
   useEffect(() => {
@@ -41,19 +37,8 @@ const QuotationRequests = () => {
 
   if (!user) return null;
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = (page) => {
     setCurrentPage(page);
-  };
-
-  const getStatusBadge = (hasProposal?: boolean) => {
-    if (hasProposal) {
-      return <Badge className="bg-green-500">Quoted</Badge>;
-    }
-    return <Badge className="bg-blue-500">New</Badge>;
-  };
-
-  const formatPropertyType = (type: string) => {
-    return type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ');
   };
 
   return (
@@ -89,82 +74,13 @@ const QuotationRequests = () => {
             </CardContent>
           </Card>
         ) : (
-          <>
-            <Card>
-              <CardHeader>
-                <CardTitle>All Customer Property Questionnaires</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Property Type</TableHead>
-                      <TableHead>Submission Date</TableHead>
-                      <TableHead>Monthly Bill</TableHead>
-                      <TableHead>Roof Age</TableHead>
-                      <TableHead>Battery Interest</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {questionnaires.map((questionnaire) => (
-                      <TableRow key={questionnaire.id}>
-                        <TableCell className="font-medium">{questionnaire.customerName}</TableCell>
-                        <TableCell>{formatPropertyType(questionnaire.property_type)}</TableCell>
-                        <TableCell>{format(parseISO(questionnaire.created_at), "MMM d, yyyy")}</TableCell>
-                        <TableCell>${questionnaire.monthly_electric_bill}</TableCell>
-                        <TableCell>{questionnaire.roof_age_status}</TableCell>
-                        <TableCell>{questionnaire.interested_in_batteries ? "Yes" : "No"}</TableCell>
-                        <TableCell>{getStatusBadge(questionnaire.hasProposal)}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button size="sm" variant="outline">View Details</Button>
-                            {!questionnaire.hasProposal && (
-                              <Button size="sm">Submit Quote</Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-            
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <Pagination className="mt-4">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                    />
-                  </PaginationItem>
-                  
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <PaginationItem key={page}>
-                      <PaginationLink 
-                        isActive={page === currentPage}
-                        onClick={() => handlePageChange(page)}
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  
-                  <PaginationItem>
-                    <PaginationNext 
-                      onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            )}
-          </>
+          <QuestionnairesTable 
+            questionnaires={questionnaires}
+            loading={loading}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         )}
       </div>
     </MainLayout>
