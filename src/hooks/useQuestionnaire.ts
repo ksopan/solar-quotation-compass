@@ -15,13 +15,14 @@ export const useQuestionnaire = () => {
   const { 
     questionnaire, 
     loading, 
-    isSaving, 
+    isSaving: isFetchSaving, 
     setQuestionnaire 
   } = useFetchQuestionnaire();
   
   const { 
     updateQuestionnaire, 
-    createQuestionnaire 
+    createQuestionnaire,
+    isSaving: isActionSaving
   } = useQuestionnaireActions(questionnaire, setQuestionnaire);
   
   const { 
@@ -32,6 +33,9 @@ export const useQuestionnaire = () => {
     attachments,
     isLoadingFiles
   } = useQuestionnaireAttachments(questionnaire);
+
+  // Combine saving states
+  const isSaving = isFetchSaving || isActionSaving || isUploading;
 
   // Use useMemo to ensure stable references for all returned values
   return useMemo(() => ({
