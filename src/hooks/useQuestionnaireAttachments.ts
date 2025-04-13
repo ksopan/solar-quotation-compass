@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { QuestionnaireData } from "./useQuestionnaireBase";
+import { QuestionnaireData } from "./questionnaire/useQuestionnaireBase";
 import { useAuth } from "@/contexts/auth";
 import { formatFileSize } from "@/lib/utils";
 
@@ -18,7 +18,6 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
 
-  // 🔁 Fetch attachments when user ID changes
   useEffect(() => {
     const fetchAttachments = async () => {
       if (!user) {
@@ -40,7 +39,6 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
           setAttachments([]);
         } else {
           console.log("✅ Fetched attachments:", data);
-          // Transform FileObject into the expected format with the required size property
           const formattedData = data.map(file => ({
             name: file.name,
             size: file.metadata?.size || 0,
@@ -60,7 +58,6 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
     fetchAttachments();
   }, [user]);
 
-  // Upload attachment for a questionnaire
   const uploadAttachment = async (file: File) => {
     if (!user) {
       toast.error("You need to be logged in to upload files");
@@ -98,7 +95,6 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
       toast.success("File uploaded successfully");
       console.log("📤 File uploaded successfully:", data.path);
 
-      // Add the new file to our local state
       setAttachments(prev => [...prev, { 
         name: `${timestamp}-${file.name}`, 
         size: file.size 
@@ -114,7 +110,6 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
     }
   };
 
-  // Delete attachment
   const deleteAttachment = async (fileName: string) => {
     if (!user) return false;
 
@@ -142,7 +137,6 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
     }
   };
 
-  // Get file URL with improved error handling
   const getFileUrl = (fileName: string) => {
     if (!user) {
       console.warn("No user found when attempting to get file URL");

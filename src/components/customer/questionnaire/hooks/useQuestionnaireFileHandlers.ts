@@ -31,7 +31,7 @@ export const useQuestionnaireFileHandlers = () => {
       const filePath = `${user.id}/${timestamp}-${file.name}`;
 
       const { data, error } = await supabase.storage
-        .from('questionnaire_attachments')
+        .from('quotation_document_files')  // Updated bucket name
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
@@ -69,7 +69,7 @@ export const useQuestionnaireFileHandlers = () => {
       const filePath = `${user.id}/${fileName}`;
 
       const { error } = await supabase.storage
-        .from('questionnaire_attachments')
+        .from('quotation_document_files')  // Updated bucket name
         .remove([filePath]);
 
       if (error) {
@@ -95,7 +95,7 @@ export const useQuestionnaireFileHandlers = () => {
 
     try {
       const { data } = supabase.storage
-        .from('questionnaire_attachments')
+        .from('quotation_document_files')  // Updated bucket name
         .getPublicUrl(`${user.id}/${fileName}`);
       return data.publicUrl;
     } catch (error) {
@@ -116,7 +116,7 @@ export const useQuestionnaireFileHandlers = () => {
       console.log("Loading files for user", user.id);
       
       const { data, error } = await supabase.storage
-        .from('questionnaire_attachments')
+        .from('quotation_document_files')  // Updated bucket name
         .list(user.id);
         
       if (error) {
@@ -151,3 +151,4 @@ export const useQuestionnaireFileHandlers = () => {
     isLoadingFiles
   };
 };
+
