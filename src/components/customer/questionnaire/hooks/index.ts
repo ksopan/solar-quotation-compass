@@ -3,6 +3,10 @@ import { useCallback } from "react";
 import { useQuestionnaireProfileState } from "./useQuestionnaireProfileState";
 import { useQuestionnaireFileHandlers } from "./useQuestionnaireFileHandlers";
 import { useQuestionnaireFormHandlers } from "./useQuestionnaireFormHandlers";
+import { useEditMode } from "./useEditMode";
+import { useFormChange } from "./useFormChange";
+import { useSaveHandler } from "./useSaveHandler";
+import { useSubmitHandler } from "./useSubmitHandler";
 
 export const useQuestionnaireProfileHandlers = () => {
   // Get state from the state hook
@@ -67,3 +71,7 @@ export { useQuestionnaireFormState } from "./useQuestionnaireFormState";
 export { useQuestionnaireUpdate } from "./useQuestionnaireUpdate";
 export { useQuestionnaireCreate } from "./useQuestionnaireCreate";
 export { useQuestionnaireFileHandlers } from "./useQuestionnaireFileHandlers";
+export { useEditMode } from "./useEditMode";
+export { useFormChange } from "./useFormChange";
+export { useSaveHandler } from "./useSaveHandler";
+export { useSubmitHandler } from "./useSubmitHandler";
