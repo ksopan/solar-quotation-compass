@@ -53,20 +53,25 @@ export const useQuestionnaireActions = (
   };
 
   // Create a new questionnaire for the user if they don't have one
-  const createQuestionnaire = async (data: Omit<QuestionnaireData, 'id' | 'created_at' | 'is_completed'>) => {
+  const createQuestionnaire = async (data: Partial<QuestionnaireData>) => {
     if (!user) return null;
     
     try {
       setIsSaving(true);
       console.log("Creating new questionnaire for user:", user.id);
       
+      // Ensure the customer_id is set to the current user
+      const questionnaireData = {
+        ...data,
+        customer_id: user.id,
+        is_completed: false
+      };
+      
+      console.log("Submitting questionnaire data:", questionnaireData);
+      
       const { data: newQuestionnaire, error } = await supabase
         .from("property_questionnaires")
-        .insert({
-          ...data,
-          customer_id: user.id,
-          is_completed: false
-        })
+        .insert(questionnaireData)
         .select()
         .single();
       

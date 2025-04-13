@@ -4,8 +4,10 @@ import { QuestionnaireData } from "../types";
 import { useQuestionnaireProfileState } from "./useQuestionnaireProfileState";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/auth";
 
 export const useQuestionnaireFormHandlers = () => {
+  const { user } = useAuth();
   const {
     questionnaire,
     setIsEditing,
@@ -73,12 +75,44 @@ export const useQuestionnaireFormHandlers = () => {
   const handleSave = useCallback(async () => {
     if (!formData) return;
     
-    const success = await updateQuestionnaire(formData);
-    if (success) {
-      setIsEditing(false);
-      toast.success("Your profile has been updated");
+    if (questionnaire) {
+      // Update existing questionnaire
+      const success = await updateQuestionnaire(formData);
+      if (success) {
+        setIsEditing(false);
+        toast.success("Your profile has been updated");
+      }
+    } else if (user) {
+      // Create new questionnaire
+      setSaving(true);
+      try {
+        console.log("Creating new questionnaire with data:", formData);
+        const { data: newQuestionnaire, error } = await supabase
+          .from("property_questionnaires")
+          .insert({
+            ...formData,
+            customer_id: user.id,
+            is_completed: false
+          })
+          .select()
+          .single();
+          
+        if (error) {
+          console.error("Error creating questionnaire:", error);
+          toast.error("Failed to create your profile");
+          return;
+        }
+        
+        setIsEditing(false);
+        toast.success("Your profile has been created");
+      } catch (error) {
+        console.error("Error in createQuestionnaire:", error);
+        toast.error("An error occurred while creating your profile");
+      } finally {
+        setSaving(false);
+      }
     }
-  }, [formData, updateQuestionnaire, setIsEditing]);
+  }, [formData, questionnaire, updateQuestionnaire, setIsEditing, user, setSaving]);
   
   const handleCancel = useCallback(() => {
     console.log("❌ Cancelling edit mode");
@@ -111,12 +145,16 @@ export const useQuestionnaireFormHandlers = () => {
   }, [questionnaire]);
   
   const createQuestionnaire = useCallback(async (data: Omit<QuestionnaireData, 'id' | 'created_at' | 'is_completed'>) => {
+    if (!user) return null;
+    
     setSaving(true);
     try {
+      console.log("Creating new questionnaire with data:", data);
       const { data: newQuestionnaire, error } = await supabase
         .from("property_questionnaires")
         .insert({
           ...data,
+          customer_id: user.id,
           is_completed: false
         })
         .select()
@@ -137,7 +175,7 @@ export const useQuestionnaireFormHandlers = () => {
     } finally {
       setSaving(false);
     }
-  }, [setSaving]);
+  }, [user, setSaving]);
   
   const handleCreateProfile = useCallback(() => {
     console.log("🆕 Creating new profile");

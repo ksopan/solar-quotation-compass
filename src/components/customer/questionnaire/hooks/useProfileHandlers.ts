@@ -37,39 +37,70 @@ export const useProfileHandlers = (
 
   // Handle saving changes
   const handleSave = useCallback(async () => {
-    if (!state.formData || !state.questionnaire) return;
+    if (!state.formData) return;
     
     try {
       dispatch({ type: 'SET_IS_SAVING', payload: true });
-      console.log("Updating questionnaire with:", state.formData);
       
-      const { error } = await supabase
-        .from("property_questionnaires")
-        .update({
-          ...state.formData,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", state.questionnaire.id);
+      if (state.questionnaire) {
+        // Update existing questionnaire
+        console.log("Updating questionnaire with:", state.formData);
         
-      if (error) {
-        console.error("Error updating questionnaire:", error);
-        toast.error("Failed to save your changes");
-        return;
+        const { error } = await supabase
+          .from("property_questionnaires")
+          .update({
+            ...state.formData,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", state.questionnaire.id);
+          
+        if (error) {
+          console.error("Error updating questionnaire:", error);
+          toast.error("Failed to save your changes");
+          return;
+        }
+        
+        // Update the questionnaire with the form data
+        dispatch({ type: 'SET_QUESTIONNAIRE', payload: {
+          ...state.questionnaire,
+          ...state.formData
+        } as QuestionnaireData });
+      } else if (user) {
+        // Create new questionnaire
+        console.log("Creating new questionnaire for user:", user.id);
+        
+        const { data: newQuestionnaire, error } = await supabase
+          .from("property_questionnaires")
+          .insert({
+            ...state.formData,
+            customer_id: user.id,
+            is_completed: false
+          })
+          .select()
+          .single();
+          
+        if (error) {
+          console.error("Error creating questionnaire:", error);
+          toast.error("Failed to create your profile");
+          return;
+        }
+        
+        console.log("Created new questionnaire:", newQuestionnaire);
+        
+        // Set the new questionnaire
+        dispatch({ type: 'SET_QUESTIONNAIRE', payload: newQuestionnaire as QuestionnaireData });
+        toast.success("Your profile has been created");
       }
       
-      // Update the questionnaire with the form data
-      dispatch({ type: 'SET_QUESTIONNAIRE', payload: state.formData as QuestionnaireData });
       // Exit edit mode
       dispatch({ type: 'SET_IS_EDITING', payload: false });
-      
-      toast.success("Profile saved successfully");
     } catch (error) {
       console.error("Error in handleSave:", error);
       toast.error("An error occurred while saving your changes");
     } finally {
       dispatch({ type: 'SET_IS_SAVING', payload: false });
     }
-  }, [state.formData, state.questionnaire, dispatch]);
+  }, [state.formData, state.questionnaire, user, dispatch]);
 
   // Handle cancelling edits
   const handleCancel = useCallback(() => {

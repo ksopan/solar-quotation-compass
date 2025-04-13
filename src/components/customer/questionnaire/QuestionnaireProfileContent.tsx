@@ -66,9 +66,19 @@ export const QuestionnaireProfileContent: React.FC = () => {
   const handleSave = async () => {
     if (!formData) return;
     
-    const success = await updateQuestionnaire(formData);
-    if (success) {
-      setIsEditing(false);
+    if (questionnaire) {
+      // Update existing questionnaire
+      const success = await updateQuestionnaire(formData);
+      if (success) {
+        setIsEditing(false);
+      }
+    } else {
+      // Create new questionnaire
+      console.log("Creating new questionnaire with data:", formData);
+      const newQuestionnaire = await createQuestionnaire(formData);
+      if (newQuestionnaire) {
+        setIsEditing(false);
+      }
     }
   };
   
