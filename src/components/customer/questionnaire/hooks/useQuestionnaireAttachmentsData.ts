@@ -20,7 +20,7 @@ export const useQuestionnaireAttachmentsData = (
         dispatch({ type: 'SET_IS_LOADING_FILES', payload: true });
         
         const { data, error } = await supabase.storage
-          .from('questionnaire_attachments')
+          .from('quotation_document_files')
           .list(user.id);
           
         if (error) {

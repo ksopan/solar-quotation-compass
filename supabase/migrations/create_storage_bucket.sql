@@ -1,4 +1,5 @@
 
+
 -- Create a storage bucket for quotation files if it doesn't exist
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('quotation_document_files', 'Quotation Document Files', true)
@@ -27,3 +28,4 @@ CREATE POLICY "Allow users to delete their own files"
 ON storage.objects FOR DELETE
 TO authenticated
 USING (bucket_id = 'quotation_document_files' AND auth.uid()::text = (storage.foldername(name))[1]);
+

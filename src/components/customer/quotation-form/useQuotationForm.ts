@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { QuotationFormValues } from "@/components/customer/QuotationForm";
 import { Database } from "@/integrations/supabase/types";
-import { User } from "@/contexts/auth"; // Updated import path
+import { User } from "@/contexts/auth";
 
 type QuotationInsert = Database['public']['Tables']['quotation_requests']['Insert'];
 type DocumentFileInsert = Database['public']['Tables']['quotation_document_files']['Insert'];
@@ -28,7 +27,6 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
-    // Handle numeric inputs
     if (name === "energyUsage" || name === "roofArea") {
       setFormData({
         ...formData,
@@ -79,7 +77,6 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
       
       console.log("Submitting as user:", user.id, "with role:", user.role);
       
-      // Create the quotation request directly without referencing users table
       const quotationData: QuotationInsert = {
         customer_id: user.id,
         location: formData.location,
@@ -105,12 +102,10 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
       
       console.log("Quotation created successfully with ID:", quotation.id);
       
-      // Upload files if any
       if (formData.files.length > 0) {
         console.log(`Uploading ${formData.files.length} files...`);
         
         for (const file of formData.files) {
-          // Upload to Storage
           const fileExt = file.name.split('.').pop();
           const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
           const filePath = `${user.id}/${quotation.id}/${fileName}`;
@@ -118,7 +113,7 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
           console.log(`Uploading file ${file.name} to path ${filePath}`);
           
           const { error: uploadError } = await supabase.storage
-            .from("quotation-files")
+            .from("quotation_document_files")
             .upload(filePath, file);
           
           if (uploadError) {
@@ -129,7 +124,6 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
           
           console.log(`File uploaded successfully to ${filePath}`);
           
-          // Create document file entry
           const fileData: DocumentFileInsert = {
             quotation_id: quotation.id,
             file_name: file.name,
@@ -153,7 +147,6 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
       
       toast.success("Quotation request submitted successfully!");
       
-      // Reset form
       setFormData({
         location: "",
         roofType: "asphalt",
@@ -163,7 +156,6 @@ export const useQuotationForm = ({ user, onSuccess }: UseQuotationFormProps) => 
         files: []
       });
       
-      // Call the success callback
       onSuccess();
       
     } catch (error) {
