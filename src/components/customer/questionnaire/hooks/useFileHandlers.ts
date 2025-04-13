@@ -37,16 +37,16 @@ export const useFileHandlers = (
       }
       
       // Check if the bucket exists
-      const bucketExists = buckets.some(bucket => bucket.name === 'questionnaire_attachments');
+      const bucketExists = buckets.some(bucket => bucket.name === 'quotation_document_files');
       if (!bucketExists) {
-        console.error("Storage bucket 'questionnaire_attachments' does not exist");
+        console.error("Storage bucket 'quotation_document_files' does not exist");
         toast.error("Upload configuration error. Please contact support.");
         return null;
       }
 
       console.log("Uploading file to path:", filePath);
       const { data, error } = await supabase.storage
-        .from('questionnaire_attachments')
+        .from('quotation_document_files')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
@@ -89,7 +89,7 @@ export const useFileHandlers = (
       const filePath = `${user.id}/${fileName}`;
 
       const { error } = await supabase.storage
-        .from('questionnaire_attachments')
+        .from('quotation_document_files')
         .remove([filePath]);
 
       if (error) {
@@ -118,7 +118,7 @@ export const useFileHandlers = (
 
     try {
       const { data } = supabase.storage
-        .from('questionnaire_attachments')
+        .from('quotation_document_files')
         .getPublicUrl(`${user.id}/${fileName}`);
       return data.publicUrl;
     } catch (error) {
