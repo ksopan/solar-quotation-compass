@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
-import { User } from "@supabase/supabase-js";
+import { User } from "@/contexts/auth/types"; // Changed: Import our custom User type
 
 type PropertyQuestionnaireItem = Database['public']['Tables']['property_questionnaires']['Row'] & {
   customerName?: string;
