@@ -87,13 +87,27 @@ export const useQuestionnaireFormHandlers = () => {
       setSaving(true);
       try {
         console.log("Creating new questionnaire with data:", formData);
+        
+        // Ensure all required fields are present
+        const questionnaireData = {
+          property_type: formData.property_type || "home",
+          ownership_status: formData.ownership_status || "own",
+          monthly_electric_bill: formData.monthly_electric_bill || 0,
+          interested_in_batteries: formData.interested_in_batteries !== undefined ? formData.interested_in_batteries : false,
+          battery_reason: formData.battery_reason || null,
+          purchase_timeline: formData.purchase_timeline || "within_year",
+          willing_to_remove_trees: formData.willing_to_remove_trees !== undefined ? formData.willing_to_remove_trees : false,
+          roof_age_status: formData.roof_age_status || "no",
+          first_name: formData.first_name || "",
+          last_name: formData.last_name || "",
+          email: formData.email || "",
+          customer_id: user.id,
+          is_completed: false
+        };
+          
         const { data: newQuestionnaire, error } = await supabase
           .from("property_questionnaires")
-          .insert({
-            ...formData,
-            customer_id: user.id,
-            is_completed: false
-          })
+          .insert(questionnaireData)
           .select()
           .single();
           
@@ -144,19 +158,33 @@ export const useQuestionnaireFormHandlers = () => {
     }
   }, [questionnaire]);
   
-  const createQuestionnaire = useCallback(async (data: Omit<QuestionnaireData, 'id' | 'created_at' | 'is_completed'>) => {
+  const createQuestionnaire = useCallback(async (data: Partial<QuestionnaireData>) => {
     if (!user) return null;
     
     setSaving(true);
     try {
       console.log("Creating new questionnaire with data:", data);
+      
+      // Ensure all required fields are present
+      const questionnaireData = {
+        property_type: data.property_type || "home",
+        ownership_status: data.ownership_status || "own",
+        monthly_electric_bill: data.monthly_electric_bill || 0,
+        interested_in_batteries: data.interested_in_batteries !== undefined ? data.interested_in_batteries : false,
+        battery_reason: data.battery_reason || null,
+        purchase_timeline: data.purchase_timeline || "within_year",
+        willing_to_remove_trees: data.willing_to_remove_trees !== undefined ? data.willing_to_remove_trees : false,
+        roof_age_status: data.roof_age_status || "no",
+        first_name: data.first_name || "",
+        last_name: data.last_name || "",
+        email: data.email || "",
+        customer_id: user.id,
+        is_completed: false
+      };
+        
       const { data: newQuestionnaire, error } = await supabase
         .from("property_questionnaires")
-        .insert({
-          ...data,
-          customer_id: user.id,
-          is_completed: false
-        })
+        .insert(questionnaireData)
         .select()
         .single();
         

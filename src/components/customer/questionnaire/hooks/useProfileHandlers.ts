@@ -69,13 +69,26 @@ export const useProfileHandlers = (
         // Create new questionnaire
         console.log("Creating new questionnaire for user:", user.id);
         
+        // Ensure all required fields are present
+        const questionnaireData = {
+          property_type: state.formData.property_type || "home",
+          ownership_status: state.formData.ownership_status || "own",
+          monthly_electric_bill: state.formData.monthly_electric_bill || 0,
+          interested_in_batteries: state.formData.interested_in_batteries !== undefined ? state.formData.interested_in_batteries : false,
+          battery_reason: state.formData.battery_reason || null,
+          purchase_timeline: state.formData.purchase_timeline || "within_year",
+          willing_to_remove_trees: state.formData.willing_to_remove_trees !== undefined ? state.formData.willing_to_remove_trees : false,
+          roof_age_status: state.formData.roof_age_status || "no",
+          first_name: state.formData.first_name || "",
+          last_name: state.formData.last_name || "",
+          email: state.formData.email || "",
+          customer_id: user.id,
+          is_completed: false
+        };
+          
         const { data: newQuestionnaire, error } = await supabase
           .from("property_questionnaires")
-          .insert({
-            ...state.formData,
-            customer_id: user.id,
-            is_completed: false
-          })
+          .insert(questionnaireData)
           .select()
           .single();
           

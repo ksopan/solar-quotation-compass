@@ -60,9 +60,19 @@ export const useQuestionnaireActions = (
       setIsSaving(true);
       console.log("Creating new questionnaire for user:", user.id);
       
-      // Ensure the customer_id is set to the current user
+      // Ensure all required fields are present
       const questionnaireData = {
-        ...data,
+        property_type: data.property_type || "home",
+        ownership_status: data.ownership_status || "own",
+        monthly_electric_bill: data.monthly_electric_bill || 0,
+        interested_in_batteries: data.interested_in_batteries !== undefined ? data.interested_in_batteries : false,
+        battery_reason: data.battery_reason || null,
+        purchase_timeline: data.purchase_timeline || "within_year",
+        willing_to_remove_trees: data.willing_to_remove_trees !== undefined ? data.willing_to_remove_trees : false,
+        roof_age_status: data.roof_age_status || "no",
+        first_name: data.first_name || "",
+        last_name: data.last_name || "",
+        email: data.email || "",
         customer_id: user.id,
         is_completed: false
       };
