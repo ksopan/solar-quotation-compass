@@ -16,6 +16,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const handleButtonClick = () => {
     if (fileInputRef.current) {
@@ -28,13 +29,22 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     if (files && files.length > 0) {
       const file = files[0];
       console.log("Selected file:", file.name, "size:", file.size);
+      
+      setErrorMessage(null);
       setSelectedFile(file);
+      
+      // Check for spaces and special characters in filename
+      const hasSpecialChars = /[^a-zA-Z0-9.-]/.test(file.name);
+      if (hasSpecialChars) {
+        console.log("File name contains spaces or special characters. These will be replaced with underscores.");
+      }
       
       // Upload file
       try {
         await onUpload(file);
       } catch (error) {
         console.error("Error uploading file:", error);
+        setErrorMessage("Error uploading file. Please try again.");
       }
       
       // Clear the input so the same file can be uploaded again if needed
@@ -43,7 +53,10 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
       }
       
       // Clear the selected file after upload completes
-      setTimeout(() => setSelectedFile(null), 3000);
+      setTimeout(() => {
+        setSelectedFile(null);
+        setErrorMessage(null);
+      }, 3000);
     }
   };
   
@@ -92,6 +105,12 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
             </span>
           </div>
           <Progress value={100} className="h-1" />
+        </div>
+      )}
+      
+      {errorMessage && (
+        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-600">{errorMessage}</p>
         </div>
       )}
     </div>

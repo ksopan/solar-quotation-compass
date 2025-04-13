@@ -26,11 +26,14 @@ export const useQuestionnaireFileHandlers = () => {
       setIsUploading(true);
       const timestamp = new Date().getTime();
       
-      // Use user ID as the folder name instead of questionnaire ID for proper RLS
-      const filePath = `${user.id}/${timestamp}-${file.name}`;
+      // Generate a safe filename by removing spaces and special characters
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      
+      // Use user ID as the folder name with sanitized filename
+      const filePath = `${user.id}/${timestamp}-${safeFileName}`;
 
       const { data, error } = await supabase.storage
-        .from('quotation_document_files')  // Use quotation_document_files bucket
+        .from('quotation_document_files')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
@@ -42,9 +45,9 @@ export const useQuestionnaireFileHandlers = () => {
         return null;
       }
 
-      // Update attachments after successful upload
+      // Update attachments after successful upload with sanitized filename
       setAttachments(prev => [...prev, { 
-        name: `${timestamp}-${file.name}`, 
+        name: `${timestamp}-${safeFileName}`, 
         size: file.size 
       }]);
       

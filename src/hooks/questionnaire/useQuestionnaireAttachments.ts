@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +17,6 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
 
-  // 🔁 Fetch attachments when user ID changes
   useEffect(() => {
     const fetchAttachments = async () => {
       if (!user) {
@@ -31,7 +29,7 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
         console.log("📂 Fetching attachments for user:", user.id);
 
         const { data, error } = await supabase.storage
-          .from('quotation_document_files')  // Use the quotation_document_files bucket
+          .from('quotation_document_files')
           .list(user.id);
 
         if (error) {
@@ -40,7 +38,6 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
           setAttachments([]);
         } else {
           console.log("✅ Fetched attachments:", data);
-          // Transform FileObject into the expected format with the required size property
           const formattedData = data.map(file => ({
             name: file.name,
             size: file.metadata?.size || 0,
@@ -60,7 +57,6 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
     fetchAttachments();
   }, [user]);
 
-  // Upload attachment for a questionnaire
   const uploadAttachment = async (file: File) => {
     if (!user) {
       toast.error("You need to be logged in to upload files");
@@ -78,12 +74,13 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
       console.log("🔄 Starting file upload for:", file.name);
       
       const timestamp = new Date().getTime();
-      const filePath = `${user.id}/${timestamp}-${file.name}`;
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filePath = `${user.id}/${timestamp}-${safeFileName}`;
 
       console.log("📤 Uploading to path:", filePath);
       
       const { data, error } = await supabase.storage
-        .from('quotation_document_files')  // Use the quotation_document_files bucket
+        .from('quotation_document_files')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
@@ -98,9 +95,8 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
       toast.success("File uploaded successfully");
       console.log("📤 File uploaded successfully:", data.path);
 
-      // Add the new file to our local state
       setAttachments(prev => [...prev, { 
-        name: `${timestamp}-${file.name}`, 
+        name: `${timestamp}-${safeFileName}`, 
         size: file.size 
       }]);
 
@@ -114,16 +110,15 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
     }
   };
 
-  // Delete attachment
   const deleteAttachment = async (fileName: string) => {
     if (!user) return false;
 
     try {
       const filePath = `${user.id}/${fileName}`;
-      console.log("🗑️ Deleting file at path:", filePath);
+      console.log("��️ Deleting file at path:", filePath);
 
       const { error } = await supabase.storage
-        .from('quotation_document_files')  // Use the quotation_document_files bucket
+        .from('quotation_document_files')
         .remove([filePath]);
 
       if (error) {
@@ -142,7 +137,6 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
     }
   };
 
-  // Get file URL with improved error handling
   const getFileUrl = (fileName: string) => {
     if (!user) {
       console.warn("No user found when attempting to get file URL");
@@ -151,7 +145,7 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
 
     try {
       const { data } = supabase.storage
-        .from('quotation_document_files')  // Use the quotation_document_files bucket
+        .from('quotation_document_files')
         .getPublicUrl(`${user.id}/${fileName}`);
 
       return data.publicUrl;

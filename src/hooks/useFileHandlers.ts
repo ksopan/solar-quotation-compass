@@ -22,8 +22,11 @@ export const useFileHandlers = (
     try {
       dispatch({ type: 'SET_IS_UPLOADING', payload: true });
       const timestamp = new Date().getTime();
-      // Use user ID for storage path
-      const filePath = `${user.id}/${timestamp}-${file.name}`;
+      
+      // Generate a safe filename by removing spaces and special characters
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      // Use user ID for storage path with sanitized filename
+      const filePath = `${user.id}/${timestamp}-${safeFileName}`;
       
       // Check if the bucket exists first
       const { data: buckets, error: bucketsError } = await supabase
@@ -60,7 +63,7 @@ export const useFileHandlers = (
 
       // Update attachments after successful upload
       const newAttachment = { 
-        name: `${timestamp}-${file.name}`, 
+        name: `${timestamp}-${safeFileName}`, 
         size: file.size 
       };
       
