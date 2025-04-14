@@ -6,12 +6,14 @@ import { useVendorQuotations } from "@/hooks/useVendorQuotations";
 import { DashboardStats } from "@/components/vendor/DashboardStats";
 import { QuestionnaireFilters } from "@/components/vendor/QuestionnaireFilters";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
+import { useNavigate } from "react-router-dom";
 
 const VendorDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 5; // Show fewer items on dashboard
   
   // Destructure only what we need from the hook
   const { loading, stats, fetchQuestionnaires } = useVendorQuotations(user);
@@ -42,7 +44,7 @@ const VendorDashboard = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Welcome, {user.companyName || 'Vendor'}!</h1>
-        <Button onClick={() => window.location.href = "/quotation-requests"}>View All Requests</Button>
+        <Button onClick={() => navigate("/quotation-requests")}>View All Requests</Button>
       </div>
 
       <DashboardStats stats={stats} />

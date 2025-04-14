@@ -21,6 +21,7 @@ import {
   PaginationPrevious 
 } from "@/components/ui/pagination";
 import { Card, CardContent } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 
 interface QuestionnairesTableProps {
   questionnaires: PropertyQuestionnaireItem[];
@@ -37,6 +38,8 @@ export const QuestionnairesTable: React.FC<QuestionnairesTableProps> = ({
   totalPages,
   onPageChange
 }) => {
+  const navigate = useNavigate();
+  
   const getStatusBadge = (hasProposal?: boolean) => {
     if (hasProposal) {
       return <Badge className="bg-green-500">Quoted</Badge>;
@@ -46,6 +49,18 @@ export const QuestionnairesTable: React.FC<QuestionnairesTableProps> = ({
 
   const formatPropertyType = (type: string) => {
     return type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ');
+  };
+
+  const handleViewDetails = (questionnaireId: string) => {
+    // Navigate to details page or show modal
+    console.log("View details for:", questionnaireId);
+    // navigate(`/questionnaire/${questionnaireId}`);
+  };
+
+  const handleSubmitQuote = (questionnaireId: string) => {
+    // Navigate to quote submission page
+    console.log("Submit quote for:", questionnaireId);
+    // navigate(`/submit-quote/${questionnaireId}`);
   };
 
   if (loading) {
@@ -95,9 +110,20 @@ export const QuestionnairesTable: React.FC<QuestionnairesTableProps> = ({
                   <TableCell>{getStatusBadge(questionnaire.hasProposal)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="outline">View Details</Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleViewDetails(questionnaire.id)}
+                      >
+                        View Details
+                      </Button>
                       {!questionnaire.hasProposal && (
-                        <Button size="sm">Submit Quote</Button>
+                        <Button 
+                          size="sm"
+                          onClick={() => handleSubmitQuote(questionnaire.id)}
+                        >
+                          Submit Quote
+                        </Button>
                       )}
                     </div>
                   </TableCell>

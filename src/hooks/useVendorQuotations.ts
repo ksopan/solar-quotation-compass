@@ -34,7 +34,7 @@ export const useVendorQuotations = (user: User | null) => {
       const from = (page - 1) * limit;
       const to = from + limit - 1;
       
-      // Fetch the questionnaires with pagination
+      // Fetch all completed property questionnaires
       const { data: questionnaires, error, count } = await supabase
         .from("property_questionnaires")
         .select(`
@@ -156,13 +156,6 @@ export const useVendorQuotations = (user: User | null) => {
       console.error("Error fetching stats:", error);
     }
   }, [user]);
-
-  // Initial fetch when component mounts
-  useEffect(() => {
-    if (user) {
-      fetchQuestionnaires();
-    }
-  }, [user, fetchQuestionnaires]);
 
   return { 
     questionnaires, 

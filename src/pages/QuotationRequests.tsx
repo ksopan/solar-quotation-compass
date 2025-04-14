@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MainLayout } from "@/components/layouts/MainLayout";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
