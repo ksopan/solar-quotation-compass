@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { User } from "@/contexts/auth/types";
 import { PropertyQuestionnaireItem, VendorStats, QuestionnairesResult } from "./types";
 import { fetchQuestionnaires, fetchVendorStats } from "./vendorQuestionnaireApi";
+import { toast } from "sonner";
 
 export const useVendorQuotations = (user: User | null) => {
   const [questionnaires, setQuestionnaires] = useState<PropertyQuestionnaireItem[]>([]);
@@ -15,6 +16,7 @@ export const useVendorQuotations = (user: User | null) => {
   });
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch statistics
   const fetchStats = useCallback(async () => {
@@ -26,6 +28,7 @@ export const useVendorQuotations = (user: User | null) => {
       console.log("Stats updated:", statsData);
     } catch (error) {
       console.error("Error fetching stats:", error);
+      setError("Failed to load dashboard statistics");
     }
   }, [user]);
 
@@ -36,6 +39,7 @@ export const useVendorQuotations = (user: User | null) => {
     console.log("Fetching questionnaires page", page, "with limit", limit);
     setLoading(true);
     setCurrentPage(page);
+    setError(null);
     
     try {
       const result = await fetchQuestionnaires(user, page, limit);
@@ -44,9 +48,17 @@ export const useVendorQuotations = (user: User | null) => {
         console.log("Setting questionnaires from hook:", result.questionnaires);
         setQuestionnaires(result.questionnaires);
         setTotalPages(result.totalPages);
+        
+        if (result.questionnaires.length === 0) {
+          // Only show toast if we're on page 1 and expected data
+          if (page === 1 && result.totalPages > 0) {
+            toast.info("No questionnaires found on this page");
+          }
+        }
       } else {
         console.log("No result returned from fetchQuestionnaires");
         setQuestionnaires([]);
+        setError("Failed to load questionnaires data");
       }
       
       // Also update stats when questionnaires are fetched
@@ -57,6 +69,7 @@ export const useVendorQuotations = (user: User | null) => {
     } catch (error) {
       console.error("Error in fetchQuestionnairesPaginated:", error);
       setLoading(false);
+      setError("An error occurred while loading questionnaires");
       return null;
     }
   }, [user, fetchStats]);
@@ -75,6 +88,7 @@ export const useVendorQuotations = (user: User | null) => {
     stats,
     totalPages,
     currentPage,
+    error,
     fetchQuestionnaires: fetchQuestionnairesPaginated,
     fetchStats 
   };

@@ -31,9 +31,12 @@ export const fetchQuestionnaires = async (
     
     if (countError) {
       console.error("Error checking questionnaire count:", countError);
+      toast.error("Failed to check questionnaire count");
+      return null;
     }
     
-    // Fetch all completed property questionnaires
+    // Fetch all completed property questionnaires - NO FILTERING BY VENDOR YET 
+    // since vendors should see all completed questionnaires to bid on
     const { data: questionnaires, error, count } = await supabase
       .from("property_questionnaires")
       .select(`
@@ -90,10 +93,11 @@ export const fetchQuestionnaires = async (
           .single();
           
         if (proposalError && proposalError.code !== 'PGRST116') { // Ignore not found errors
-          console.error("Error checking proposal:", proposalError);
+          console.log(`Checking proposal for questionnaire ${questionnaire.id}:`, proposalError);
         }
           
         const hasProposal = !!proposalData;
+        console.log(`Questionnaire ${questionnaire.id} has proposal from this vendor:`, hasProposal);
           
         return {
           ...questionnaire,
@@ -133,7 +137,7 @@ export const fetchVendorStats = async (user: User | null): Promise<VendorStats> 
   }
   
   try {
-    // Count of new/unviewed completed questionnaires
+    // Count of completed questionnaires
     const { count: newCount, error: newError } = await supabase
       .from("property_questionnaires")
       .select("id", { count: 'exact' })
@@ -163,7 +167,7 @@ export const fetchVendorStats = async (user: User | null): Promise<VendorStats> 
       : 0;
       
     // Log stats for debugging
-    console.log("Vendor stats:", {
+    console.log("Vendor stats calculated:", {
       newRequests: potentialCustomerCount,
       submittedQuotes: submittedQuotesCount,
       conversionRate,

@@ -26,7 +26,8 @@ const VendorDashboard = () => {
   // Log dashboard rendering
   useEffect(() => {
     console.log("VendorDashboard rendering with questionnaires:", questionnaires);
-  }, [questionnaires]);
+    console.log("VendorDashboard stats:", stats);
+  }, [questionnaires, stats]);
 
   if (!user) {
     toast.error("User not authenticated");
