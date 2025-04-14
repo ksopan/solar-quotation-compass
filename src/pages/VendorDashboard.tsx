@@ -1,9 +1,8 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
 import { useVendorQuotations } from "@/hooks/vendor";
-import { PropertyQuestionnaireItem } from "@/hooks/vendor";
 import { DashboardStats } from "@/components/vendor/DashboardStats";
 import { QuestionnaireFilters } from "@/components/vendor/QuestionnaireFilters";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
@@ -13,12 +12,16 @@ import { toast } from "sonner";
 const VendorDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const itemsPerPage = 5; // Show fewer items on dashboard
   
   // Use the hook directly
-  const { questionnaires, loading, stats, fetchQuestionnaires } = useVendorQuotations(user);
+  const { 
+    questionnaires, 
+    loading, 
+    stats, 
+    fetchQuestionnaires, 
+    currentPage, 
+    totalPages 
+  } = useVendorQuotations(user);
 
   // Log dashboard rendering
   useEffect(() => {
@@ -31,8 +34,7 @@ const VendorDashboard = () => {
   }
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    fetchQuestionnaires(page, itemsPerPage);
+    fetchQuestionnaires(page, 5); // Show fewer items on dashboard
   };
 
   return (

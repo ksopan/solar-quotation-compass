@@ -15,11 +15,23 @@ export const fetchQuestionnaires = async (
   if (!user) return null;
   
   try {
-    console.log("Fetching questionnaires for vendor:", user.id);
+    console.log("Fetching questionnaires for vendor:", user.id, "with role:", user.role);
     
     // Calculate pagination range
     const from = (page - 1) * limit;
     const to = from + limit - 1;
+    
+    // First, check if there are any completed questionnaires at all
+    const { count: totalCount, error: countError } = await supabase
+      .from("property_questionnaires")
+      .select('*', { count: 'exact', head: true })
+      .eq('is_completed', true);
+      
+    console.log("Total completed questionnaires in database:", totalCount);
+    
+    if (countError) {
+      console.error("Error checking questionnaire count:", countError);
+    }
     
     // Fetch all completed property questionnaires
     const { data: questionnaires, error, count } = await supabase
@@ -52,12 +64,14 @@ export const fetchQuestionnaires = async (
       return null;
     }
     
-    console.log("Fetched questionnaires:", questionnaires);
+    console.log("Fetched questionnaires result:", questionnaires);
+    console.log("Questionnaires count from query:", count);
     
     if (!questionnaires || questionnaires.length === 0) {
+      console.log("No questionnaires found for current pagination range");
       return { 
         questionnaires: [], 
-        totalPages: 0
+        totalPages: count ? Math.ceil(count / limit) : 0
       };
     }
     
