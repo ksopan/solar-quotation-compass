@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/pagination";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface QuestionnairesTableProps {
   questionnaires: PropertyQuestionnaireItem[];
@@ -52,14 +53,16 @@ export const QuestionnairesTable: React.FC<QuestionnairesTableProps> = ({
   };
 
   const handleViewDetails = (questionnaireId: string) => {
-    // Navigate to details page or show modal
+    toast.info("Viewing details for questionnaire");
     console.log("View details for:", questionnaireId);
+    // In a real implementation, this would navigate to a details page
     // navigate(`/questionnaire/${questionnaireId}`);
   };
 
   const handleSubmitQuote = (questionnaireId: string) => {
-    // Navigate to quote submission page
+    toast.info("Preparing to submit quote");
     console.log("Submit quote for:", questionnaireId);
+    // In a real implementation, this would navigate to a quote submission page
     // navigate(`/submit-quote/${questionnaireId}`);
   };
 

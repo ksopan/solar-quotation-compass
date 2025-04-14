@@ -11,6 +11,72 @@ type PropertyQuestionnaireItem = Database['public']['Tables']['property_question
   hasProposal?: boolean;
 };
 
+// Sample data for testing when no questionnaires exist in the database
+const SAMPLE_DATA: PropertyQuestionnaireItem[] = [
+  {
+    id: "1",
+    customer_id: "cust-1",
+    first_name: "John",
+    last_name: "Smith",
+    email: "john.smith@example.com",
+    property_type: "residential",
+    ownership_status: "owned",
+    monthly_electric_bill: 150,
+    roof_age_status: "5-10 years",
+    purchase_timeline: "3-6 months",
+    interested_in_batteries: true,
+    battery_reason: "backup power",
+    willing_to_remove_trees: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    is_completed: true,
+    customerName: "John Smith",
+    customerEmail: "john.smith@example.com",
+    hasProposal: false
+  },
+  {
+    id: "2",
+    customer_id: "cust-2",
+    first_name: "Sarah",
+    last_name: "Johnson",
+    email: "sarah.j@example.com",
+    property_type: "commercial",
+    ownership_status: "owned",
+    monthly_electric_bill: 450,
+    roof_age_status: "less than 5 years",
+    purchase_timeline: "immediately",
+    interested_in_batteries: true,
+    battery_reason: "cost savings",
+    willing_to_remove_trees: true,
+    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+    updated_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    is_completed: true,
+    customerName: "Sarah Johnson",
+    customerEmail: "sarah.j@example.com",
+    hasProposal: true
+  },
+  {
+    id: "3",
+    customer_id: "cust-3",
+    first_name: "Michael",
+    last_name: "Brown",
+    email: "m.brown@example.com",
+    property_type: "residential",
+    ownership_status: "rented",
+    monthly_electric_bill: 200,
+    roof_age_status: "10-15 years",
+    purchase_timeline: "6-12 months",
+    interested_in_batteries: false,
+    willing_to_remove_trees: false,
+    created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days ago
+    updated_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+    is_completed: true,
+    customerName: "Michael Brown",
+    customerEmail: "m.brown@example.com",
+    hasProposal: false
+  }
+];
+
 export const useVendorQuotations = (user: User | null) => {
   const [questionnaires, setQuestionnaires] = useState<PropertyQuestionnaireItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -98,6 +164,10 @@ export const useVendorQuotations = (user: User | null) => {
             };
           })
         );
+      } else {
+        // If no data found in database, use sample data for testing/visualization
+        console.log("No questionnaires found in database, using sample data for testing");
+        processedQuestionnaires = SAMPLE_DATA;
       }
       
       // Update stats
@@ -108,7 +178,7 @@ export const useVendorQuotations = (user: User | null) => {
       
       return { 
         questionnaires: processedQuestionnaires, 
-        totalPages: count ? Math.ceil(count / limit) : 0 
+        totalPages: count ? Math.ceil(count / limit) : Math.ceil(SAMPLE_DATA.length / limit)
       };
     } catch (error) {
       console.error("Error in fetchQuestionnaires:", error);
@@ -129,6 +199,9 @@ export const useVendorQuotations = (user: User | null) => {
         .eq("is_completed", true);
         
       if (newError) console.error("Error fetching new count:", newError);
+      
+      // If no data in DB, use sample data length
+      const potentialCustomerCount = newCount || SAMPLE_DATA.length;
         
       // Count of submitted quotes by this vendor
       const { count: submittedCount, error: submittedError } = await supabase
@@ -137,20 +210,15 @@ export const useVendorQuotations = (user: User | null) => {
         .eq("vendor_id", user.id);
         
       if (submittedError) console.error("Error fetching submitted count:", submittedError);
-        
-      // Count of all potential customers with completed questionnaires
-      const { count: totalCount, error: totalError } = await supabase
-        .from("property_questionnaires")
-        .select("id", { count: 'exact' })
-        .eq("is_completed", true);
-        
-      if (totalError) console.error("Error fetching total count:", totalError);
+      
+      // Use sample submitted quotes count if none in DB
+      const submittedQuotesCount = submittedCount || 1;
         
       setStats({
-        newRequests: newCount || 0,
-        submittedQuotes: submittedCount || 0,
-        conversionRate: 24, // We'll keep this hardcoded for now
-        potentialCustomers: totalCount || 0
+        newRequests: potentialCustomerCount,
+        submittedQuotes: submittedQuotesCount,
+        conversionRate: 24, // Hardcoded for now
+        potentialCustomers: potentialCustomerCount
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
