@@ -87,6 +87,10 @@ export const fetchQuestionnaires = async (
       );
     }
     
+    // Add more detailed logging to help debug
+    console.log("Processed questionnaires:", processedQuestionnaires);
+    console.log("Total pages:", count ? Math.ceil(count / limit) : 1);
+    
     return { 
       questionnaires: processedQuestionnaires, 
       totalPages: count ? Math.ceil(count / limit) : 1
@@ -118,7 +122,9 @@ export const fetchVendorStats = async (user: User | null): Promise<VendorStats> 
       .select("id", { count: 'exact' })
       .eq("is_completed", true);
       
-    if (newError) console.error("Error fetching new count:", newError);
+    if (newError) {
+      console.error("Error fetching new count:", newError);
+    }
     
     const potentialCustomerCount = newCount || 0;
       
@@ -128,7 +134,9 @@ export const fetchVendorStats = async (user: User | null): Promise<VendorStats> 
       .select("id", { count: 'exact' })
       .eq("vendor_id", user.id);
       
-    if (submittedError) console.error("Error fetching submitted count:", submittedError);
+    if (submittedError) {
+      console.error("Error fetching submitted count:", submittedError);
+    }
     
     const submittedQuotesCount = submittedCount || 0;
     
@@ -137,6 +145,14 @@ export const fetchVendorStats = async (user: User | null): Promise<VendorStats> 
       ? Math.round((submittedQuotesCount / potentialCustomerCount) * 100) 
       : 0;
       
+    // Log stats for debugging
+    console.log("Vendor stats:", {
+      newRequests: potentialCustomerCount,
+      submittedQuotes: submittedQuotesCount,
+      conversionRate,
+      potentialCustomers: potentialCustomerCount
+    });
+    
     return {
       newRequests: potentialCustomerCount,
       submittedQuotes: submittedQuotesCount,

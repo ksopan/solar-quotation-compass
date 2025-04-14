@@ -33,6 +33,7 @@ export const useVendorQuotations = (user: User | null) => {
       
       if (result) {
         setQuestionnaires(result.questionnaires);
+        console.log("Setting questionnaires from hook:", result.questionnaires);
       }
       
       // Also update stats when questionnaires are fetched
@@ -55,5 +56,3 @@ export const useVendorQuotations = (user: User | null) => {
     fetchStats 
   };
 };
-
-export type { PropertyQuestionnaireItem, VendorStats };

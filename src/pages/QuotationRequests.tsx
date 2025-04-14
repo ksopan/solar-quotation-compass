@@ -23,9 +23,11 @@ const QuotationRequests = () => {
   useEffect(() => {
     if (!user) return;
 
+    console.log("QuotationRequests: Fetching questionnaires for page", currentPage);
     const loadData = async () => {
       const result = await fetchQuestionnaires(currentPage, itemsPerPage);
       if (result) {
+        console.log("QuotationRequests: Received questionnaires", result.questionnaires);
         setQuestionnaires(result.questionnaires);
         setTotalPages(result.totalPages);
       }

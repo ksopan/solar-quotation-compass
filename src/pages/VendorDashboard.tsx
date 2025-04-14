@@ -22,9 +22,11 @@ const VendorDashboard = () => {
   // Fetch questionnaires with pagination only when needed
   useEffect(() => {
     if (user) {
+      console.log("VendorDashboard: Fetching questionnaires for page", currentPage);
       const loadData = async () => {
         const result = await fetchQuestionnaires(currentPage, itemsPerPage);
         if (result) {
+          console.log("VendorDashboard: Received questionnaires", result.questionnaires);
           setQuestionnaires(result.questionnaires);
           setTotalPages(result.totalPages);
         }

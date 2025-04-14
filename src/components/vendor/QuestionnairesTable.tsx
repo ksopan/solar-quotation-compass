@@ -1,6 +1,6 @@
 
 import React from "react";
-import { PropertyQuestionnaireItem } from "@/hooks/useVendorQuotations";
+import { PropertyQuestionnaireItem } from "@/hooks/vendor";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
