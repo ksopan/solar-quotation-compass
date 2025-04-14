@@ -56,14 +56,14 @@ export const QuestionnairesTable: React.FC<QuestionnairesTableProps> = ({
     toast.info("Viewing details for questionnaire");
     console.log("View details for:", questionnaireId);
     // In a real implementation, this would navigate to a details page
-    // navigate(`/questionnaire/${questionnaireId}`);
+    navigate(`/quotation/${questionnaireId}`);
   };
 
   const handleSubmitQuote = (questionnaireId: string) => {
     toast.info("Preparing to submit quote");
     console.log("Submit quote for:", questionnaireId);
     // In a real implementation, this would navigate to a quote submission page
-    // navigate(`/submit-quote/${questionnaireId}`);
+    navigate(`/quotation/${questionnaireId}?action=quote`);
   };
 
   if (loading) {
@@ -79,7 +79,7 @@ export const QuestionnairesTable: React.FC<QuestionnairesTableProps> = ({
       <Card>
         <CardContent className="py-8">
           <div className="text-center">
-            <p className="text-muted-foreground">No property questionnaires found</p>
+            <p className="text-muted-foreground">No property questionnaires found in the database</p>
           </div>
         </CardContent>
       </Card>

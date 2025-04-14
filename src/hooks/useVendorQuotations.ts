@@ -3,79 +3,13 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
-import { User } from "@/contexts/auth/types"; // Using our custom User type
+import { User } from "@/contexts/auth/types";
 
 type PropertyQuestionnaireItem = Database['public']['Tables']['property_questionnaires']['Row'] & {
   customerName?: string;
   customerEmail?: string;
   hasProposal?: boolean;
 };
-
-// Sample data for testing when no questionnaires exist in the database
-const SAMPLE_DATA: PropertyQuestionnaireItem[] = [
-  {
-    id: "1",
-    customer_id: "cust-1",
-    first_name: "John",
-    last_name: "Smith",
-    email: "john.smith@example.com",
-    property_type: "residential",
-    ownership_status: "owned",
-    monthly_electric_bill: 150,
-    roof_age_status: "5-10 years",
-    purchase_timeline: "3-6 months",
-    interested_in_batteries: true,
-    battery_reason: "backup power",
-    willing_to_remove_trees: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    is_completed: true,
-    customerName: "John Smith",
-    customerEmail: "john.smith@example.com",
-    hasProposal: false
-  },
-  {
-    id: "2",
-    customer_id: "cust-2",
-    first_name: "Sarah",
-    last_name: "Johnson",
-    email: "sarah.j@example.com",
-    property_type: "commercial",
-    ownership_status: "owned",
-    monthly_electric_bill: 450,
-    roof_age_status: "less than 5 years",
-    purchase_timeline: "immediately",
-    interested_in_batteries: true,
-    battery_reason: "cost savings",
-    willing_to_remove_trees: true,
-    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
-    updated_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    is_completed: true,
-    customerName: "Sarah Johnson",
-    customerEmail: "sarah.j@example.com",
-    hasProposal: true
-  },
-  {
-    id: "3",
-    customer_id: "cust-3",
-    first_name: "Michael",
-    last_name: "Brown",
-    email: "m.brown@example.com",
-    property_type: "residential",
-    ownership_status: "rented",
-    monthly_electric_bill: 200,
-    roof_age_status: "10-15 years",
-    purchase_timeline: "6-12 months",
-    interested_in_batteries: false,
-    willing_to_remove_trees: false,
-    created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days ago
-    updated_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-    is_completed: true,
-    customerName: "Michael Brown",
-    customerEmail: "m.brown@example.com",
-    hasProposal: false
-  }
-];
 
 export const useVendorQuotations = (user: User | null) => {
   const [questionnaires, setQuestionnaires] = useState<PropertyQuestionnaireItem[]>([]);
@@ -128,6 +62,7 @@ export const useVendorQuotations = (user: User | null) => {
       if (error) {
         console.error("Questionnaire fetch error:", error);
         toast.error("Failed to load property questionnaires");
+        setLoading(false);
         return null;
       }
       
@@ -164,10 +99,6 @@ export const useVendorQuotations = (user: User | null) => {
             };
           })
         );
-      } else {
-        // If no data found in database, use sample data for testing/visualization
-        console.log("No questionnaires found in database, using sample data for testing");
-        processedQuestionnaires = SAMPLE_DATA;
       }
       
       // Update stats
@@ -178,7 +109,7 @@ export const useVendorQuotations = (user: User | null) => {
       
       return { 
         questionnaires: processedQuestionnaires, 
-        totalPages: count ? Math.ceil(count / limit) : Math.ceil(SAMPLE_DATA.length / limit)
+        totalPages: count ? Math.ceil(count / limit) : 1
       };
     } catch (error) {
       console.error("Error in fetchQuestionnaires:", error);
@@ -200,8 +131,7 @@ export const useVendorQuotations = (user: User | null) => {
         
       if (newError) console.error("Error fetching new count:", newError);
       
-      // If no data in DB, use sample data length
-      const potentialCustomerCount = newCount || SAMPLE_DATA.length;
+      const potentialCustomerCount = newCount || 0;
         
       // Count of submitted quotes by this vendor
       const { count: submittedCount, error: submittedError } = await supabase
@@ -211,13 +141,17 @@ export const useVendorQuotations = (user: User | null) => {
         
       if (submittedError) console.error("Error fetching submitted count:", submittedError);
       
-      // Use sample submitted quotes count if none in DB
-      const submittedQuotesCount = submittedCount || 1;
+      const submittedQuotesCount = submittedCount || 0;
+      
+      // Calculate conversion rate
+      const conversionRate = potentialCustomerCount > 0 
+        ? Math.round((submittedQuotesCount / potentialCustomerCount) * 100) 
+        : 0;
         
       setStats({
         newRequests: potentialCustomerCount,
         submittedQuotes: submittedQuotesCount,
-        conversionRate: 24, // Hardcoded for now
+        conversionRate,
         potentialCustomers: potentialCustomerCount
       });
     } catch (error) {

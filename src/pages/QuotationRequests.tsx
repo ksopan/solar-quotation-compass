@@ -5,7 +5,7 @@ import { MainLayout } from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useVendorQuotations } from "@/hooks/useVendorQuotations";
+import { useVendorQuotations, PropertyQuestionnaireItem } from "@/hooks/useVendorQuotations";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
 import { QuestionnaireFilters } from "@/components/vendor/QuestionnaireFilters";
 
@@ -17,7 +17,7 @@ const QuotationRequests = () => {
   const itemsPerPage = 15; // More items per page in the dedicated view
   
   const { fetchQuestionnaires, loading } = useVendorQuotations(user);
-  const [questionnaires, setQuestionnaires] = useState([]);
+  const [questionnaires, setQuestionnaires] = useState<PropertyQuestionnaireItem[]>([]);
 
   // Fetch questionnaires with correct dependency array
   useEffect(() => {
@@ -36,7 +36,7 @@ const QuotationRequests = () => {
 
   if (!user) return null;
 
-  const handlePageChange = (page) => {
+  const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 

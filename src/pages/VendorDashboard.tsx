@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
-import { useVendorQuotations } from "@/hooks/useVendorQuotations";
+import { useVendorQuotations, PropertyQuestionnaireItem } from "@/hooks/useVendorQuotations";
 import { DashboardStats } from "@/components/vendor/DashboardStats";
 import { QuestionnaireFilters } from "@/components/vendor/QuestionnaireFilters";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
@@ -17,7 +17,7 @@ const VendorDashboard = () => {
   
   // Destructure only what we need from the hook
   const { loading, stats, fetchQuestionnaires } = useVendorQuotations(user);
-  const [questionnaires, setQuestionnaires] = useState([]);
+  const [questionnaires, setQuestionnaires] = useState<PropertyQuestionnaireItem[]>([]);
 
   // Fetch questionnaires with pagination only when needed
   useEffect(() => {
@@ -36,7 +36,7 @@ const VendorDashboard = () => {
 
   if (!user) return null;
 
-  const handlePageChange = (page) => {
+  const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
