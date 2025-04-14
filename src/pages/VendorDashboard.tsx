@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
-import { useVendorQuotations, PropertyQuestionnaireItem } from "@/hooks/useVendorQuotations";
+import { useVendorQuotations, PropertyQuestionnaireItem } from "@/hooks/vendor";
 import { DashboardStats } from "@/components/vendor/DashboardStats";
 import { QuestionnaireFilters } from "@/components/vendor/QuestionnaireFilters";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";

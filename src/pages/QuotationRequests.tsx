@@ -5,7 +5,7 @@ import { MainLayout } from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useVendorQuotations, PropertyQuestionnaireItem } from "@/hooks/useVendorQuotations";
+import { useVendorQuotations, PropertyQuestionnaireItem } from "@/hooks/vendor";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
 import { QuestionnaireFilters } from "@/components/vendor/QuestionnaireFilters";
 
