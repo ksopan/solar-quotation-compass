@@ -2,11 +2,13 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
-import { useVendorQuotations, PropertyQuestionnaireItem } from "@/hooks/vendor";
+import { useVendorQuotations } from "@/hooks/vendor";
+import { PropertyQuestionnaireItem } from "@/hooks/vendor";
 import { DashboardStats } from "@/components/vendor/DashboardStats";
 import { QuestionnaireFilters } from "@/components/vendor/QuestionnaireFilters";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const VendorDashboard = () => {
   const { user } = useAuth();
@@ -15,31 +17,22 @@ const VendorDashboard = () => {
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 5; // Show fewer items on dashboard
   
-  // Destructure only what we need from the hook
-  const { loading, stats, fetchQuestionnaires } = useVendorQuotations(user);
-  const [questionnaires, setQuestionnaires] = useState<PropertyQuestionnaireItem[]>([]);
+  // Use the hook directly
+  const { questionnaires, loading, stats, fetchQuestionnaires } = useVendorQuotations(user);
 
-  // Fetch questionnaires with pagination only when needed
+  // Log dashboard rendering
   useEffect(() => {
-    if (user) {
-      console.log("VendorDashboard: Fetching questionnaires for page", currentPage);
-      const loadData = async () => {
-        const result = await fetchQuestionnaires(currentPage, itemsPerPage);
-        if (result) {
-          console.log("VendorDashboard: Received questionnaires", result.questionnaires);
-          setQuestionnaires(result.questionnaires);
-          setTotalPages(result.totalPages);
-        }
-      };
-      
-      loadData();
-    }
-  }, [user, currentPage, fetchQuestionnaires]);
+    console.log("VendorDashboard rendering with questionnaires:", questionnaires);
+  }, [questionnaires]);
 
-  if (!user) return null;
+  if (!user) {
+    toast.error("User not authenticated");
+    return null;
+  }
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    fetchQuestionnaires(page, itemsPerPage);
   };
 
   return (

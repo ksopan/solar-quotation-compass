@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -8,38 +8,27 @@ import { useNavigate } from "react-router-dom";
 import { useVendorQuotations, PropertyQuestionnaireItem } from "@/hooks/vendor";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
 import { QuestionnaireFilters } from "@/components/vendor/QuestionnaireFilters";
+import { toast } from "sonner";
 
 const QuotationRequests = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const itemsPerPage = 15; // More items per page in the dedicated view
   
-  const { fetchQuestionnaires, loading } = useVendorQuotations(user);
-  const [questionnaires, setQuestionnaires] = useState<PropertyQuestionnaireItem[]>([]);
-
-  // Fetch questionnaires with correct dependency array
+  // Use the hook directly
+  const { questionnaires, loading, fetchQuestionnaires, stats } = useVendorQuotations(user);
+  
+  // Log rendering
   useEffect(() => {
-    if (!user) return;
+    console.log("QuotationRequests rendering with questionnaires:", questionnaires);
+  }, [questionnaires]);
 
-    console.log("QuotationRequests: Fetching questionnaires for page", currentPage);
-    const loadData = async () => {
-      const result = await fetchQuestionnaires(currentPage, itemsPerPage);
-      if (result) {
-        console.log("QuotationRequests: Received questionnaires", result.questionnaires);
-        setQuestionnaires(result.questionnaires);
-        setTotalPages(result.totalPages);
-      }
-    };
-    
-    loadData();
-  }, [user, currentPage, fetchQuestionnaires]);
-
-  if (!user) return null;
+  if (!user) {
+    toast.error("User not authenticated");
+    return null;
+  }
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    fetchQuestionnaires(page, 15);
   };
 
   return (
@@ -58,8 +47,8 @@ const QuotationRequests = () => {
         <QuestionnairesTable 
           questionnaires={questionnaires}
           loading={loading}
-          currentPage={currentPage}
-          totalPages={totalPages}
+          currentPage={1}
+          totalPages={Math.max(1, Math.ceil(stats.potentialCustomers / 15))}
           onPageChange={handlePageChange}
         />
       </div>

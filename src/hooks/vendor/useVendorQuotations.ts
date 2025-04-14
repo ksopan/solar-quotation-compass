@@ -48,6 +48,13 @@ export const useVendorQuotations = (user: User | null) => {
     }
   }, [user, fetchStats]);
 
+  // Initial data load
+  useEffect(() => {
+    if (user) {
+      fetchQuestionnairesPaginated();
+    }
+  }, [user, fetchQuestionnairesPaginated]);
+
   return { 
     questionnaires, 
     loading, 

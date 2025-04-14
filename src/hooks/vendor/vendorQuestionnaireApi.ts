@@ -54,38 +54,41 @@ export const fetchQuestionnaires = async (
     
     console.log("Fetched questionnaires:", questionnaires);
     
-    let processedQuestionnaires: PropertyQuestionnaireItem[] = [];
+    if (!questionnaires || questionnaires.length === 0) {
+      return { 
+        questionnaires: [], 
+        totalPages: 0
+      };
+    }
     
     // Process questionnaires to check if vendor has submitted a proposal
-    if (questionnaires && questionnaires.length > 0) {
-      processedQuestionnaires = await Promise.all(
-        questionnaires.map(async (questionnaire) => {
-          // Prepare customer name from the questionnaire data itself
-          const customerName = `${questionnaire.first_name} ${questionnaire.last_name}`;
+    const processedQuestionnaires: PropertyQuestionnaireItem[] = await Promise.all(
+      questionnaires.map(async (questionnaire) => {
+        // Prepare customer name from the questionnaire data itself
+        const customerName = `${questionnaire.first_name} ${questionnaire.last_name}`;
+        
+        // Check if the vendor has already submitted a proposal for this questionnaire
+        const { data: proposalData, error: proposalError } = await supabase
+          .from("quotation_proposals")
+          .select("id")
+          .eq("quotation_request_id", questionnaire.id)
+          .eq("vendor_id", user.id)
+          .single();
           
-          // Check if the vendor has already submitted a proposal for this questionnaire
-          const { data: proposalData, error: proposalError } = await supabase
-            .from("quotation_proposals")
-            .select("id")
-            .eq("quotation_request_id", questionnaire.id)
-            .eq("vendor_id", user.id)
-            .single();
-            
-          if (proposalError && proposalError.code !== 'PGRST116') { // Ignore not found errors
-            console.error("Error checking proposal:", proposalError);
-          }
-            
-          const hasProposal = !!proposalData;
-            
-          return {
-            ...questionnaire,
-            customerName,
-            customerEmail: questionnaire.email,
-            hasProposal
-          };
-        })
-      );
-    }
+        if (proposalError && proposalError.code !== 'PGRST116') { // Ignore not found errors
+          console.error("Error checking proposal:", proposalError);
+        }
+          
+        const hasProposal = !!proposalData;
+          
+        return {
+          ...questionnaire,
+          customerName,
+          customerEmail: questionnaire.email,
+          hasProposal
+        };
+      })
+    );
     
     // Add more detailed logging to help debug
     console.log("Processed questionnaires:", processedQuestionnaires);
