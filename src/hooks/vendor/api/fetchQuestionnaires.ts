@@ -21,7 +21,7 @@ export const fetchQuestionnaires = async (
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     
-    // Debug: Let's check what's actually in the property_questionnaires table
+    // Debug: Check what's actually in the property_questionnaires table - no filters
     const { data: allQuestionnaires, error: debugError } = await supabase
       .from("property_questionnaires")
       .select('*');
@@ -30,9 +30,11 @@ export const fetchQuestionnaires = async (
     
     if (debugError) {
       console.error("Debug query error:", debugError);
+      toast.error("Failed to query questionnaires: " + debugError.message);
+      return null;
     }
     
-    // Check if there are any questionnaires at all - for debugging purposes
+    // Check total count
     const { count: totalCount, error: countError } = await supabase
       .from("property_questionnaires")
       .select('*', { count: 'exact', head: true });
@@ -41,7 +43,7 @@ export const fetchQuestionnaires = async (
     
     if (countError) {
       console.error("Error checking questionnaire count:", countError);
-      toast.error("Failed to check questionnaire count");
+      toast.error("Failed to check questionnaire count: " + countError.message);
       return null;
     }
     
@@ -52,8 +54,8 @@ export const fetchQuestionnaires = async (
       return { questionnaires: [], totalPages: 0 };
     }
 
-    // Fetch ALL questionnaires (not just completed ones)
-    console.log("Fetching all questionnaires...");
+    // Fetch ALL questionnaires with detailed logging to diagnose issues
+    console.log(`Fetching questionnaires (page ${page}, limit ${limit}, range ${from}-${to})...`);
     const { data: questionnaires, error, count } = await supabase
       .from("property_questionnaires")
       .select(`
@@ -79,7 +81,7 @@ export const fetchQuestionnaires = async (
       
     if (error) {
       console.error("Questionnaire fetch error:", error);
-      toast.error("Failed to load property questionnaires");
+      toast.error("Failed to load property questionnaires: " + error.message);
       return null;
     }
     
@@ -105,15 +107,14 @@ export const fetchQuestionnaires = async (
           .from("quotation_proposals")
           .select("id")
           .eq("quotation_request_id", questionnaire.id)
-          .eq("vendor_id", user.id)
-          .single();
+          .eq("vendor_id", user.id);
           
         if (proposalError && proposalError.code !== 'PGRST116') { // Ignore not found errors
-          console.log(`Checking proposal for questionnaire ${questionnaire.id}:`, proposalError);
+          console.error(`Checking proposal for questionnaire ${questionnaire.id}:`, proposalError);
         }
           
-        const hasProposal = !!proposalData;
-        console.log(`Questionnaire ${questionnaire.id} has proposal from this vendor:`, hasProposal);
+        const hasProposal = proposalData && proposalData.length > 0;
+        console.log(`Questionnaire ${questionnaire.id} has proposal from vendor ${user.id}:`, hasProposal);
           
         return {
           ...questionnaire,

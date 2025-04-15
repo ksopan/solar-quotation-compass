@@ -15,7 +15,7 @@ export const useVendorQuotations = (user: User | null) => {
   const [stats, setStats] = useState<VendorStats>({
     newRequests: 0,
     submittedQuotes: 0,
-    conversionRate: 24, // Default value
+    conversionRate: 0,
     potentialCustomers: 0
   });
   const [totalPages, setTotalPages] = useState(1);
@@ -66,18 +66,14 @@ export const useVendorQuotations = (user: User | null) => {
         setQuestionnaires(result.questionnaires);
         setTotalPages(result.totalPages);
         
-        if (result.questionnaires.length === 0 && totalPages > 0) {
+        if (result.questionnaires.length === 0 && result.totalPages > 0) {
           // Handle case where current page might be out of bounds
           if (page > 1) {
             toast.info("No questionnaires found on this page. Returning to page 1.");
             return fetchQuestionnaires(user, 1, limit);
           } else {
             toast.info("No questionnaires found. Use the refresh button to try again.");
-            // Try permission check
-            checkPermissions();
           }
-        } else if (result.questionnaires.length > 0) {
-          toast.success(`Found ${result.questionnaires.length} questionnaires`);
         }
       } else {
         console.log("No result returned from fetchQuestionnaires");
@@ -98,13 +94,13 @@ export const useVendorQuotations = (user: User | null) => {
       toast.error("An error occurred while loading questionnaires");
       return null;
     }
-  }, [user, fetchStats, checkPermissions, totalPages]);
+  }, [user, fetchStats]);
 
   // Initial data load and refresh on user change or manual refresh
   useEffect(() => {
     console.log("useVendorQuotations effect running with user:", user?.id);
     if (user) {
-      fetchQuestionnairesPaginated();
+      fetchQuestionnairesPaginated(1, 15);  // Fetch more items per page initially
     }
   }, [user, fetchQuestionnairesPaginated, refreshCounter]);
 

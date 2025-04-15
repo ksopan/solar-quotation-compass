@@ -28,18 +28,18 @@ export const checkPermissions = async (user: User) => {
       toast.warning("Debug RPC returned no data");
     }
     
-    // Next, try a direct query to the table
-    const { data: tableData, error: tableError } = await supabase
+    // Next, try a direct query to the table with no filters
+    const { data: rawTableData, error: rawTableError } = await supabase
       .from("property_questionnaires")
       .select("*")
-      .limit(3);
+      .limit(10);
       
-    if (tableError) {
-      console.error("Direct table query error:", tableError);
-      toast.error("Direct table query failed: " + tableError.message);
+    if (rawTableError) {
+      console.error("Raw table query error:", rawTableError);
+      toast.error("Raw table query failed: " + rawTableError.message);
     } else {
-      console.log("Direct table query result:", tableData);
-      toast.success(`Direct query returned ${tableData?.length || 0} rows`);
+      console.log("RAW TABLE DATA - ALL QUESTIONNAIRES:", rawTableData);
+      toast.success(`Raw query returned ${rawTableData?.length || 0} total questionnaires`);
     }
     
     // Check if the user can query the proposals
