@@ -15,6 +15,7 @@ import AuthCallback from "./pages/auth/AuthCallback";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ResetPassword from "./pages/ResetPassword";
 import QuotationRequests from "./pages/QuotationRequests";
+import AllQuestionnaires from "./pages/AllQuestionnaires"; // Add import for new page
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,11 @@ const App = () => (
             <Route path="/quotation-requests" element={
               <ProtectedRoute>
                 <QuotationRequests />
+              </ProtectedRoute>
+            } />
+            <Route path="/all-questionnaires" element={
+              <ProtectedRoute>
+                <AllQuestionnaires />
               </ProtectedRoute>
             } />
             
