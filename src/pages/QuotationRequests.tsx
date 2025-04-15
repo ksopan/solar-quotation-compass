@@ -1,8 +1,9 @@
+
 import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw, Database } from "lucide-react";
+import { ArrowLeft, RefreshCw, Database, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useVendorQuotations, PropertyQuestionnaireItem } from "@/hooks/vendor";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
@@ -23,7 +24,8 @@ const QuotationRequests = () => {
     stats, 
     refresh, 
     currentPage, 
-    totalPages
+    totalPages,
+    error
   } = useVendorQuotations(user);
   
   // Log rendering
@@ -51,6 +53,7 @@ const QuotationRequests = () => {
     const result = await createSampleQuestionnaire(user.id);
     if (result) {
       // Refresh the data to show the new questionnaire
+      toast.success("Sample questionnaire created successfully. Refreshing data...");
       refresh();
     }
   };
@@ -69,9 +72,19 @@ const QuotationRequests = () => {
             <Button variant="outline" onClick={handleRefresh}>
               <RefreshCw className="h-4 w-4 mr-2" /> Refresh
             </Button>
-            <QuestionnaireFilters />
+            <Button variant="outline">
+              <Filter className="h-4 w-4 mr-2" /> Filter
+            </Button>
           </div>
         </div>
+
+        {error && (
+          <Card className="bg-red-50 border-red-200">
+            <CardContent className="py-4">
+              <p className="text-red-700">{error}</p>
+            </CardContent>
+          </Card>
+        )}
 
         <QuestionnairesTable 
           questionnaires={questionnaires}

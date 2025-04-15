@@ -21,42 +21,29 @@ export const fetchQuestionnaires = async (
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     
-    // First, check if there are any completed questionnaires at all - with detailed logging
+    // Check if there are any questionnaires at all - for debugging purposes
     const { count: totalCount, error: countError } = await supabase
       .from("property_questionnaires")
       .select('*', { count: 'exact', head: true });
       
-    console.log("Total questionnaires in database (regardless of completion):", totalCount);
+    console.log("Total questionnaires in database:", totalCount);
     
     if (countError) {
       console.error("Error checking questionnaire count:", countError);
       toast.error("Failed to check questionnaire count");
       return null;
     }
-
-    // Log auth status for debugging
-    const { data: { session } } = await supabase.auth.getSession();
-    console.log("Current user ID:", session?.user?.id);
-    console.log("Current JWT role:", session?.user?.user_metadata?.role);
     
-    // Explicitly log the auth token to verify permissions
-    console.log("✅ Supabase user ID (auth.uid()):", user.id);
-    
-    // Fetch all property questionnaires without filtering by is_completed to check if any exist
-    console.log("Fetching questionnaires without completion filter...");
-    const { data: allQuestionnaires, error: allError } = await supabase
-      .from("property_questionnaires")
-      .select('id, is_completed')
-      .limit(5);
-      
-    console.log("Sample of all questionnaires:", allQuestionnaires);
-    
-    if (allError) {
-      console.error("Error fetching sample questionnaires:", allError);
+    // If no questionnaires exist at all, return empty result
+    if (totalCount === 0) {
+      console.log("No questionnaires found in the database at all");
+      toast.info("No questionnaires found in the database");
+      return { questionnaires: [], totalPages: 0 };
     }
-    
-    // Now fetch only completed questionnaires
-    console.log("Fetching completed questionnaires...");
+
+    // Fetch ALL questionnaires (not just completed ones)
+    // This is a change from the previous version which only fetched completed questionnaires
+    console.log("Fetching all questionnaires...");
     const { data: questionnaires, error, count } = await supabase
       .from("property_questionnaires")
       .select(`
@@ -77,7 +64,6 @@ export const fetchQuestionnaires = async (
         updated_at,
         is_completed
       `, { count: 'exact' })
-      .eq('is_completed', true) // Only fetch completed questionnaires
       .order('created_at', { ascending: false })
       .range(from, to);
       
@@ -92,24 +78,6 @@ export const fetchQuestionnaires = async (
     
     if (!questionnaires || questionnaires.length === 0) {
       console.log("No questionnaires found for current pagination range");
-      
-      // Attempt a direct query using try/catch instead of RPC
-      try {
-        const { data: directCheck, error: directError } = await supabase
-          .from('property_questionnaires')
-          .select('id, is_completed')
-          .eq('is_completed', true)
-          .limit(5);
-          
-        if (directError) {
-          console.error("Direct query error:", directError);
-        } else {
-          console.log("Direct query result:", directCheck);
-        }
-      } catch (directQueryError) {
-        console.error("Error in direct query:", directQueryError);
-      }
-      
       return { 
         questionnaires: [], 
         totalPages: count ? Math.ceil(count / limit) : 0
@@ -149,6 +117,11 @@ export const fetchQuestionnaires = async (
     // Add more detailed logging to help debug
     console.log("Processed questionnaires:", processedQuestionnaires);
     console.log("Total pages:", count ? Math.ceil(count / limit) : 1);
+    
+    // Show success toast only if we found questionnaires
+    if (processedQuestionnaires.length > 0) {
+      toast.success(`Found ${processedQuestionnaires.length} questionnaire(s)`);
+    }
     
     return { 
       questionnaires: processedQuestionnaires, 

@@ -23,6 +23,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { ClipboardList } from "lucide-react";
 
 interface QuestionnairesTableProps {
   questionnaires: PropertyQuestionnaireItem[];
@@ -41,7 +42,10 @@ export const QuestionnairesTable: React.FC<QuestionnairesTableProps> = ({
 }) => {
   const navigate = useNavigate();
   
-  const getStatusBadge = (hasProposal?: boolean) => {
+  const getStatusBadge = (hasProposal?: boolean, isCompleted?: boolean) => {
+    if (!isCompleted) {
+      return <Badge className="bg-amber-500">Incomplete</Badge>;
+    }
     if (hasProposal) {
       return <Badge className="bg-green-500">Quoted</Badge>;
     }
@@ -78,7 +82,9 @@ export const QuestionnairesTable: React.FC<QuestionnairesTableProps> = ({
     return (
       <Card>
         <CardContent className="py-8">
-          <div className="text-center">
+          <div className="flex flex-col items-center justify-center text-center p-6">
+            <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">No questionnaires found</h3>
             <p className="text-muted-foreground">No property questionnaires found in the database</p>
           </div>
         </CardContent>
@@ -109,8 +115,8 @@ export const QuestionnairesTable: React.FC<QuestionnairesTableProps> = ({
                   <TableCell>{formatPropertyType(questionnaire.property_type)}</TableCell>
                   <TableCell>{format(parseISO(questionnaire.created_at), "MMM d, yyyy")}</TableCell>
                   <TableCell>${questionnaire.monthly_electric_bill}</TableCell>
-                  <TableCell>{questionnaire.roof_age_status}</TableCell>
-                  <TableCell>{getStatusBadge(questionnaire.hasProposal)}</TableCell>
+                  <TableCell>{questionnaire.roof_age_status.replace(/_/g, ' ')}</TableCell>
+                  <TableCell>{getStatusBadge(questionnaire.hasProposal, questionnaire.is_completed)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button 
@@ -120,7 +126,7 @@ export const QuestionnairesTable: React.FC<QuestionnairesTableProps> = ({
                       >
                         View Details
                       </Button>
-                      {!questionnaire.hasProposal && (
+                      {questionnaire.is_completed && !questionnaire.hasProposal && (
                         <Button 
                           size="sm"
                           onClick={() => handleSubmitQuote(questionnaire.id)}
