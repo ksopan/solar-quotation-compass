@@ -17,6 +17,12 @@ export const useVendorQuotations = (user: User | null) => {
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const [refreshCounter, setRefreshCounter] = useState(0);
+
+  // Force refresh function
+  const forceRefresh = useCallback(() => {
+    setRefreshCounter(prev => prev + 1);
+  }, []);
 
   // Fetch statistics
   const fetchStats = useCallback(async () => {
@@ -74,13 +80,13 @@ export const useVendorQuotations = (user: User | null) => {
     }
   }, [user, fetchStats]);
 
-  // Initial data load
+  // Initial data load and refresh on user change or manual refresh
   useEffect(() => {
     console.log("useVendorQuotations effect running with user:", user?.id);
     if (user) {
       fetchQuestionnairesPaginated();
     }
-  }, [user, fetchQuestionnairesPaginated]);
+  }, [user, fetchQuestionnairesPaginated, refreshCounter]);
 
   return { 
     questionnaires, 
@@ -90,6 +96,7 @@ export const useVendorQuotations = (user: User | null) => {
     currentPage,
     error,
     fetchQuestionnaires: fetchQuestionnairesPaginated,
-    fetchStats 
+    fetchStats,
+    refresh: forceRefresh
   };
 };

@@ -34,6 +34,10 @@ export const fetchQuestionnaires = async (
       toast.error("Failed to check questionnaire count");
       return null;
     }
+
+    // Log JWT for debugging
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log("Current JWT role:", session?.user?.user_metadata?.role);
     
     // Fetch all completed property questionnaires - NO FILTERING BY VENDOR YET 
     // since vendors should see all completed questionnaires to bid on

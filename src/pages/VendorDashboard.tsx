@@ -8,6 +8,7 @@ import { QuestionnaireFilters } from "@/components/vendor/QuestionnaireFilters";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { RefreshCw } from "lucide-react";
 
 const VendorDashboard = () => {
   const { user } = useAuth();
@@ -20,7 +21,8 @@ const VendorDashboard = () => {
     stats, 
     fetchQuestionnaires, 
     currentPage, 
-    totalPages 
+    totalPages,
+    refresh
   } = useVendorQuotations(user);
 
   // Log dashboard rendering
@@ -38,11 +40,21 @@ const VendorDashboard = () => {
     fetchQuestionnaires(page, 5); // Show fewer items on dashboard
   };
 
+  const handleRefresh = () => {
+    toast.info("Refreshing dashboard data...");
+    refresh();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Welcome, {user.companyName || 'Vendor'}!</h1>
-        <Button onClick={() => navigate("/quotation-requests")}>View All Requests</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4 mr-2" /> Refresh
+          </Button>
+          <Button onClick={() => navigate("/quotation-requests")}>View All Requests</Button>
+        </div>
       </div>
 
       <DashboardStats stats={stats} />
