@@ -8,7 +8,8 @@ import { QuestionnaireFilters } from "@/components/vendor/QuestionnaireFilters";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, ShieldAlert, AlertCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 const VendorDashboard = () => {
   const { user } = useAuth();
@@ -22,7 +23,9 @@ const VendorDashboard = () => {
     fetchQuestionnaires, 
     currentPage, 
     totalPages,
-    refresh
+    refresh,
+    checkPermissions,
+    error
   } = useVendorQuotations(user);
 
   // Log dashboard rendering
@@ -30,6 +33,13 @@ const VendorDashboard = () => {
     console.log("VendorDashboard rendering with questionnaires:", questionnaires);
     console.log("VendorDashboard stats:", stats);
   }, [questionnaires, stats]);
+
+  useEffect(() => {
+    // Initial load - show toast with help if no data found
+    if (!loading && questionnaires.length === 0) {
+      toast.info("No questionnaires found. Check permissions or try refreshing.");
+    }
+  }, [loading, questionnaires]);
 
   if (!user) {
     toast.error("User not authenticated");
@@ -45,11 +55,19 @@ const VendorDashboard = () => {
     refresh();
   };
 
+  const handleCheckPermissions = () => {
+    toast.info("Checking database permissions...");
+    checkPermissions();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Welcome, {user.companyName || 'Vendor'}!</h1>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleCheckPermissions}>
+            <ShieldAlert className="h-4 w-4 mr-2" /> Check Permissions
+          </Button>
           <Button variant="outline" onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4 mr-2" /> Refresh
           </Button>
@@ -58,6 +76,21 @@ const VendorDashboard = () => {
       </div>
 
       <DashboardStats stats={stats} />
+
+      {error && (
+        <Card className="bg-red-50 border-red-200">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+              <div>
+                <h3 className="font-medium text-red-800">Error Loading Data</h3>
+                <p className="text-red-600">{error}</p>
+                <p className="text-sm text-red-500 mt-1">Try refreshing or checking permissions.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Recent Property Questionnaires</h2>
@@ -71,6 +104,34 @@ const VendorDashboard = () => {
         totalPages={totalPages}
         onPageChange={handlePageChange}
       />
+      
+      {!loading && questionnaires.length === 0 && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="py-6">
+            <div className="text-center">
+              <h3 className="font-medium text-blue-800">No Questionnaires Found</h3>
+              <p className="text-blue-600 mt-1">
+                There are no property questionnaires available at this time.
+              </p>
+              <div className="mt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={handleRefresh}
+                  className="mr-2"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" /> Refresh Data
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleCheckPermissions}
+                >
+                  <ShieldAlert className="h-4 w-4 mr-2" /> Check Permissions
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

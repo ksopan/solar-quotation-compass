@@ -21,13 +21,12 @@ export const fetchQuestionnaires = async (
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     
-    // First, check if there are any completed questionnaires at all
+    // First, check if there are any completed questionnaires at all - with detailed logging
     const { count: totalCount, error: countError } = await supabase
       .from("property_questionnaires")
-      .select('*', { count: 'exact', head: true })
-      .eq('is_completed', true);
+      .select('*', { count: 'exact', head: true });
       
-    console.log("Total completed questionnaires in database:", totalCount);
+    console.log("Total questionnaires in database (regardless of completion):", totalCount);
     
     if (countError) {
       console.error("Error checking questionnaire count:", countError);
@@ -35,12 +34,29 @@ export const fetchQuestionnaires = async (
       return null;
     }
 
-    // Log JWT for debugging
+    // Log auth status for debugging
     const { data: { session } } = await supabase.auth.getSession();
+    console.log("Current user ID:", session?.user?.id);
     console.log("Current JWT role:", session?.user?.user_metadata?.role);
     
-    // Fetch all completed property questionnaires - NO FILTERING BY VENDOR YET 
-    // since vendors should see all completed questionnaires to bid on
+    // Explicitly log the auth token to verify permissions
+    console.log("✅ Supabase user ID (auth.uid()):", user.id);
+    
+    // Fetch all property questionnaires without filtering by is_completed to check if any exist
+    console.log("Fetching questionnaires without completion filter...");
+    const { data: allQuestionnaires, error: allError } = await supabase
+      .from("property_questionnaires")
+      .select('id, is_completed')
+      .limit(5);
+      
+    console.log("Sample of all questionnaires:", allQuestionnaires);
+    
+    if (allError) {
+      console.error("Error fetching sample questionnaires:", allError);
+    }
+    
+    // Now fetch only completed questionnaires
+    console.log("Fetching completed questionnaires...");
     const { data: questionnaires, error, count } = await supabase
       .from("property_questionnaires")
       .select(`
@@ -76,6 +92,17 @@ export const fetchQuestionnaires = async (
     
     if (!questionnaires || questionnaires.length === 0) {
       console.log("No questionnaires found for current pagination range");
+      
+      // Attempt a direct query to confirm RLS is working
+      const { data: directCheck, error: directError } = await supabase
+        .rpc('get_debug_questionnaires');
+        
+      if (directError) {
+        console.error("Direct query error:", directError);
+      } else {
+        console.log("Direct RPC query result:", directCheck);
+      }
+      
       return { 
         questionnaires: [], 
         totalPages: count ? Math.ceil(count / limit) : 0
