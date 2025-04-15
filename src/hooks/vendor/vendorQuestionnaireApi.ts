@@ -93,14 +93,21 @@ export const fetchQuestionnaires = async (
     if (!questionnaires || questionnaires.length === 0) {
       console.log("No questionnaires found for current pagination range");
       
-      // Attempt a direct query to confirm RLS is working
-      const { data: directCheck, error: directError } = await supabase
-        .rpc('get_debug_questionnaires');
-        
-      if (directError) {
-        console.error("Direct query error:", directError);
-      } else {
-        console.log("Direct RPC query result:", directCheck);
+      // Attempt a direct query using try/catch instead of RPC
+      try {
+        const { data: directCheck, error: directError } = await supabase
+          .from('property_questionnaires')
+          .select('id, is_completed')
+          .eq('is_completed', true)
+          .limit(5);
+          
+        if (directError) {
+          console.error("Direct query error:", directError);
+        } else {
+          console.log("Direct query result:", directCheck);
+        }
+      } catch (directQueryError) {
+        console.error("Error in direct query:", directQueryError);
       }
       
       return { 
