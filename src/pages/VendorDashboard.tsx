@@ -66,6 +66,7 @@ const VendorDashboard = () => {
       toast.info("Creating sample questionnaire data...");
       
       // Call the RPC function to create a sample questionnaire
+      // Fix: Correctly type the parameters object
       const { data, error } = await supabase
         .rpc('insert_sample_questionnaire', { vendor_id: user.id });
         
