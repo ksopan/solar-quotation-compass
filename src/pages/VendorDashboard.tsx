@@ -8,8 +8,9 @@ import { QuestionnaireFilters } from "@/components/vendor/QuestionnaireFilters";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { RefreshCw, ShieldAlert, AlertCircle } from "lucide-react";
+import { RefreshCw, ShieldAlert, AlertCircle, Database } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 
 const VendorDashboard = () => {
   const { user } = useAuth();
@@ -58,6 +59,31 @@ const VendorDashboard = () => {
   const handleCheckPermissions = () => {
     toast.info("Checking database permissions...");
     checkPermissions();
+  };
+
+  const handleCreateSampleData = async () => {
+    try {
+      toast.info("Creating sample questionnaire data...");
+      
+      // Call the RPC function to create a sample questionnaire
+      const { data, error } = await supabase
+        .rpc('insert_sample_questionnaire', { vendor_id: user.id });
+        
+      if (error) {
+        console.error("Error creating sample data:", error);
+        toast.error("Failed to create sample data: " + error.message);
+        return;
+      }
+      
+      console.log("Sample data created with ID:", data);
+      toast.success("Sample questionnaire created successfully!");
+      
+      // Refresh the data to show the new questionnaire
+      refresh();
+    } catch (err) {
+      console.error("Exception creating sample data:", err);
+      toast.error("An unexpected error occurred");
+    }
   };
 
   return (
@@ -113,11 +139,10 @@ const VendorDashboard = () => {
               <p className="text-blue-600 mt-1">
                 There are no property questionnaires available at this time.
               </p>
-              <div className="mt-4">
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
                 <Button 
                   variant="outline" 
                   onClick={handleRefresh}
-                  className="mr-2"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" /> Refresh Data
                 </Button>
@@ -126,6 +151,12 @@ const VendorDashboard = () => {
                   onClick={handleCheckPermissions}
                 >
                   <ShieldAlert className="h-4 w-4 mr-2" /> Check Permissions
+                </Button>
+                <Button 
+                  variant="default"
+                  onClick={handleCreateSampleData}
+                >
+                  <Database className="h-4 w-4 mr-2" /> Create Sample Data
                 </Button>
               </div>
             </div>
