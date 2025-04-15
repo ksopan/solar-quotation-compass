@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { RefreshCw, ShieldAlert, AlertCircle, Database } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { createSampleQuestionnaire } from "@/hooks/vendor/api";
 
 const VendorDashboard = () => {
   const { user } = useAuth();
@@ -62,28 +61,12 @@ const VendorDashboard = () => {
   };
 
   const handleCreateSampleData = async () => {
-    try {
-      toast.info("Creating sample questionnaire data...");
-      
-      // Call the RPC function to create a sample questionnaire
-      // Fix: Correctly type the parameters object
-      const { data, error } = await supabase
-        .rpc('insert_sample_questionnaire', { vendor_id: user.id });
-        
-      if (error) {
-        console.error("Error creating sample data:", error);
-        toast.error("Failed to create sample data: " + error.message);
-        return;
-      }
-      
-      console.log("Sample data created with ID:", data);
-      toast.success("Sample questionnaire created successfully!");
-      
+    if (!user) return;
+    
+    const result = await createSampleQuestionnaire(user.id);
+    if (result) {
       // Refresh the data to show the new questionnaire
       refresh();
-    } catch (err) {
-      console.error("Exception creating sample data:", err);
-      toast.error("An unexpected error occurred");
     }
   };
 

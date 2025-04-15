@@ -2,9 +2,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { User } from "@/contexts/auth/types";
 import { PropertyQuestionnaireItem, VendorStats, QuestionnairesResult } from "./types";
-import { fetchQuestionnaires, fetchVendorStats } from "./vendorQuestionnaireApi";
+import { 
+  fetchQuestionnaires, 
+  fetchVendorStats, 
+  checkPermissions as checkPermissionsApi 
+} from "./api";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 export const useVendorQuotations = (user: User | null) => {
   const [questionnaires, setQuestionnaires] = useState<PropertyQuestionnaireItem[]>([]);
@@ -29,30 +32,7 @@ export const useVendorQuotations = (user: User | null) => {
   // Direct debug function to check RLS permissions
   const checkPermissions = useCallback(async () => {
     if (!user) return;
-    
-    try {
-      console.log("Checking RLS permissions directly...");
-      
-      // Try a direct query first
-      const { data: directData, error: directError } = await supabase
-        .from('property_questionnaires')
-        .select('id, is_completed')
-        .limit(10);
-        
-      if (directError) {
-        console.error("Direct permission check failed:", directError);
-        toast.error("Permission check failed");
-      } else {
-        console.log("Permission check results:", directData);
-        if (directData.length > 0) {
-          toast.success(`Found ${directData.length} questionnaires in direct check`);
-        } else {
-          toast.warning("No questionnaires found in direct permission check");
-        }
-      }
-    } catch (error) {
-      console.error("Error in permission check:", error);
-    }
+    await checkPermissionsApi(user);
   }, [user]);
 
   // Fetch statistics
