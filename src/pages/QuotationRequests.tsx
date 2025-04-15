@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw, Database, Filter } from "lucide-react";
+import { ArrowLeft, RefreshCw, Database, Filter, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useVendorQuotations, PropertyQuestionnaireItem } from "@/hooks/vendor";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
@@ -25,7 +25,8 @@ const QuotationRequests = () => {
     refresh, 
     currentPage, 
     totalPages,
-    error
+    error,
+    checkPermissions
   } = useVendorQuotations(user);
   
   // Log rendering
@@ -45,6 +46,11 @@ const QuotationRequests = () => {
   const handleRefresh = () => {
     toast.info("Refreshing questionnaire data...");
     refresh();
+  };
+
+  const handleCheckPermissions = () => {
+    toast.info("Checking database permissions...");
+    checkPermissions();
   };
 
   const handleCreateSampleData = async () => {
@@ -69,6 +75,9 @@ const QuotationRequests = () => {
             <h1 className="text-3xl font-bold">All Property Questionnaires</h1>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={handleCheckPermissions}>
+              <AlertTriangle className="h-4 w-4 mr-2" /> Check Permissions
+            </Button>
             <Button variant="outline" onClick={handleRefresh}>
               <RefreshCw className="h-4 w-4 mr-2" /> Refresh
             </Button>
@@ -108,6 +117,12 @@ const QuotationRequests = () => {
                     onClick={handleRefresh}
                   >
                     <RefreshCw className="h-4 w-4 mr-2" /> Refresh Data
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCheckPermissions}
+                  >
+                    <AlertTriangle className="h-4 w-4 mr-2" /> Check Permissions
                   </Button>
                   <Button 
                     variant="default"

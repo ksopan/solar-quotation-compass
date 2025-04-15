@@ -66,14 +66,17 @@ export const useVendorQuotations = (user: User | null) => {
         setQuestionnaires(result.questionnaires);
         setTotalPages(result.totalPages);
         
-        if (result.questionnaires.length === 0) {
-          // Only show toast if we're on page 1 and expected data
-          if (page === 1) {
+        if (result.questionnaires.length === 0 && totalPages > 0) {
+          // Handle case where current page might be out of bounds
+          if (page > 1) {
+            toast.info("No questionnaires found on this page. Returning to page 1.");
+            return fetchQuestionnaires(user, 1, limit);
+          } else {
             toast.info("No questionnaires found. Use the refresh button to try again.");
             // Try permission check
             checkPermissions();
           }
-        } else {
+        } else if (result.questionnaires.length > 0) {
           toast.success(`Found ${result.questionnaires.length} questionnaires`);
         }
       } else {
@@ -95,7 +98,7 @@ export const useVendorQuotations = (user: User | null) => {
       toast.error("An error occurred while loading questionnaires");
       return null;
     }
-  }, [user, fetchStats, checkPermissions]);
+  }, [user, fetchStats, checkPermissions, totalPages]);
 
   // Initial data load and refresh on user change or manual refresh
   useEffect(() => {

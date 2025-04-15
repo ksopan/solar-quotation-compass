@@ -21,6 +21,17 @@ export const fetchQuestionnaires = async (
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     
+    // Debug: Let's check what's actually in the property_questionnaires table
+    const { data: allQuestionnaires, error: debugError } = await supabase
+      .from("property_questionnaires")
+      .select('*');
+    
+    console.log("DEBUG - All questionnaires in database:", allQuestionnaires);
+    
+    if (debugError) {
+      console.error("Debug query error:", debugError);
+    }
+    
     // Check if there are any questionnaires at all - for debugging purposes
     const { count: totalCount, error: countError } = await supabase
       .from("property_questionnaires")
@@ -42,7 +53,6 @@ export const fetchQuestionnaires = async (
     }
 
     // Fetch ALL questionnaires (not just completed ones)
-    // This is a change from the previous version which only fetched completed questionnaires
     console.log("Fetching all questionnaires...");
     const { data: questionnaires, error, count } = await supabase
       .from("property_questionnaires")
