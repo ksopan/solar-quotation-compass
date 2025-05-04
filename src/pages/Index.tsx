@@ -2,10 +2,9 @@
 import React from "react";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { useAuth } from "@/contexts/auth";
-import { CustomerDashboard } from "./CustomerDashboard";
-import { VendorDashboard } from "./VendorDashboard";
-import { AdminDashboard } from "./AdminDashboard";
-import { LandingPage } from "./LandingPage";
+import VendorDashboard from "./VendorDashboard";
+import AdminDashboard from "./AdminDashboard";
+import LandingPage from "./LandingPage";
 import { DatabaseDebugView } from "@/components/admin/DatabaseDebugView";
 
 const Index = () => {
