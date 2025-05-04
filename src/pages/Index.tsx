@@ -6,6 +6,7 @@ import VendorDashboard from "./VendorDashboard";
 import AdminDashboard from "./AdminDashboard";
 import LandingPage from "./LandingPage";
 import { DatabaseDebugView } from "@/components/admin/DatabaseDebugView";
+import CustomerDashboard from "./CustomerDashboard";
 
 const Index = () => {
   const { user } = useAuth();
