@@ -1,19 +1,18 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
-import { Button } from "@/components/ui/button";
 import { useVendorQuotations } from "@/hooks/vendor";
 import { DashboardStats } from "@/components/vendor/DashboardStats";
 import { QuestionnaireFilters } from "@/components/vendor/QuestionnaireFilters";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { RefreshCw, ShieldAlert, AlertCircle } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { VendorDashboardHeader } from "@/components/vendor/VendorDashboardHeader";
+import { VendorDashboardActions } from "@/components/vendor/VendorDashboardActions";
+import { ErrorDisplay } from "@/components/vendor/ErrorDisplay";
+import { EmptyStateCard } from "@/components/vendor/EmptyStateCard";
 
 const VendorDashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   
   // Use the hook directly
   const { 
@@ -79,34 +78,16 @@ const VendorDashboard = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Welcome, {user.companyName || 'Vendor'}!</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleCheckPermissions}>
-            <ShieldAlert className="h-4 w-4 mr-2" /> Check Permissions
-          </Button>
-          <Button variant="outline" onClick={handleRefresh}>
-            <RefreshCw className="h-4 w-4 mr-2" /> Refresh
-          </Button>
-          <Button onClick={() => navigate("/quotation-requests")}>View All Requests</Button>
-        </div>
+        <VendorDashboardHeader user={user} />
+        <VendorDashboardActions 
+          onRefresh={handleRefresh}
+          onCheckPermissions={handleCheckPermissions}
+        />
       </div>
 
       <DashboardStats stats={stats} />
 
-      {error && (
-        <Card className="bg-red-50 border-red-200">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
-              <div>
-                <h3 className="font-medium text-red-800">Error Loading Data</h3>
-                <p className="text-red-600">{error}</p>
-                <p className="text-sm text-red-500 mt-1">Try refreshing or checking permissions.</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {error && <ErrorDisplay error={error} />}
       
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Recent Property Questionnaires</h2>
@@ -122,36 +103,11 @@ const VendorDashboard = () => {
       />
       
       {!loading && questionnaires.length === 0 && (
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="py-6">
-            <div className="text-center">
-              <h3 className="font-medium text-blue-800">No Questionnaires Found</h3>
-              <p className="text-blue-600 mt-1">
-                There are no property questionnaires available at this time.
-              </p>
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={handleRefresh}
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" /> Refresh Data
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={handleCheckPermissions}
-                >
-                  <ShieldAlert className="h-4 w-4 mr-2" /> Check Permissions
-                </Button>
-                <Button 
-                  variant="default"
-                  onClick={handleCreateSampleData}
-                >
-                  Create Sample Data
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyStateCard
+          onRefresh={handleRefresh}
+          onCheckPermissions={handleCheckPermissions}
+          onCreateSampleData={handleCreateSampleData}
+        />
       )}
     </div>
   );
