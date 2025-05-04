@@ -12,49 +12,60 @@ export const checkPermissions = async (user: User) => {
     console.log("Checking permissions for user:", user.id);
     toast.info("Testing database permissions...");
     
-    // First, try to fetch all questionnaires using the debug RPC function
-    const { data: debugData, error: debugError } = await supabase
-      .rpc('get_debug_questionnaires');
-      
-    console.log("Debug RPC result:", debugData);
+    // First, check what tables the user can access
+    console.log("Testing access to property_questionnaires table...");
     
-    if (debugError) {
-      console.error("Debug RPC error:", debugError);
-      toast.error("Debug RPC check failed: " + debugError.message);
-    } else if (debugData && debugData.length > 0) {
-      toast.success("Successfully retrieved data via debug RPC");
-      console.log("Debug RPC questionnaires:", debugData);
-    } else {
-      toast.warning("Debug RPC returned no data");
-    }
-    
-    // Next, try a direct query to the table with no filters
-    const { data: rawTableData, error: rawTableError } = await supabase
+    // Try to fetch all questionnaires - no filters
+    const { data: allQuestionnaires, error: allError } = await supabase
       .from("property_questionnaires")
-      .select("*")
-      .limit(10);
+      .select("id, first_name, last_name, email, is_completed")
+      .limit(25);
       
-    if (rawTableError) {
-      console.error("Raw table query error:", rawTableError);
-      toast.error("Raw table query failed: " + rawTableError.message);
+    if (allError) {
+      console.error("Error fetching all questionnaires:", allError);
+      toast.error("Cannot access questionnaires: " + allError.message);
     } else {
-      console.log("RAW TABLE DATA - ALL QUESTIONNAIRES:", rawTableData);
-      toast.success(`Raw query returned ${rawTableData?.length || 0} total questionnaires`);
+      console.log(`SUCCESS: Found ${allQuestionnaires?.length || 0} total questionnaires`);
+      toast.success(`Found ${allQuestionnaires?.length || 0} total questionnaires in database`);
+      
+      // Log each questionnaire for debugging
+      allQuestionnaires?.forEach((q, index) => {
+        console.log(`Questionnaire ${index + 1}:`, q);
+      });
+      
+      // Count completed questionnaires
+      const completedCount = allQuestionnaires?.filter(q => q.is_completed).length || 0;
+      console.log(`Completed questionnaires: ${completedCount}`);
+      toast.info(`Completed questionnaires: ${completedCount}`);
     }
     
-    // Check if the user can query the proposals
+    // Check if the user can query the proposals table
+    console.log("Testing access to quotation_proposals table...");
     const { data: proposalData, error: proposalError } = await supabase
       .from("quotation_proposals")
       .select("*")
       .eq("vendor_id", user.id)
-      .limit(3);
+      .limit(5);
       
     if (proposalError) {
-      console.error("Proposals query error:", proposalError);
-      toast.error("Proposals query failed: " + proposalError.message);
+      console.error("Quotation proposals access error:", proposalError);
+      toast.error("Cannot access quotation proposals: " + proposalError.message);
     } else {
-      console.log("Proposals query result:", proposalData);
-      toast.success(`Proposals query returned ${proposalData?.length || 0} rows`);
+      console.log(`Found ${proposalData?.length || 0} proposals for this vendor`);
+      toast.success(`Found ${proposalData?.length || 0} proposals for this vendor`);
+    }
+    
+    // Try a direct access using the debug RPC function
+    console.log("Trying debug RPC function...");
+    const { data: debugData, error: debugError } = await supabase
+      .rpc('get_debug_questionnaires');
+      
+    if (debugError) {
+      console.error("Debug RPC error:", debugError);
+      toast.error("Debug RPC failed: " + debugError.message);
+    } else {
+      console.log(`Debug RPC returned ${debugData?.length || 0} questionnaires`);
+      toast.success(`Debug RPC returned ${debugData?.length || 0} questionnaires`);
     }
     
     return true;

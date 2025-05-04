@@ -100,7 +100,7 @@ export const useVendorQuotations = (user: User | null) => {
   useEffect(() => {
     console.log("useVendorQuotations effect running with user:", user?.id);
     if (user) {
-      fetchQuestionnairesPaginated(1, 15);  // Fetch more items per page initially
+      fetchQuestionnairesPaginated(1, 25);  // Fetch more items per page initially
     }
   }, [user, fetchQuestionnairesPaginated, refreshCounter]);
 

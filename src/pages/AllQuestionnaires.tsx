@@ -1,27 +1,72 @@
 
-import React from "react";
+import React, { useEffect } from "react";
+import { useAuth } from "@/contexts/auth";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, RefreshCw, Database, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAllQuestionnaires } from "@/hooks/questionnaire/useAllQuestionnaires";
-import { format, parseISO } from "date-fns";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell
-} from "@/components/ui/table";
+import { useVendorQuotations } from "@/hooks/vendor";
+import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
+import { createSampleQuestionnaire } from "@/hooks/vendor/api";
 
 const AllQuestionnaires = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const { questionnaires, loading, error, refetch } = useAllQuestionnaires();
+  
+  // Use the hook directly
+  const { 
+    questionnaires, 
+    loading, 
+    fetchQuestionnaires, 
+    refresh, 
+    currentPage, 
+    totalPages,
+    error,
+    checkPermissions
+  } = useVendorQuotations(user);
+  
+  // Log rendering
+  useEffect(() => {
+    console.log("AllQuestionnaires rendering with questionnaires:", questionnaires);
+  }, [questionnaires]);
 
-  const formatPropertyType = (type: string) => {
-    return type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ');
+  useEffect(() => {
+    // Initial check - run permission check if no questionnaires found
+    if (!loading && questionnaires.length === 0) {
+      checkPermissions();
+    }
+  }, [loading, questionnaires, checkPermissions]);
+
+  if (!user) {
+    toast.error("User not authenticated");
+    return null;
+  }
+
+  const handlePageChange = (page: number) => {
+    fetchQuestionnaires(page, 25);
+  };
+
+  const handleRefresh = () => {
+    toast.info("Refreshing questionnaire data...");
+    refresh();
+  };
+
+  const handleCheckPermissions = () => {
+    toast.info("Checking database permissions...");
+    checkPermissions();
+  };
+
+  const handleCreateSampleData = async () => {
+    if (!user) return;
+    
+    const result = await createSampleQuestionnaire(user.id);
+    if (result) {
+      // Refresh the data to show the new questionnaire
+      toast.success("Sample questionnaire created successfully. Refreshing data...");
+      refresh();
+    }
   };
 
   return (
@@ -34,60 +79,61 @@ const AllQuestionnaires = () => {
             </Button>
             <h1 className="text-3xl font-bold">All Property Questionnaires</h1>
           </div>
-          <Button variant="outline" onClick={refetch}>
-            <RefreshCw className="h-4 w-4 mr-2" /> Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleCheckPermissions}>
+              <AlertTriangle className="h-4 w-4 mr-2" /> Check Permissions
+            </Button>
+            <Button variant="outline" onClick={handleRefresh}>
+              <RefreshCw className="h-4 w-4 mr-2" /> Refresh
+            </Button>
+          </div>
         </div>
 
         {error && (
           <Card className="bg-red-50 border-red-200">
-            <CardContent className="p-4">
-              <p className="text-red-800">{error}</p>
+            <CardContent className="py-4">
+              <p className="text-red-700">{error}</p>
             </CardContent>
           </Card>
         )}
 
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : questionnaires.length === 0 ? (
-          <Card>
-            <CardContent className="py-8">
+        <QuestionnairesTable 
+          questionnaires={questionnaires}
+          loading={loading}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+        
+        {!loading && questionnaires.length === 0 && (
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="py-6">
               <div className="text-center">
-                <p className="text-muted-foreground">No property questionnaires found</p>
+                <h3 className="font-medium text-blue-800">No Questionnaires Found</h3>
+                <p className="text-blue-600 mt-1">
+                  There are no property questionnaires available in the database.
+                </p>
+                <div className="mt-4 flex justify-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleRefresh}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" /> Refresh Data
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCheckPermissions}
+                  >
+                    <AlertTriangle className="h-4 w-4 mr-2" /> Check Permissions
+                  </Button>
+                  <Button 
+                    variant="default"
+                    onClick={handleCreateSampleData}
+                  >
+                    <Database className="h-4 w-4 mr-2" /> Create Sample Data
+                  </Button>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Property Type</TableHead>
-                    <TableHead>Monthly Bill</TableHead>
-                    <TableHead>Completed</TableHead>
-                    <TableHead>Submission Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {questionnaires.map((questionnaire) => (
-                    <TableRow key={questionnaire.id}>
-                      <TableCell className="font-medium">
-                        {questionnaire.first_name} {questionnaire.last_name}
-                      </TableCell>
-                      <TableCell>{questionnaire.email}</TableCell>
-                      <TableCell>{formatPropertyType(questionnaire.property_type)}</TableCell>
-                      <TableCell>${questionnaire.monthly_electric_bill}</TableCell>
-                      <TableCell>{questionnaire.is_completed ? "Yes" : "No"}</TableCell>
-                      <TableCell>{format(parseISO(questionnaire.created_at), "MMM d, yyyy")}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
             </CardContent>
           </Card>
         )}

@@ -21,25 +21,13 @@ export const fetchQuestionnaires = async (
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     
-    // Debug: Check what's actually in the property_questionnaires table - no filters
-    const { data: allQuestionnaires, error: debugError } = await supabase
-      .from("property_questionnaires")
-      .select('*');
-    
-    console.log("DEBUG - All questionnaires in database:", allQuestionnaires);
-    
-    if (debugError) {
-      console.error("Debug query error:", debugError);
-      toast.error("Failed to query questionnaires: " + debugError.message);
-      return null;
-    }
-    
-    // Check total count
+    // Get the total count first
     const { count: totalCount, error: countError } = await supabase
       .from("property_questionnaires")
-      .select('*', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true })
+      .eq('is_completed', true);
       
-    console.log("Total questionnaires in database:", totalCount);
+    console.log("Total completed questionnaires in database:", totalCount);
     
     if (countError) {
       console.error("Error checking questionnaire count:", countError);
@@ -49,12 +37,12 @@ export const fetchQuestionnaires = async (
     
     // If no questionnaires exist at all, return empty result
     if (totalCount === 0) {
-      console.log("No questionnaires found in the database at all");
-      toast.info("No questionnaires found in the database");
+      console.log("No completed questionnaires found in the database");
+      toast.info("No completed questionnaires found in the database");
       return { questionnaires: [], totalPages: 0 };
     }
 
-    // Fetch ALL questionnaires with detailed logging to diagnose issues
+    // Fetch actual questionnaires with pagination
     console.log(`Fetching questionnaires (page ${page}, limit ${limit}, range ${from}-${to})...`);
     const { data: questionnaires, error, count } = await supabase
       .from("property_questionnaires")
@@ -76,6 +64,7 @@ export const fetchQuestionnaires = async (
         updated_at,
         is_completed
       `, { count: 'exact' })
+      .eq('is_completed', true)  // Only get completed questionnaires
       .order('created_at', { ascending: false })
       .range(from, to);
       
@@ -85,8 +74,8 @@ export const fetchQuestionnaires = async (
       return null;
     }
     
-    console.log("Fetched questionnaires result:", questionnaires);
-    console.log("Questionnaires count from query:", count);
+    console.log("Fetched questionnaires:", questionnaires?.length || 0);
+    console.log("Questionnaires data:", questionnaires);
     
     if (!questionnaires || questionnaires.length === 0) {
       console.log("No questionnaires found for current pagination range");
@@ -109,7 +98,7 @@ export const fetchQuestionnaires = async (
           .eq("quotation_request_id", questionnaire.id)
           .eq("vendor_id", user.id);
           
-        if (proposalError && proposalError.code !== 'PGRST116') { // Ignore not found errors
+        if (proposalError) {
           console.error(`Checking proposal for questionnaire ${questionnaire.id}:`, proposalError);
         }
           
@@ -125,7 +114,6 @@ export const fetchQuestionnaires = async (
       })
     );
     
-    // Add more detailed logging to help debug
     console.log("Processed questionnaires:", processedQuestionnaires);
     console.log("Total pages:", count ? Math.ceil(count / limit) : 1);
     
