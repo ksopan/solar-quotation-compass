@@ -10,18 +10,20 @@ import { VendorDashboardHeader } from "@/components/vendor/VendorDashboardHeader
 import { VendorDashboardActions } from "@/components/vendor/VendorDashboardActions";
 import { ErrorDisplay } from "@/components/vendor/ErrorDisplay";
 import { EmptyStateCard } from "@/components/vendor/EmptyStateCard";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 
 const VendorDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
-  // Use the hook directly
+  // Use the hook directly with a limit of 5 recent questionnaires
   const { 
     questionnaires, 
     loading, 
     stats, 
-    fetchQuestionnaires, 
-    currentPage, 
-    totalPages,
+    fetchQuestionnaires,
     refresh,
     checkPermissions,
     error
@@ -32,6 +34,14 @@ const VendorDashboard = () => {
     console.log("VendorDashboard rendering with questionnaires:", questionnaires);
     console.log("VendorDashboard stats:", stats);
   }, [questionnaires, stats]);
+
+  // Initial load - show 5 most recent questionnaires
+  useEffect(() => {
+    if (user) {
+      // Fetch 5 most recent questionnaires without pagination
+      fetchQuestionnaires(1, 5);
+    }
+  }, [user, fetchQuestionnaires]);
 
   useEffect(() => {
     // Initial load - show toast with help if no data found
@@ -45,10 +55,6 @@ const VendorDashboard = () => {
     return null;
   }
 
-  const handlePageChange = (page: number) => {
-    fetchQuestionnaires(page, 10); // Show 10 items per page on dashboard
-  };
-
   const handleRefresh = () => {
     toast.info("Refreshing dashboard data...");
     refresh();
@@ -61,6 +67,7 @@ const VendorDashboard = () => {
 
   const handleShowAllQuestionnaires = () => {
     toast.info("Navigating to all questionnaires...");
+    navigate("/all-questionnaires");
   };
 
   const handleCreateSampleData = async () => {
@@ -96,15 +103,22 @@ const VendorDashboard = () => {
       
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Recent Property Questionnaires</h2>
-        <QuestionnaireFilters />
+        <Button 
+          variant="outline" 
+          onClick={handleShowAllQuestionnaires} 
+          className="flex items-center"
+        >
+          View All Questionnaires <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
       </div>
       
       <QuestionnairesTable 
         questionnaires={questionnaires}
         loading={loading}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
+        currentPage={1}
+        totalPages={1}
+        onPageChange={() => {}}
+        showPagination={false}
       />
       
       {!loading && questionnaires.length === 0 && (

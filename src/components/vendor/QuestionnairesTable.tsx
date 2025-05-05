@@ -31,6 +31,7 @@ interface QuestionnairesTableProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  showPagination?: boolean;
 }
 
 export const QuestionnairesTable: React.FC<QuestionnairesTableProps> = ({
@@ -38,7 +39,8 @@ export const QuestionnairesTable: React.FC<QuestionnairesTableProps> = ({
   loading,
   currentPage,
   totalPages,
-  onPageChange
+  onPageChange,
+  showPagination = true
 }) => {
   const navigate = useNavigate();
   
@@ -143,8 +145,8 @@ export const QuestionnairesTable: React.FC<QuestionnairesTableProps> = ({
         </CardContent>
       </Card>
       
-      {/* Pagination - show only if totalPages > 1 */}
-      {totalPages > 1 && (
+      {/* Pagination - show only if showPagination is true AND totalPages > 1 */}
+      {showPagination && totalPages > 1 && (
         <Pagination className="mt-4">
           <PaginationContent>
             <PaginationItem>

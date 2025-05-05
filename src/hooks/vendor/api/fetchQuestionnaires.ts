@@ -68,30 +68,32 @@ export const fetchQuestionnaires = async (
       
       // Process questionnaires to check if vendor has submitted a proposal
       const processedQuestionnaires: PropertyQuestionnaireItem[] = await Promise.all(
-        data.map(async (questionnaire) => {
-          const customerName = `${questionnaire.first_name} ${questionnaire.last_name}`;
-          
-          // Check if the vendor has already submitted a proposal for this questionnaire
-          const { data: proposalData, error: proposalError } = await supabase
-            .from("quotation_proposals")
-            .select("id")
-            .eq("quotation_request_id", questionnaire.id)
-            .eq("vendor_id", user.id);
+        data
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) // Sort by newest first
+          .map(async (questionnaire) => {
+            const customerName = `${questionnaire.first_name} ${questionnaire.last_name}`;
             
-          if (proposalError) {
-            console.error(`Checking proposal for questionnaire ${questionnaire.id}:`, proposalError);
-          }
-            
-          const hasProposal = proposalData && proposalData.length > 0;
-          console.log(`Questionnaire ${questionnaire.id} has proposal from vendor ${user.id}:`, hasProposal);
-            
-          return {
-            ...questionnaire,
-            customerName,
-            customerEmail: questionnaire.email,
-            hasProposal
-          };
-        })
+            // Check if the vendor has already submitted a proposal for this questionnaire
+            const { data: proposalData, error: proposalError } = await supabase
+              .from("quotation_proposals")
+              .select("id")
+              .eq("quotation_request_id", questionnaire.id)
+              .eq("vendor_id", user.id);
+              
+            if (proposalError) {
+              console.error(`Checking proposal for questionnaire ${questionnaire.id}:`, proposalError);
+            }
+              
+            const hasProposal = proposalData && proposalData.length > 0;
+            console.log(`Questionnaire ${questionnaire.id} has proposal from vendor ${user.id}:`, hasProposal);
+              
+            return {
+              ...questionnaire,
+              customerName,
+              customerEmail: questionnaire.email,
+              hasProposal
+            };
+          })
       );
       
       return {
@@ -121,7 +123,7 @@ export const fetchQuestionnaires = async (
           is_completed
         `, { count: 'exact' })
         .eq('is_completed', true)  // Only get completed questionnaires
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false }) // Always order by newest first
         .range(from, to);
         
       if (error) {
