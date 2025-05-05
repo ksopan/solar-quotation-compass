@@ -143,7 +143,7 @@ export const QuestionnairesTable: React.FC<QuestionnairesTableProps> = ({
         </CardContent>
       </Card>
       
-      {/* Pagination */}
+      {/* Pagination - show only if totalPages > 1 */}
       {totalPages > 1 && (
         <Pagination className="mt-4">
           <PaginationContent>

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useVendorQuotations } from "@/hooks/vendor";
 import { DashboardStats } from "@/components/vendor/DashboardStats";
@@ -13,6 +13,7 @@ import { EmptyStateCard } from "@/components/vendor/EmptyStateCard";
 
 const VendorDashboard = () => {
   const { user } = useAuth();
+  const [showAll, setShowAll] = useState(false);
   
   // Use the hook directly
   const { 
@@ -40,13 +41,22 @@ const VendorDashboard = () => {
     }
   }, [loading, questionnaires]);
 
+  useEffect(() => {
+    // Fetch all questionnaires if showAll is true
+    if (showAll) {
+      fetchQuestionnaires(1, 100); // Show up to 100 items when viewing all
+    }
+  }, [showAll, fetchQuestionnaires]);
+
   if (!user) {
     toast.error("User not authenticated");
     return null;
   }
 
   const handlePageChange = (page: number) => {
-    fetchQuestionnaires(page, 5); // Show fewer items on dashboard
+    if (!showAll) {
+      fetchQuestionnaires(page, 5); // Show fewer items on dashboard when paginated
+    }
   };
 
   const handleRefresh = () => {
@@ -57,6 +67,12 @@ const VendorDashboard = () => {
   const handleCheckPermissions = () => {
     toast.info("Checking database permissions...");
     checkPermissions();
+  };
+
+  const handleShowAllQuestionnaires = () => {
+    setShowAll(true);
+    toast.info("Loading all questionnaires...");
+    fetchQuestionnaires(1, 100); // Fetch up to 100 questionnaires
   };
 
   const handleCreateSampleData = async () => {
@@ -82,6 +98,7 @@ const VendorDashboard = () => {
         <VendorDashboardActions 
           onRefresh={handleRefresh}
           onCheckPermissions={handleCheckPermissions}
+          showAllQuestionnaires={handleShowAllQuestionnaires}
         />
       </div>
 
@@ -90,7 +107,9 @@ const VendorDashboard = () => {
       {error && <ErrorDisplay error={error} />}
       
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Recent Property Questionnaires</h2>
+        <h2 className="text-xl font-semibold">
+          {showAll ? "All Property Questionnaires" : "Recent Property Questionnaires"}
+        </h2>
         <QuestionnaireFilters />
       </div>
       
@@ -98,7 +117,7 @@ const VendorDashboard = () => {
         questionnaires={questionnaires}
         loading={loading}
         currentPage={currentPage}
-        totalPages={totalPages}
+        totalPages={showAll ? 1 : totalPages}
         onPageChange={handlePageChange}
       />
       

@@ -53,7 +53,7 @@ export const useVendorQuotations = (user: User | null) => {
   const fetchQuestionnairesPaginated = useCallback(async (page = 1, limit = 10): Promise<QuestionnairesResult | null> => {
     if (!user) return null;
     
-    console.log("Fetching questionnaires page", page, "with limit", limit);
+    console.log(`Fetching questionnaires page ${page} with limit ${limit}`);
     setLoading(true);
     setCurrentPage(page);
     setError(null);
@@ -100,7 +100,7 @@ export const useVendorQuotations = (user: User | null) => {
   useEffect(() => {
     console.log("useVendorQuotations effect running with user:", user?.id);
     if (user) {
-      fetchQuestionnairesPaginated(1, 25);  // Fetch more items per page initially
+      fetchQuestionnairesPaginated(1, 10);  // Default to showing 10 items per page initially
     }
   }, [user, fetchQuestionnairesPaginated, refreshCounter]);
 

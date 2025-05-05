@@ -1,17 +1,19 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, ShieldAlert } from "lucide-react";
+import { RefreshCw, ShieldAlert, List } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface VendorDashboardActionsProps {
   onRefresh: () => void;
   onCheckPermissions: () => void;
+  showAllQuestionnaires: () => void;
 }
 
 export const VendorDashboardActions: React.FC<VendorDashboardActionsProps> = ({ 
   onRefresh, 
-  onCheckPermissions 
+  onCheckPermissions,
+  showAllQuestionnaires
 }) => {
   const navigate = useNavigate();
   
@@ -22,6 +24,9 @@ export const VendorDashboardActions: React.FC<VendorDashboardActionsProps> = ({
       </Button>
       <Button variant="outline" onClick={onRefresh}>
         <RefreshCw className="h-4 w-4 mr-2" /> Refresh
+      </Button>
+      <Button onClick={showAllQuestionnaires}>
+        <List className="h-4 w-4 mr-2" /> Show All Questionnaires
       </Button>
       <Button onClick={() => navigate("/quotation-requests")}>View All Requests</Button>
     </div>
