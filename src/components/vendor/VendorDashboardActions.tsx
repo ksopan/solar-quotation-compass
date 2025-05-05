@@ -25,7 +25,7 @@ export const VendorDashboardActions: React.FC<VendorDashboardActionsProps> = ({
       <Button variant="outline" onClick={onRefresh}>
         <RefreshCw className="h-4 w-4 mr-2" /> Refresh
       </Button>
-      <Button onClick={showAllQuestionnaires}>
+      <Button onClick={() => navigate("/all-questionnaires")}>
         <List className="h-4 w-4 mr-2" /> Show All Questionnaires
       </Button>
       <Button onClick={() => navigate("/quotation-requests")}>View All Requests</Button>
