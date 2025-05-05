@@ -4,14 +4,16 @@ import { useAuth } from "@/contexts/auth";
 import { useVendorQuotations } from "@/hooks/vendor";
 import { QuestionnairesTable } from "@/components/vendor/QuestionnairesTable";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, RefreshCw, DatabaseIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const AllQuestionnaires = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [debugMode, setDebugMode] = useState(false);
   
   const { 
     questionnaires, 
@@ -41,11 +43,39 @@ const AllQuestionnaires = () => {
     refresh();
   };
 
+  // Toggle debug mode to use the RPC function directly
+  const handleToggleDebugMode = async () => {
+    if (!debugMode) {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase.rpc('get_debug_questionnaires');
+        if (error) {
+          throw error;
+        }
+        console.log("Debug RPC direct call returned:", data?.length || 0, "questionnaires");
+        toast.success(`Debug mode: Found ${data?.length || 0} questionnaires directly from RPC`);
+        setDebugMode(true);
+      } catch (error) {
+        console.error("Error using debug RPC function:", error);
+        toast.error("Failed to use debug mode");
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setDebugMode(false);
+      loadAllQuestionnaires();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">All Property Questionnaires</h1>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleToggleDebugMode}>
+            <DatabaseIcon className="h-4 w-4 mr-2" /> 
+            {debugMode ? "Normal Mode" : "Debug Mode"}
+          </Button>
           <Button variant="outline" onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4 mr-2" /> Refresh
           </Button>
