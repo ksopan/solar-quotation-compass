@@ -104,6 +104,30 @@ export const useVendorQuotations = (user: User | null) => {
     }
   }, [user, fetchQuestionnairesPaginated, refreshCounter]);
 
+  // Make sure all questionnaires are fetched even for AllQuestionnaires page
+  const fetchAllQuestionnaires = useCallback(async () => {
+    if (!user) return null;
+    
+    try {
+      setLoading(true);
+      const result = await fetchQuestionnaires(user, 1, 100);  // Get all questionnaires with large limit
+      
+      if (result) {
+        setQuestionnaires(result.questionnaires);
+        setTotalPages(1); // Only one page when fetching all
+        setCurrentPage(1);
+      }
+      
+      setLoading(false);
+      return result;
+    } catch (error) {
+      console.error("Error fetching all questionnaires:", error);
+      setLoading(false);
+      setError("Failed to load all questionnaires");
+      return null;
+    }
+  }, [user]);
+
   return { 
     questionnaires, 
     loading, 
@@ -112,6 +136,7 @@ export const useVendorQuotations = (user: User | null) => {
     currentPage,
     error,
     fetchQuestionnaires: fetchQuestionnairesPaginated,
+    fetchAllQuestionnaires,
     fetchStats,
     refresh: forceRefresh,
     checkPermissions

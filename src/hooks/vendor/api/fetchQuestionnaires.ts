@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { User } from "@/contexts/auth/types";
@@ -16,6 +15,7 @@ export const fetchQuestionnaires = async (
   
   try {
     console.log("Fetching questionnaires for vendor:", user.id, "with role:", user.role);
+    console.log(`Requesting page ${page} with limit ${limit}`);
     
     // Calculate pagination range
     const from = (page - 1) * limit;
@@ -38,7 +38,6 @@ export const fetchQuestionnaires = async (
     // If no questionnaires exist at all, return empty result
     if (totalCount === 0) {
       console.log("No completed questionnaires found in the database");
-      toast.info("No completed questionnaires found in the database");
       return { questionnaires: [], totalPages: 0 };
     }
 
@@ -85,8 +84,7 @@ export const fetchQuestionnaires = async (
             }
               
             const hasProposal = proposalData && proposalData.length > 0;
-            console.log(`Questionnaire ${questionnaire.id} has proposal from vendor ${user.id}:`, hasProposal);
-              
+            
             return {
               ...questionnaire,
               customerName,
@@ -96,9 +94,13 @@ export const fetchQuestionnaires = async (
           })
       );
       
+      // Limit the results based on the requested limit
+      const limitedResults = processedQuestionnaires.slice(0, limit);
+      console.log(`Returning ${limitedResults.length} questionnaires out of ${processedQuestionnaires.length} total`);
+      
       return {
-        questionnaires: processedQuestionnaires,
-        totalPages: 1 // Only one page when using the debug function
+        questionnaires: limitedResults,
+        totalPages: Math.ceil(processedQuestionnaires.length / limit)
       };
     } else {
       // Standard pagination query for normal views
@@ -132,8 +134,7 @@ export const fetchQuestionnaires = async (
         return null;
       }
       
-      console.log("Fetched questionnaires:", questionnaires?.length || 0);
-      console.log("Questionnaires data:", questionnaires);
+      console.log(`Fetched ${questionnaires?.length || 0} questionnaires for page ${page} with limit ${limit}`);
       
       if (!questionnaires || questionnaires.length === 0) {
         console.log("No questionnaires found for current pagination range");
@@ -161,7 +162,6 @@ export const fetchQuestionnaires = async (
           }
             
           const hasProposal = proposalData && proposalData.length > 0;
-          console.log(`Questionnaire ${questionnaire.id} has proposal from vendor ${user.id}:`, hasProposal);
             
           return {
             ...questionnaire,
@@ -172,13 +172,8 @@ export const fetchQuestionnaires = async (
         })
       );
       
-      console.log("Processed questionnaires:", processedQuestionnaires);
+      console.log("Processed questionnaires:", processedQuestionnaires.length);
       console.log("Total pages:", count ? Math.ceil(count / limit) : 1);
-      
-      // Show success toast only if we found questionnaires
-      if (processedQuestionnaires.length > 0) {
-        toast.success(`Found ${processedQuestionnaires.length} questionnaire(s)`);
-      }
       
       return { 
         questionnaires: processedQuestionnaires, 

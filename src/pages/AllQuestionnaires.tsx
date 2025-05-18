@@ -14,13 +14,11 @@ const AllQuestionnaires = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [debugMode, setDebugMode] = useState(false);
+  const [allQuestionnaires, setAllQuestionnaires] = useState([]);
   
   const { 
-    questionnaires, 
-    loading, 
+    loading: hookLoading,
     fetchQuestionnaires,
-    currentPage,
-    totalPages,
     refresh,
   } = useVendorQuotations(user);
 
@@ -34,13 +32,23 @@ const AllQuestionnaires = () => {
   // Load all questionnaires with a high limit
   const loadAllQuestionnaires = async () => {
     setIsLoading(true);
-    await fetchQuestionnaires(1, 100); // Show up to 100 items
-    setIsLoading(false);
+    try {
+      const { fetchQuestionnaires } = await import('@/hooks/vendor/api');
+      const result = await fetchQuestionnaires(user, 1, 100); // Show up to 100 items
+      if (result && result.questionnaires) {
+        setAllQuestionnaires(result.questionnaires);
+      }
+    } catch (error) {
+      console.error("Error loading all questionnaires:", error);
+      toast.error("Failed to load questionnaires");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRefresh = () => {
     toast.info("Refreshing all questionnaires...");
-    refresh();
+    loadAllQuestionnaires();
   };
 
   // Toggle debug mode to use the RPC function directly
@@ -86,14 +94,15 @@ const AllQuestionnaires = () => {
       </div>
 
       <QuestionnairesTable 
-        questionnaires={questionnaires}
-        loading={loading || isLoading}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={(page) => fetchQuestionnaires(page, 100)}
+        questionnaires={allQuestionnaires}
+        loading={isLoading || hookLoading}
+        currentPage={1}
+        totalPages={1}
+        onPageChange={() => loadAllQuestionnaires()}
+        showPagination={false}
       />
       
-      {!loading && questionnaires.length === 0 && (
+      {!isLoading && allQuestionnaires.length === 0 && (
         <div className="text-center p-8">
           <p>No questionnaires found. The database may be empty or you may not have permission to view them.</p>
           <Button onClick={handleRefresh} className="mt-4">

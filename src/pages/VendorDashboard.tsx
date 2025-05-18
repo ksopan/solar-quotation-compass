@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useVendorQuotations } from "@/hooks/vendor";
 import { DashboardStats } from "@/components/vendor/DashboardStats";
@@ -17,38 +17,65 @@ import { ArrowRight } from "lucide-react";
 const VendorDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [isLoadingRecent, setIsLoadingRecent] = useState(false);
   
-  // Use the hook directly with a limit of 5 recent questionnaires
+  // Use the hook for dashboard stats only
   const { 
-    questionnaires, 
-    loading, 
     stats, 
-    fetchQuestionnaires,
     refresh,
     checkPermissions,
     error
   } = useVendorQuotations(user);
 
+  // Separate state for recent questionnaires
+  const [recentQuestionnaires, setRecentQuestionnaires] = useState([]);
+  
   // Log dashboard rendering
   useEffect(() => {
-    console.log("VendorDashboard rendering with questionnaires:", questionnaires);
+    console.log("VendorDashboard rendering with recent questionnaires:", recentQuestionnaires);
     console.log("VendorDashboard stats:", stats);
-  }, [questionnaires, stats]);
+  }, [recentQuestionnaires, stats]);
+
+  // Function to fetch recent questionnaires
+  const fetchRecentQuestionnaires = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoadingRecent(true);
+      console.log("Fetching recent questionnaires");
+      
+      // Import the fetch function directly to avoid hooks dependency issues
+      const { fetchQuestionnaires } = await import('@/hooks/vendor/api');
+      const result = await fetchQuestionnaires(user, 1, 5); // Explicitly request 5 items
+      
+      if (result && result.questionnaires) {
+        console.log("Fetched recent questionnaires:", result.questionnaires.length);
+        setRecentQuestionnaires(result.questionnaires);
+      } else {
+        setRecentQuestionnaires([]);
+      }
+    } catch (error) {
+      console.error("Error fetching recent questionnaires:", error);
+      toast.error("Failed to fetch recent questionnaires");
+      setRecentQuestionnaires([]);
+    } finally {
+      setIsLoadingRecent(false);
+    }
+  };
 
   // Initial load - show 5 most recent questionnaires
   useEffect(() => {
     if (user) {
-      // Explicitly fetch 5 most recent questionnaires
-      fetchQuestionnaires(1, 5);
+      fetchRecentQuestionnaires();
     }
-  }, [user, fetchQuestionnaires]);
+  }, [user]);
 
   useEffect(() => {
     // Initial load - show toast with help if no data found
-    if (!loading && questionnaires.length === 0) {
+    if (!isLoadingRecent && recentQuestionnaires.length === 0) {
       toast.info("No questionnaires found. Check permissions or try refreshing.");
     }
-  }, [loading, questionnaires]);
+  }, [isLoadingRecent, recentQuestionnaires]);
 
   if (!user) {
     toast.error("User not authenticated");
@@ -58,6 +85,7 @@ const VendorDashboard = () => {
   const handleRefresh = () => {
     toast.info("Refreshing dashboard data...");
     refresh();
+    fetchRecentQuestionnaires();
   };
 
   const handleCheckPermissions = () => {
@@ -77,7 +105,9 @@ const VendorDashboard = () => {
       const { createSampleQuestionnaire } = await import('@/hooks/vendor/api');
       const result = await createSampleQuestionnaire(user.id);
       if (result) {
+        toast.success("Sample questionnaire created");
         // Refresh the data to show the new questionnaire
+        fetchRecentQuestionnaires();
         refresh();
       }
     } catch (error) {
@@ -113,15 +143,15 @@ const VendorDashboard = () => {
       </div>
       
       <QuestionnairesTable 
-        questionnaires={questionnaires}
-        loading={loading}
+        questionnaires={recentQuestionnaires}
+        loading={isLoadingRecent}
         currentPage={1}
         totalPages={1}
         onPageChange={() => {}}
         showPagination={false}
       />
       
-      {!loading && questionnaires.length === 0 && (
+      {!isLoadingRecent && recentQuestionnaires.length === 0 && (
         <EmptyStateCard
           onRefresh={handleRefresh}
           onCheckPermissions={handleCheckPermissions}
