@@ -38,7 +38,7 @@ const VendorDashboard = () => {
   // Initial load - show 5 most recent questionnaires
   useEffect(() => {
     if (user) {
-      // Fetch 5 most recent questionnaires without pagination
+      // Explicitly fetch 5 most recent questionnaires
       fetchQuestionnaires(1, 5);
     }
   }, [user, fetchQuestionnaires]);
