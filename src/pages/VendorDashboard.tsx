@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useVendorQuotations } from "@/hooks/vendor";
 import { DashboardStats } from "@/components/vendor/DashboardStats";
@@ -12,63 +12,54 @@ import { ErrorDisplay } from "@/components/vendor/ErrorDisplay";
 import { EmptyStateCard } from "@/components/vendor/EmptyStateCard";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 
 const VendorDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [isLoadingRecent, setIsLoadingRecent] = useState(false);
+  const [isLoadingRecent, setIsLoadingRecent] = useState(true);
+  const [recentQuestionnaires, setRecentQuestionnaires] = useState([]);
   
-  // Use the hook for dashboard stats only
+  // Use the hook for stats and utility functions
   const { 
     stats, 
     refresh,
     checkPermissions,
-    error
+    fetchRecentQuestionnaires,
+    error,
+    loading: hookLoading
   } = useVendorQuotations(user);
 
-  // Separate state for recent questionnaires
-  const [recentQuestionnaires, setRecentQuestionnaires] = useState([]);
-  
   // Log dashboard rendering
   useEffect(() => {
     console.log("VendorDashboard rendering with recent questionnaires:", recentQuestionnaires);
     console.log("VendorDashboard stats:", stats);
   }, [recentQuestionnaires, stats]);
 
+  // Initial load - show 5 most recent questionnaires
+  useEffect(() => {
+    if (user) {
+      loadRecentQuestionnaires();
+    }
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Function to fetch recent questionnaires
-  const fetchRecentQuestionnaires = async () => {
+  const loadRecentQuestionnaires = async () => {
     if (!user) return;
     
+    setIsLoadingRecent(true);
     try {
-      setIsLoadingRecent(true);
       console.log("Fetching recent questionnaires");
-      
-      // Import the fetch function directly to avoid hooks dependency issues
-      const { fetchQuestionnaires } = await import('@/hooks/vendor/api');
-      const result = await fetchQuestionnaires(user, 1, 5); // Explicitly request 5 items
-      
-      if (result && result.questionnaires) {
-        console.log("Fetched recent questionnaires:", result.questionnaires.length);
-        setRecentQuestionnaires(result.questionnaires);
-      } else {
-        setRecentQuestionnaires([]);
-      }
+      const questionnaires = await fetchRecentQuestionnaires(5); // Explicitly request 5 items
+      setRecentQuestionnaires(questionnaires);
+      console.log("Fetched recent questionnaires:", questionnaires.length);
     } catch (error) {
-      console.error("Error fetching recent questionnaires:", error);
+      console.error("Error loading recent questionnaires:", error);
       toast.error("Failed to fetch recent questionnaires");
-      setRecentQuestionnaires([]);
     } finally {
       setIsLoadingRecent(false);
     }
   };
-
-  // Initial load - show 5 most recent questionnaires
-  useEffect(() => {
-    if (user) {
-      fetchRecentQuestionnaires();
-    }
-  }, [user]);
 
   useEffect(() => {
     // Initial load - show toast with help if no data found
@@ -85,7 +76,7 @@ const VendorDashboard = () => {
   const handleRefresh = () => {
     toast.info("Refreshing dashboard data...");
     refresh();
-    fetchRecentQuestionnaires();
+    loadRecentQuestionnaires();
   };
 
   const handleCheckPermissions = () => {
@@ -107,7 +98,7 @@ const VendorDashboard = () => {
       if (result) {
         toast.success("Sample questionnaire created");
         // Refresh the data to show the new questionnaire
-        fetchRecentQuestionnaires();
+        loadRecentQuestionnaires();
         refresh();
       }
     } catch (error) {
@@ -142,14 +133,21 @@ const VendorDashboard = () => {
         </Button>
       </div>
       
-      <QuestionnairesTable 
-        questionnaires={recentQuestionnaires}
-        loading={isLoadingRecent}
-        currentPage={1}
-        totalPages={1}
-        onPageChange={() => {}}
-        showPagination={false}
-      />
+      {isLoadingRecent ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="sr-only">Loading...</span>
+        </div>
+      ) : (
+        <QuestionnairesTable 
+          questionnaires={recentQuestionnaires}
+          loading={false}
+          currentPage={1}
+          totalPages={1}
+          onPageChange={() => {}}
+          showPagination={false}
+        />
+      )}
       
       {!isLoadingRecent && recentQuestionnaires.length === 0 && (
         <EmptyStateCard
