@@ -104,26 +104,27 @@ export const useVendorQuotations = (user: User | null) => {
     }
   }, [user, fetchQuestionnairesPaginated, refreshCounter]);
 
-  // Function to fetch a specific number of recent questionnaires (for dashboard)
-  const fetchRecentQuestionnaires = useCallback(async (limit = 5): Promise<PropertyQuestionnaireItem[]> => {
-    if (!user) return [];
+  // Make sure all questionnaires are fetched even for AllQuestionnaires page
+  const fetchAllQuestionnaires = useCallback(async () => {
+    if (!user) return null;
     
     try {
-      console.log(`Fetching ${limit} recent questionnaires`);
       setLoading(true);
+      const result = await fetchQuestionnaires(user, 1, 100);  // Get all questionnaires with large limit
       
-      const result = await fetchQuestionnaires(user, 1, limit);
-      
-      setLoading(false);
-      if (result && result.questionnaires) {
-        console.log(`Fetched ${result.questionnaires.length} recent questionnaires`);
-        return result.questionnaires;
+      if (result) {
+        setQuestionnaires(result.questionnaires);
+        setTotalPages(1); // Only one page when fetching all
+        setCurrentPage(1);
       }
-      return [];
-    } catch (error) {
-      console.error("Error fetching recent questionnaires:", error);
+      
       setLoading(false);
-      return [];
+      return result;
+    } catch (error) {
+      console.error("Error fetching all questionnaires:", error);
+      setLoading(false);
+      setError("Failed to load all questionnaires");
+      return null;
     }
   }, [user]);
 
@@ -135,7 +136,7 @@ export const useVendorQuotations = (user: User | null) => {
     currentPage,
     error,
     fetchQuestionnaires: fetchQuestionnairesPaginated,
-    fetchRecentQuestionnaires,
+    fetchAllQuestionnaires,
     fetchStats,
     refresh: forceRefresh,
     checkPermissions
