@@ -45,7 +45,7 @@ export const fetchQuestionnaires = async (
     // Fetch actual questionnaires with pagination
     console.log(`Fetching questionnaires (page ${page}, limit ${limit}, range ${from}-${to})...`);
     
-    // Standard pagination query for normal views
+    // No filtering by vendor - we want all completed questionnaires for vendors to see
     const { data: questionnaires, error, count } = await supabase
       .from("property_questionnaires")
       .select(`
