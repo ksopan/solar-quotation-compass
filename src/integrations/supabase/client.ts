@@ -2,30 +2,16 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://lbrtgnrhstyklgpnslvw.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxicnRnbnJoc3R5a2xncG5zbHZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4MDA0MDksImV4cCI6MjA1OTM3NjQwOX0.tH3XZj3bBRtHNSD_iVfYu14UmzObn09MRyx7havlF6g";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-console.log("Initializing Supabase client with URL:", SUPABASE_URL);
-
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
+    storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true
   }
 });
-
-// ✅ Add this block to check the logged-in user
-(async () => {
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error) {
-    console.error("❌ Supabase auth error:", error.message);
-  } else if (!user) {
-    console.warn("⚠️ No Supabase user is currently logged in.");
-  } else {
-    console.log("✅ Supabase user ID (auth.uid()):", user.id);
-  }
-})();
