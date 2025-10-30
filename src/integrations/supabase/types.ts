@@ -89,6 +89,8 @@ export type Database = {
           status: Database["public"]["Enums"]["questionnaire_status"] | null
           submitted_at: string | null
           updated_at: string
+          verification_token: string | null
+          verified_at: string | null
           version: number | null
           willing_to_remove_trees: boolean
         }
@@ -112,6 +114,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["questionnaire_status"] | null
           submitted_at?: string | null
           updated_at?: string
+          verification_token?: string | null
+          verified_at?: string | null
           version?: number | null
           willing_to_remove_trees?: boolean
         }
@@ -135,6 +139,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["questionnaire_status"] | null
           submitted_at?: string | null
           updated_at?: string
+          verification_token?: string | null
+          verified_at?: string | null
           version?: number | null
           willing_to_remove_trees?: boolean
         }

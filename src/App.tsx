@@ -20,6 +20,7 @@ import QuestionnaireDetails from "./pages/QuestionnaireDetails";
 import SubmitQuote from "./pages/SubmitQuote";
 import VendorDashboard from "./pages/VendorDashboard";
 import VendorProfile from "./pages/VendorProfile";
+import VerificationSuccess from "./pages/VerificationSuccess";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verification-success" element={<VerificationSuccess />} />
             
             {/* Protected routes */}
             <Route path="/complete-profile" element={

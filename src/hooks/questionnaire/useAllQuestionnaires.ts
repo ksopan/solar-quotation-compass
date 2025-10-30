@@ -43,7 +43,9 @@ export const useAllQuestionnaires = () => {
           submitted_at,
           proposal_deadline,
           acceptance_deadline,
-          version
+          version,
+          verification_token,
+          verified_at
         `)
         .order('created_at', { ascending: false });
         

@@ -26,13 +26,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { questionnaireId, customerName, customerEmail, propertyType, monthlyBill }: NotificationRequest = await req.json();
 
-    console.log("New questionnaire submitted:", {
-      questionnaireId,
-      customerName,
-      customerEmail,
-      propertyType,
-      monthlyBill
-    });
+    console.log("Processing vendor notification for questionnaire:", questionnaireId);
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -40,11 +34,35 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Fetch all vendor emails from the database
+    // Verify the questionnaire is active before notifying vendors
+    const { data: questionnaire, error: questError } = await supabase
+      .from("property_questionnaires")
+      .select("status")
+      .eq("id", questionnaireId)
+      .single();
+
+    if (questError || !questionnaire) {
+      console.error("Questionnaire not found:", questError);
+      return new Response(
+        JSON.stringify({ error: "Questionnaire not found" }),
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (questionnaire.status !== "active") {
+      console.log("Questionnaire is not active, skipping notification. Status:", questionnaire.status);
+      return new Response(
+        JSON.stringify({ message: "Questionnaire not active yet", status: questionnaire.status }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("Questionnaire is active, proceeding with vendor notification");
+
+    // Fetch all vendor emails from the vendor_profiles table
     const { data: vendors, error: vendorError } = await supabase
-      .from("user_profiles")
-      .select("email")
-      .eq("role", "vendor");
+      .from("vendor_profiles")
+      .select("email");
 
     if (vendorError) {
       console.error("Error fetching vendors:", vendorError);

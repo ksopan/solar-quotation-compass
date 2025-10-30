@@ -68,9 +68,12 @@ export const fetchQuestionnaires = async (
           submitted_at,
           proposal_deadline,
           acceptance_deadline,
-          version
+          version,
+          verification_token,
+          verified_at
         `, { count: 'exact' })
         .eq('is_completed', true)  // Only get completed questionnaires
+        .in('status', ['active', 'submitted', 'under_review', 'proposals_received'])  // Only show active and submitted questionnaires
         .order('created_at', { ascending: false }) // Always order by newest first
         .range(from, to);
         
