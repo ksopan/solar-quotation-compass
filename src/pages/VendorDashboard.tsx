@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
+import { MainLayout } from "@/components/layouts/MainLayout";
 import { useVendorQuotations } from "@/hooks/vendor";
 import { DashboardStats } from "@/components/vendor/DashboardStats";
 import { QuestionnaireFilters } from "@/components/vendor/QuestionnaireFilters";
@@ -117,48 +118,50 @@ const VendorDashboard = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <VendorDashboardHeader user={user} />
-        <VendorDashboardActions 
-          onRefresh={handleRefresh}
-          onCheckPermissions={handleCheckPermissions}
-          showAllQuestionnaires={handleShowAllQuestionnaires}
-        />
-      </div>
+    <MainLayout>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <VendorDashboardHeader user={user} />
+          <VendorDashboardActions 
+            onRefresh={handleRefresh}
+            onCheckPermissions={handleCheckPermissions}
+            showAllQuestionnaires={handleShowAllQuestionnaires}
+          />
+        </div>
 
-      <DashboardStats stats={stats} />
+        <DashboardStats stats={stats} />
 
-      {error && <ErrorDisplay error={error} />}
-      
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Recent Property Questionnaires</h2>
-        <Button 
-          variant="outline" 
-          onClick={handleShowAllQuestionnaires} 
-          className="flex items-center"
-        >
-          View All Questionnaires <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
-      
-      <QuestionnairesTable 
-        questionnaires={recentQuestionnaires}
-        loading={isLoadingRecent}
-        currentPage={1}
-        totalPages={1}
-        onPageChange={() => {}}
-        showPagination={false}
-      />
-      
-      {!isLoadingRecent && recentQuestionnaires.length === 0 && (
-        <EmptyStateCard
-          onRefresh={handleRefresh}
-          onCheckPermissions={handleCheckPermissions}
-          onCreateSampleData={handleCreateSampleData}
+        {error && <ErrorDisplay error={error} />}
+        
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Recent Property Questionnaires</h2>
+          <Button 
+            variant="outline" 
+            onClick={handleShowAllQuestionnaires} 
+            className="flex items-center"
+          >
+            View All Questionnaires <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+        
+        <QuestionnairesTable 
+          questionnaires={recentQuestionnaires}
+          loading={isLoadingRecent}
+          currentPage={1}
+          totalPages={1}
+          onPageChange={() => {}}
+          showPagination={false}
         />
-      )}
-    </div>
+        
+        {!isLoadingRecent && recentQuestionnaires.length === 0 && (
+          <EmptyStateCard
+            onRefresh={handleRefresh}
+            onCheckPermissions={handleCheckPermissions}
+            onCreateSampleData={handleCreateSampleData}
+          />
+        )}
+      </div>
+    </MainLayout>
   );
 };
 

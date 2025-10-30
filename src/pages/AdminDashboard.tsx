@@ -1,6 +1,7 @@
 
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { MainLayout } from "@/components/layouts/MainLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +36,8 @@ const AdminDashboard = () => {
   if (!user) return null;
 
   return (
-    <div className="space-y-6">
+    <MainLayout>
+      <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Administrator Dashboard</h1>
         <div className="flex items-center space-x-2">
@@ -217,6 +219,7 @@ const AdminDashboard = () => {
         </TabsContent>
       </Tabs>
     </div>
+    </MainLayout>
   );
 };
 

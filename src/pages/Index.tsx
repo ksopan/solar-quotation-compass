@@ -1,6 +1,5 @@
 
 import React from "react";
-import { MainLayout } from "@/components/layouts/MainLayout";
 import { useAuth } from "@/contexts/auth";
 import VendorDashboard from "./VendorDashboard";
 import AdminDashboard from "./AdminDashboard";
@@ -15,13 +14,12 @@ const Index = () => {
     return <LandingPage />;
   }
 
-  return (
-    <MainLayout>
-      {user.role === "customer" && <CustomerDashboard />}
-      {user.role === "vendor" && <VendorDashboard />}
-      {user.role === "admin" && <AdminDashboard />}
-    </MainLayout>
-  );
+  // Each dashboard component now handles its own MainLayout
+  if (user.role === "customer") return <CustomerDashboard />;
+  if (user.role === "vendor") return <VendorDashboard />;
+  if (user.role === "admin") return <AdminDashboard />;
+  
+  return null;
 };
 
 export default Index;
