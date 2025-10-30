@@ -31,7 +31,7 @@ export const QuestionnaireProfileContent: React.FC = () => {
     
     // Set submit button visibility when questionnaire loads
     if (questionnaire) {
-      setShowSubmitButton(questionnaire.is_completed === false);
+      setShowSubmitButton(questionnaire.is_completed === false && (questionnaire.status === 'draft' || !questionnaire.status));
     }
   }, [questionnaire, formData]);
   

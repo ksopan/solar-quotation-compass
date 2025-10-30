@@ -15,6 +15,11 @@ export interface QuestionnaireData {
   email: string;
   is_completed: boolean;
   created_at: string;
+  status?: 'draft' | 'submitted' | 'under_review' | 'proposals_received' | 'completed' | 'cancelled';
+  submitted_at?: string | null;
+  proposal_deadline?: string | null;
+  acceptance_deadline?: string | null;
+  version?: number;
 }
 
 // Define the state type

@@ -63,7 +63,12 @@ export const fetchQuestionnaires = async (
           willing_to_remove_trees,
           created_at,
           updated_at,
-          is_completed
+          is_completed,
+          status,
+          submitted_at,
+          proposal_deadline,
+          acceptance_deadline,
+          version
         `, { count: 'exact' })
         .eq('is_completed', true)  // Only get completed questionnaires
         .order('created_at', { ascending: false }) // Always order by newest first

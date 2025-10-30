@@ -109,7 +109,7 @@ const SubmitQuote = () => {
     setIsSubmitting(true);
     
     try {
-      // Insert the proposal
+      // Insert the proposal as draft first
       const { data: proposalData, error: proposalError } = await supabase
         .from("quotation_proposals")
         .insert({
@@ -119,7 +119,7 @@ const SubmitQuote = () => {
           warranty_period: formData.warranty_period,
           installation_timeframe: formData.installation_timeframe,
           proposal_details: formData.proposal_details,
-          status: "pending"
+          status: "draft"
         })
         .select()
         .single();
@@ -133,6 +133,21 @@ const SubmitQuote = () => {
       // Upload files if any
       if (uploadedFiles.length > 0) {
         await uploadFiles(proposalData.id);
+      }
+
+      // Now submit the proposal (change status from draft to submitted)
+      const { error: statusError } = await supabase
+        .from("quotation_proposals")
+        .update({
+          status: "submitted",
+          submitted_at: new Date().toISOString()
+        })
+        .eq("id", proposalData.id);
+
+      if (statusError) {
+        console.error("Error updating proposal status:", statusError);
+        toast.error("Failed to submit quote");
+        return;
       }
 
       // Send email notification to customer
@@ -149,7 +164,7 @@ const SubmitQuote = () => {
         // Don't fail the submission if email fails
       }
 
-      toast.success("Quote submitted successfully!");
+      toast.success("Quote submitted successfully! The customer will be notified.");
       navigate("/");
     } catch (error) {
       console.error("Error:", error);

@@ -38,7 +38,12 @@ export const useAllQuestionnaires = () => {
           willing_to_remove_trees,
           created_at,
           updated_at,
-          is_completed
+          is_completed,
+          status,
+          submitted_at,
+          proposal_deadline,
+          acceptance_deadline,
+          version
         `)
         .order('created_at', { ascending: false });
         
