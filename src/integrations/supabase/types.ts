@@ -166,13 +166,55 @@ export type Database = {
           },
         ]
       }
+      quotation_proposal_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          proposal_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          proposal_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          proposal_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotation_proposal_attachments_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "quotation_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quotation_proposals: {
         Row: {
           created_at: string
           id: string
           installation_timeframe: string
+          property_questionnaire_id: string | null
           proposal_details: string
-          quotation_request_id: string
+          quotation_request_id: string | null
           status: string
           total_price: number
           updated_at: string
@@ -183,8 +225,9 @@ export type Database = {
           created_at?: string
           id?: string
           installation_timeframe: string
+          property_questionnaire_id?: string | null
           proposal_details: string
-          quotation_request_id: string
+          quotation_request_id?: string | null
           status?: string
           total_price: number
           updated_at?: string
@@ -195,8 +238,9 @@ export type Database = {
           created_at?: string
           id?: string
           installation_timeframe?: string
+          property_questionnaire_id?: string | null
           proposal_details?: string
-          quotation_request_id?: string
+          quotation_request_id?: string | null
           status?: string
           total_price?: number
           updated_at?: string
@@ -204,6 +248,13 @@ export type Database = {
           warranty_period?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "quotation_proposals_property_questionnaire_id_fkey"
+            columns: ["property_questionnaire_id"]
+            isOneToOne: false
+            referencedRelation: "property_questionnaires"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "quotation_proposals_quotation_request_id_fkey"
             columns: ["quotation_request_id"]

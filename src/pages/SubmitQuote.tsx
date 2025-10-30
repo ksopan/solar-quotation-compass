@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
+import { Upload, X, FileText } from "lucide-react";
 
 const SubmitQuote = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +27,76 @@ const SubmitQuote = () => {
     proposal_details: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter(file => {
+      if (file.size > 20 * 1024 * 1024) {
+        toast.error(`${file.name} is too large. Maximum size is 20MB.`);
+        return false;
+      }
+      return true;
+    });
+    setUploadedFiles(prev => [...prev, ...validFiles]);
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadFiles = async (proposalId: string) => {
+    if (uploadedFiles.length === 0) return [];
+
+    const uploadedFileRecords = [];
+
+    for (const file of uploadedFiles) {
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user!.id}/${proposalId}/${Date.now()}.${fileExt}`;
+        
+        setUploadProgress(prev => ({ ...prev, [file.name]: 0 }));
+
+        const { error: uploadError, data } = await supabase.storage
+          .from('proposal_documents')
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          toast.error(`Failed to upload ${file.name}`);
+          continue;
+        }
+
+        setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
+
+        const { error: dbError } = await supabase
+          .from('quotation_proposal_attachments')
+          .insert({
+            proposal_id: proposalId,
+            file_name: file.name,
+            file_path: data.path,
+            file_type: file.type,
+            file_size: file.size
+          });
+
+        if (dbError) {
+          console.error("DB error:", dbError);
+          toast.error(`Failed to save ${file.name} record`);
+        } else {
+          uploadedFileRecords.push(data.path);
+        }
+      } catch (error) {
+        console.error("Error uploading file:", error);
+        toast.error(`Error uploading ${file.name}`);
+      }
+    }
+
+    return uploadedFileRecords;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,22 +109,44 @@ const SubmitQuote = () => {
     setIsSubmitting(true);
     
     try {
-      const { error } = await supabase
+      // Insert the proposal
+      const { data: proposalData, error: proposalError } = await supabase
         .from("quotation_proposals")
         .insert({
-          quotation_request_id: questionnaire.id,
+          property_questionnaire_id: questionnaire.id,
           vendor_id: user.id,
           total_price: parseFloat(formData.total_price),
           warranty_period: formData.warranty_period,
           installation_timeframe: formData.installation_timeframe,
           proposal_details: formData.proposal_details,
           status: "pending"
-        });
+        })
+        .select()
+        .single();
 
-      if (error) {
-        console.error("Error submitting quote:", error);
-        toast.error("Failed to submit quote");
+      if (proposalError) {
+        console.error("Error submitting quote:", proposalError);
+        toast.error("Failed to submit quote: " + proposalError.message);
         return;
+      }
+
+      // Upload files if any
+      if (uploadedFiles.length > 0) {
+        await uploadFiles(proposalData.id);
+      }
+
+      // Send email notification to customer
+      try {
+        await supabase.functions.invoke('notify-customer-quote', {
+          body: {
+            customerEmail: questionnaire.email,
+            customerName: `${questionnaire.first_name} ${questionnaire.last_name}`,
+            proposalId: proposalData.id
+          }
+        });
+      } catch (emailError) {
+        console.error("Email notification error:", emailError);
+        // Don't fail the submission if email fails
       }
 
       toast.success("Quote submitted successfully!");
@@ -63,6 +156,7 @@ const SubmitQuote = () => {
       toast.error("An error occurred while submitting the quote");
     } finally {
       setIsSubmitting(false);
+      setUploadProgress({});
     }
   };
 
@@ -168,6 +262,61 @@ const SubmitQuote = () => {
                     placeholder="Enter detailed proposal information..."
                     rows={6}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Attach Documents (Optional)</Label>
+                  <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                    <Input
+                      type="file"
+                      multiple
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      id="file-upload"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                      disabled={isSubmitting}
+                    />
+                    <label
+                      htmlFor="file-upload"
+                      className="cursor-pointer flex flex-col items-center gap-2"
+                    >
+                      <Upload className="h-8 w-8 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        Click to upload documents
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        PDF, DOC, XLS, JPG, PNG (max 20MB each)
+                      </p>
+                    </label>
+                  </div>
+
+                  {uploadedFiles.length > 0 && (
+                    <div className="space-y-2 mt-4">
+                      {uploadedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded">
+                          <FileText className="h-4 w-4" />
+                          <span className="text-sm flex-1 truncate">{file.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </span>
+                          {uploadProgress[file.name] !== undefined && (
+                            <span className="text-xs text-muted-foreground">
+                              {uploadProgress[file.name]}%
+                            </span>
+                          )}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFile(index)}
+                            disabled={isSubmitting}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-3 pt-4">
