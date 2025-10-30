@@ -29,14 +29,14 @@ export const ContactInfoStep: React.FC<ContactInfoStepProps> = ({
 
   const validateAndContinue = () => {
     const newErrors = {
-      firstName: firstName ? "" : "First name is required",
-      lastName: lastName ? "" : "Last name is required",
+      firstName: firstName.trim() ? "" : "First name is required",
+      lastName: lastName.trim() ? "" : "Last name is required",
       email: ""
     };
     
-    if (!email) {
+    if (!email.trim()) {
       newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+    } else if (!/\S+@\S+\.\S+/.test(email.trim())) {
       newErrors.email = "Please enter a valid email address";
     }
     

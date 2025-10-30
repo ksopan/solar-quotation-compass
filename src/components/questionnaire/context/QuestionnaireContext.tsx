@@ -53,8 +53,8 @@ export const QuestionnaireProvider: React.FC<{
   const [formData, setFormData] = useState<QuestionnaireData>(defaultFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Calculate total steps based on whether batteries are selected
-  const totalSteps = formData.interested_in_batteries ? 10 : 9;
+  // Total steps is always 10 (we just hide step 5 if not interested in batteries)
+  const totalSteps = 10;
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
