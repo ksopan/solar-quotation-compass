@@ -233,6 +233,7 @@ export type Database = {
           quotation_request_id: string | null
           rejected_at: string | null
           status: Database["public"]["Enums"]["proposal_status"]
+          status_new: Database["public"]["Enums"]["proposal_status"] | null
           submitted_at: string | null
           total_price: number
           updated_at: string
@@ -249,6 +250,7 @@ export type Database = {
           quotation_request_id?: string | null
           rejected_at?: string | null
           status?: Database["public"]["Enums"]["proposal_status"]
+          status_new?: Database["public"]["Enums"]["proposal_status"] | null
           submitted_at?: string | null
           total_price: number
           updated_at?: string
@@ -265,6 +267,7 @@ export type Database = {
           quotation_request_id?: string | null
           rejected_at?: string | null
           status?: Database["public"]["Enums"]["proposal_status"]
+          status_new?: Database["public"]["Enums"]["proposal_status"] | null
           submitted_at?: string | null
           total_price?: number
           updated_at?: string
