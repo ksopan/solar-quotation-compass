@@ -18,6 +18,8 @@ import QuotationRequests from "./pages/QuotationRequests";
 import AllQuestionnaires from "./pages/AllQuestionnaires";
 import QuestionnaireDetails from "./pages/QuestionnaireDetails";
 import SubmitQuote from "./pages/SubmitQuote";
+import VendorDashboard from "./pages/VendorDashboard";
+import VendorProfile from "./pages/VendorProfile";
 
 const queryClient = new QueryClient();
 
@@ -49,7 +51,12 @@ const App = () => (
             } />
             <Route path="/quotation-requests" element={
               <ProtectedRoute>
-                <QuotationRequests />
+                <VendorDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/vendor-profile" element={
+              <ProtectedRoute>
+                <VendorProfile />
               </ProtectedRoute>
             } />
             <Route path="/all-questionnaires" element={

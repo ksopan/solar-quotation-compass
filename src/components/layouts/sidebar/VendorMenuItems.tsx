@@ -24,7 +24,7 @@ export const VendorMenuItems: React.FC = () => {
       </SidebarMenuItem>
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
-          <a href="/complete-profile">
+          <a href="/vendor-profile">
             <Settings className="h-4 w-4 mr-2" />
             <span>Company Profile</span>
           </a>
