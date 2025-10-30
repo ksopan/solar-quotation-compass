@@ -56,16 +56,19 @@ export const ProfileSections: React.FC<ProfileSectionsProps> = ({
         handleChange={handleChange} 
       />
       
+      {/* Documents section is always accessible, independent of editing mode */}
       {questionnaire && (
-        <DocumentsSection 
-          questionnaire={questionnaire}
-          isLoadingFiles={isLoadingFiles}
-          attachments={attachments || []}
-          handleFileUpload={uploadAttachment}
-          handleFileDelete={deleteAttachment}
-          getFileUrl={getFileUrl}
-          isUploading={isUploading}
-        />
+        <div className="pt-4 mt-4 border-t border-border">
+          <DocumentsSection 
+            questionnaire={questionnaire}
+            isLoadingFiles={isLoadingFiles}
+            attachments={attachments || []}
+            handleFileUpload={uploadAttachment}
+            handleFileDelete={deleteAttachment}
+            getFileUrl={getFileUrl}
+            isUploading={isUploading}
+          />
+        </div>
       )}
     </>
   );

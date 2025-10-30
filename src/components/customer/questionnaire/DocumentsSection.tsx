@@ -28,8 +28,14 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
   if (!questionnaire) return null;
   
   return (
-    <div className="pt-4">
-      <Label>Property Documents & Photos</Label>
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <Label className="text-base font-semibold">Property Documents & Photos</Label>
+        <span className="text-xs text-muted-foreground">Upload anytime</span>
+      </div>
+      <p className="text-sm text-muted-foreground mb-4">
+        Upload documents and photos related to your property. You can add or remove files at any time.
+      </p>
       <div className="mt-2">
         <FileUploader onUpload={handleFileUpload} />
         
