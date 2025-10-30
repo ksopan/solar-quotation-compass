@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Home, FileText, User } from "lucide-react";
+import { Link } from "react-router-dom";
 import { SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 
 export const CustomerMenuItems: React.FC = () => {
@@ -8,26 +9,26 @@ export const CustomerMenuItems: React.FC = () => {
     <>
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
-          <a href="/">
+          <Link to="/">
             <Home className="h-4 w-4 mr-2" />
             <span>Dashboard</span>
-          </a>
+          </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
-          <a href="/quotations">
+          <Link to="/quotations">
             <FileText className="h-4 w-4 mr-2" />
             <span>My Quotations</span>
-          </a>
+          </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
-          <a href="/complete-profile">
+          <Link to="/complete-profile">
             <User className="h-4 w-4 mr-2" />
             <span>My Profile</span>
-          </a>
+          </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
     </>

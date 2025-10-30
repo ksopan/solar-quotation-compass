@@ -1,6 +1,7 @@
 
 import React from "react";
-import { FileText, BarChart, Settings } from "lucide-react";
+import { FileText, BarChart, Settings, Home } from "lucide-react";
+import { Link } from "react-router-dom";
 import { SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 
 export const VendorMenuItems: React.FC = () => {
@@ -8,26 +9,34 @@ export const VendorMenuItems: React.FC = () => {
     <>
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
-          <a href="/quotation-requests">
+          <Link to="/">
+            <Home className="h-4 w-4 mr-2" />
+            <span>Dashboard</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild>
+          <Link to="/quotation-requests">
             <FileText className="h-4 w-4 mr-2" />
             <span>Quotation Requests</span>
-          </a>
+          </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
-          <a href="/my-proposals">
+          <Link to="/my-proposals">
             <BarChart className="h-4 w-4 mr-2" />
             <span>My Proposals</span>
-          </a>
+          </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
-          <a href="/vendor-profile">
+          <Link to="/vendor-profile">
             <Settings className="h-4 w-4 mr-2" />
             <span>Company Profile</span>
-          </a>
+          </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
     </>
