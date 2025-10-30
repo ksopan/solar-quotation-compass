@@ -70,13 +70,11 @@ const Register = () => {
       await authRegister({
         ...registrationData,
         password: registrationData.password,
-        role: registrationData.role,
-        questionnaireData: questionnaireData
+        role: registrationData.role
       });
       
-      if (questionnaireData) {
-        sessionStorage.removeItem("questionnaire_data");
-      }
+      // Keep questionnaire data in sessionStorage for post-confirmation save
+      // It will be removed after successful save in useLogin
     } catch (error) {
     } finally {
       setIsLoading(false);

@@ -71,8 +71,8 @@ const AuthCallback = () => {
           return;
         }
         
-        // Check for questionnaire data in localStorage from OAuth flow
-        const questionnaireData = localStorage.getItem("questionnaire_data");
+        // Check for questionnaire data in localStorage (OAuth) or sessionStorage (email confirmation)
+        const questionnaireData = localStorage.getItem("questionnaire_data") || sessionStorage.getItem("questionnaire_data");
         if (questionnaireData && data.session.user) {
           setMessage("Processing your questionnaire data...");
           try {
@@ -101,9 +101,10 @@ const AuthCallback = () => {
               console.error("Error saving questionnaire data after OAuth:", insertError);
               toast.error("Failed to process your questionnaire data");
             } else {
-              console.log("Successfully saved questionnaire with user ID after OAuth");
+              console.log("Successfully saved questionnaire with user ID after authentication");
               toast.success("Your questionnaire has been saved to your account");
               localStorage.removeItem("questionnaire_data");
+              sessionStorage.removeItem("questionnaire_data");
             }
           } catch (err) {
             console.error("Error processing questionnaire data after OAuth:", err);

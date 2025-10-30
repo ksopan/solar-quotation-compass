@@ -95,39 +95,7 @@ export const useRegistration = (
       }
 
       if (data.user) {
-        // Step 5: If we have questionnaire data, save it now with the user's ID
-        if (questionnaireData && registrationData.role === "customer") {
-          console.log("Saving questionnaire data for new user:", data.user.id);
-          
-          try {
-            const { error: insertError } = await supabase
-              .from("property_questionnaires")
-              .insert({
-                property_type: questionnaireData.property_type,
-                ownership_status: questionnaireData.ownership_status,
-                monthly_electric_bill: questionnaireData.monthly_electric_bill,
-                interested_in_batteries: questionnaireData.interested_in_batteries,
-                battery_reason: questionnaireData.battery_reason,
-                purchase_timeline: questionnaireData.purchase_timeline,
-                willing_to_remove_trees: questionnaireData.willing_to_remove_trees,
-                roof_age_status: questionnaireData.roof_age_status,
-                first_name: questionnaireData.first_name,
-                last_name: questionnaireData.last_name,
-                email: questionnaireData.email,
-                customer_id: data.user.id,
-                is_completed: true // Mark as completed since it's linked to a user
-              });
-              
-            if (insertError) {
-              console.error("Error saving questionnaire data:", insertError);
-            } else {
-              console.log("Successfully saved questionnaire with user ID");
-            }
-          } catch (saveError) {
-            console.error("Error in questionnaire save operation:", saveError);
-          }
-        }
-        
+        // Questionnaire data will be saved after email confirmation during login
         // Email/password signup (always requires email confirmation)
         toast.success("Registration successful!", {
           description: "Please check your email to confirm your account before logging in."
