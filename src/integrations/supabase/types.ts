@@ -70,6 +70,7 @@ export type Database = {
       }
       property_questionnaires: {
         Row: {
+          acceptance_deadline: string | null
           battery_reason: string | null
           created_at: string
           customer_id: string | null
@@ -82,12 +83,17 @@ export type Database = {
           monthly_electric_bill: number
           ownership_status: string
           property_type: string
+          proposal_deadline: string | null
           purchase_timeline: string
           roof_age_status: string
+          status: Database["public"]["Enums"]["questionnaire_status"] | null
+          submitted_at: string | null
           updated_at: string
+          version: number | null
           willing_to_remove_trees: boolean
         }
         Insert: {
+          acceptance_deadline?: string | null
           battery_reason?: string | null
           created_at?: string
           customer_id?: string | null
@@ -100,12 +106,17 @@ export type Database = {
           monthly_electric_bill?: number
           ownership_status?: string
           property_type?: string
+          proposal_deadline?: string | null
           purchase_timeline?: string
           roof_age_status?: string
+          status?: Database["public"]["Enums"]["questionnaire_status"] | null
+          submitted_at?: string | null
           updated_at?: string
+          version?: number | null
           willing_to_remove_trees?: boolean
         }
         Update: {
+          acceptance_deadline?: string | null
           battery_reason?: string | null
           created_at?: string
           customer_id?: string | null
@@ -118,9 +129,13 @@ export type Database = {
           monthly_electric_bill?: number
           ownership_status?: string
           property_type?: string
+          proposal_deadline?: string | null
           purchase_timeline?: string
           roof_age_status?: string
+          status?: Database["public"]["Enums"]["questionnaire_status"] | null
+          submitted_at?: string | null
           updated_at?: string
+          version?: number | null
           willing_to_remove_trees?: boolean
         }
         Relationships: []
@@ -209,39 +224,48 @@ export type Database = {
       }
       quotation_proposals: {
         Row: {
+          accepted_at: string | null
           created_at: string
           id: string
           installation_timeframe: string
           property_questionnaire_id: string | null
           proposal_details: string
           quotation_request_id: string | null
-          status: string
+          rejected_at: string | null
+          status: Database["public"]["Enums"]["proposal_status"]
+          submitted_at: string | null
           total_price: number
           updated_at: string
           vendor_id: string
           warranty_period: string
         }
         Insert: {
+          accepted_at?: string | null
           created_at?: string
           id?: string
           installation_timeframe: string
           property_questionnaire_id?: string | null
           proposal_details: string
           quotation_request_id?: string | null
-          status?: string
+          rejected_at?: string | null
+          status?: Database["public"]["Enums"]["proposal_status"]
+          submitted_at?: string | null
           total_price: number
           updated_at?: string
           vendor_id: string
           warranty_period: string
         }
         Update: {
+          accepted_at?: string | null
           created_at?: string
           id?: string
           installation_timeframe?: string
           property_questionnaire_id?: string | null
           proposal_details?: string
           quotation_request_id?: string | null
-          status?: string
+          rejected_at?: string | null
+          status?: Database["public"]["Enums"]["proposal_status"]
+          submitted_at?: string | null
           total_price?: number
           updated_at?: string
           vendor_id?: string
@@ -341,13 +365,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_edit_proposal: { Args: { proposal_id: string }; Returns: boolean }
+      can_edit_questionnaire: {
+        Args: { questionnaire_id: string }
+        Returns: boolean
+      }
       customer_can_view_vendor: {
         Args: { customer_id: string; vendor_id: string }
         Returns: boolean
       }
     }
     Enums: {
-      [_ in never]: never
+      proposal_status:
+        | "draft"
+        | "submitted"
+        | "accepted"
+        | "rejected"
+        | "withdrawn"
+      questionnaire_status:
+        | "draft"
+        | "submitted"
+        | "under_review"
+        | "proposals_received"
+        | "completed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -474,6 +515,22 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      proposal_status: [
+        "draft",
+        "submitted",
+        "accepted",
+        "rejected",
+        "withdrawn",
+      ],
+      questionnaire_status: [
+        "draft",
+        "submitted",
+        "under_review",
+        "proposals_received",
+        "completed",
+        "cancelled",
+      ],
+    },
   },
 } as const
