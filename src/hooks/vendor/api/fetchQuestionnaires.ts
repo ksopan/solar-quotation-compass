@@ -95,7 +95,7 @@ export const fetchQuestionnaires = async (
           const { data: proposalData, error: proposalError } = await supabase
             .from("quotation_proposals")
             .select("id")
-            .eq("quotation_request_id", questionnaire.id)
+            .eq("property_questionnaire_id", questionnaire.id)
             .eq("vendor_id", user.id);
             
           if (proposalError) {
