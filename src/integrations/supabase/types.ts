@@ -14,7 +14,220 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      customer_profiles: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quotation_document_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          quotation_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          quotation_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          quotation_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotation_document_files_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotation_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotation_proposals: {
+        Row: {
+          created_at: string
+          id: string
+          installation_timeframe: string
+          proposal_details: string
+          quotation_request_id: string
+          status: string
+          total_price: number
+          updated_at: string
+          vendor_id: string
+          warranty_period: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          installation_timeframe: string
+          proposal_details: string
+          quotation_request_id: string
+          status?: string
+          total_price: number
+          updated_at?: string
+          vendor_id: string
+          warranty_period: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          installation_timeframe?: string
+          proposal_details?: string
+          quotation_request_id?: string
+          status?: string
+          total_price?: number
+          updated_at?: string
+          vendor_id?: string
+          warranty_period?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotation_proposals_quotation_request_id_fkey"
+            columns: ["quotation_request_id"]
+            isOneToOne: false
+            referencedRelation: "quotation_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotation_requests: {
+        Row: {
+          additional_notes: string | null
+          budget: number | null
+          created_at: string
+          customer_id: string
+          energy_usage: number | null
+          id: string
+          location: string
+          roof_area: number
+          roof_type: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          additional_notes?: string | null
+          budget?: number | null
+          created_at?: string
+          customer_id: string
+          energy_usage?: number | null
+          id?: string
+          location: string
+          roof_area: number
+          roof_type: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          additional_notes?: string | null
+          budget?: number | null
+          created_at?: string
+          customer_id?: string
+          energy_usage?: number | null
+          id?: string
+          location?: string
+          roof_area?: number
+          roof_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      vendor_profiles: {
+        Row: {
+          address: string | null
+          company_name: string
+          created_at: string
+          email: string
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          company_name: string
+          created_at?: string
+          email: string
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          company_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
