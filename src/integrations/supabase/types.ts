@@ -341,7 +341,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      customer_can_view_vendor: {
+        Args: { customer_id: string; vendor_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
