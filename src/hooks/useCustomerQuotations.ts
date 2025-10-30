@@ -4,19 +4,35 @@ import { User } from "@/contexts/auth/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export interface QuotationItem {
+export interface QuotationProposal {
   id: string;
-  roof_type: string;
-  location: string;
-  roof_area: number;
-  energy_usage: number;
-  budget: number;
+  vendor_id: string;
+  total_price: number;
+  warranty_period: string;
+  installation_timeframe: string;
+  proposal_details: string;
   status: string;
   created_at: string;
-  customer_id: string;
-  additional_notes: string;
   updated_at: string;
-  quotation_proposals?: any[];
+}
+
+export interface QuotationItem {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  property_type: string;
+  ownership_status: string;
+  monthly_electric_bill: number;
+  roof_age_status: string;
+  purchase_timeline: string;
+  interested_in_batteries: boolean;
+  battery_reason: string | null;
+  willing_to_remove_trees: boolean;
+  created_at: string;
+  updated_at: string;
+  is_completed: boolean;
+  quotation_proposals?: QuotationProposal[];
   proposal_count?: number;
 }
 
@@ -36,12 +52,13 @@ export const useCustomerQuotations = (user: User | null) => {
       setLoading(true);
       
       const { data, error } = await supabase
-        .from("quotation_requests")
+        .from("property_questionnaires")
         .select(`
           *,
-          quotation_proposals:quotation_proposals(id)
+          quotation_proposals:quotation_proposals(*)
         `)
         .eq("customer_id", user.id)
+        .eq("is_completed", true)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -49,14 +66,14 @@ export const useCustomerQuotations = (user: User | null) => {
       }
 
       // Transform data to include proposal_count
-      const transformedData = data.map((quotation: any) => ({
-        ...quotation,
-        proposal_count: quotation.quotation_proposals?.length || 0
+      const transformedData = data.map((questionnaire: any) => ({
+        ...questionnaire,
+        proposal_count: questionnaire.quotation_proposals?.length || 0
       }));
 
       setQuotations(transformedData);
     } catch (error) {
-      console.error("Error fetching quotations:", error);
+      console.error("Error fetching questionnaires:", error);
       toast.error("Failed to load your quotations");
     } finally {
       setLoading(false);
@@ -69,15 +86,15 @@ export const useCustomerQuotations = (user: User | null) => {
       const { error: proposalError } = await supabase
         .from("quotation_proposals")
         .delete()
-        .eq("quotation_request_id", id);
+        .eq("property_questionnaire_id", id);
 
       if (proposalError) {
         throw proposalError;
       }
 
-      // Now delete the quotation
+      // Now delete the questionnaire
       const { error } = await supabase
-        .from("quotation_requests")
+        .from("property_questionnaires")
         .delete()
         .eq("id", id);
 
@@ -87,11 +104,11 @@ export const useCustomerQuotations = (user: User | null) => {
 
       // Update the local state
       setQuotations(quotations.filter(q => q.id !== id));
-      toast.success("Quotation deleted successfully");
+      toast.success("Questionnaire deleted successfully");
       return true;
     } catch (error) {
-      console.error("Error deleting quotation:", error);
-      toast.error("Failed to delete quotation");
+      console.error("Error deleting questionnaire:", error);
+      toast.error("Failed to delete questionnaire");
       return false;
     }
   };

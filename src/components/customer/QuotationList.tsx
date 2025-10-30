@@ -11,23 +11,35 @@ import QuotationDetails from "./QuotationDetails";
 import { useAuth } from "@/contexts/auth";
 import { useCustomerQuotations } from "@/hooks/useCustomerQuotations";
 
-type QuotationItem = Database['public']['Tables']['quotation_requests']['Row'] & {
-  quotation_proposals: { count: number }[];
+type QuotationProposal = {
+  id: string;
+  vendor_id: string;
+  total_price: number;
+  warranty_period: string;
+  installation_timeframe: string;
+  proposal_details: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type QuotationItem = Database['public']['Tables']['property_questionnaires']['Row'] & {
+  quotation_proposals?: QuotationProposal[];
 };
 
 // Convert QuotationItem to QuotationDetails format
 const mapToQuotationDetails = (quotation: QuotationItem) => {
   return {
     id: quotation.id,
-    status: quotation.status,
+    status: quotation.is_completed ? 'completed' : 'pending',
     createdAt: format(new Date(quotation.created_at), "MMM d, yyyy"),
-    totalResponses: quotation.quotation_proposals?.[0]?.count || 0,
-    installationAddress: quotation.location,
-    roofType: quotation.roof_type,
-    monthlyBill: quotation.energy_usage,
-    devices: quotation.roof_area ? Math.floor(quotation.roof_area / 10) : undefined, // Example calculation
-    additionalInfo: quotation.additional_notes || undefined,
-    file_ids: [] // We'll need to fetch these separately if needed
+    totalResponses: quotation.quotation_proposals?.length || 0,
+    installationAddress: `${quotation.property_type} - ${quotation.ownership_status}`,
+    roofType: quotation.roof_age_status,
+    monthlyBill: quotation.monthly_electric_bill,
+    devices: quotation.interested_in_batteries ? 1 : 0,
+    additionalInfo: `Purchase timeline: ${quotation.purchase_timeline}`,
+    file_ids: []
   };
 };
 
@@ -129,7 +141,7 @@ export const QuotationList: React.FC<QuotationListProps> = ({
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead>Location</TableHead>
+                  <TableHead>Property Type</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Proposals</TableHead>
                   <TableHead className="text-right">Action</TableHead>
@@ -139,9 +151,9 @@ export const QuotationList: React.FC<QuotationListProps> = ({
                 {quotations.map((quotation) => (
                   <TableRow key={quotation.id}>
                     <TableCell>{format(new Date(quotation.created_at), "MMM d, yyyy")}</TableCell>
-                    <TableCell>{quotation.location}</TableCell>
-                    <TableCell>{getStatusBadge(quotation.status)}</TableCell>
-                    <TableCell>{quotation.quotation_proposals?.[0]?.count || 0}</TableCell>
+                    <TableCell>{quotation.property_type} ({quotation.ownership_status})</TableCell>
+                    <TableCell>{getStatusBadge(quotation.is_completed ? 'completed' : 'pending')}</TableCell>
+                    <TableCell>{quotation.quotation_proposals?.length || 0}</TableCell>
                     <TableCell className="text-right">
                       <Button
                         size="sm"

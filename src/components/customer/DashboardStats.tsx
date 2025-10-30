@@ -21,11 +21,11 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ quotations }) =>
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Pending Quotations</CardTitle>
+          <CardTitle className="text-sm font-medium">Completed Profiles</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {quotations.filter(q => q.status === "pending").length}
+            {quotations.filter(q => q.is_completed).length}
           </div>
         </CardContent>
       </Card>
@@ -36,7 +36,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ quotations }) =>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {quotations.reduce((total, q) => total + (q.quotation_proposals?.[0]?.count || 0), 0)}
+            {quotations.reduce((total, q) => total + (q.quotation_proposals?.length || 0), 0)}
           </div>
         </CardContent>
       </Card>
