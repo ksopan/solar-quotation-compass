@@ -51,28 +51,9 @@ const AllQuestionnaires = () => {
     loadAllQuestionnaires();
   };
 
-  // Toggle debug mode to use the RPC function directly
-  const handleToggleDebugMode = async () => {
-    if (!debugMode) {
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase.rpc('get_debug_questionnaires');
-        if (error) {
-          throw error;
-        }
-        console.log("Debug RPC direct call returned:", data?.length || 0, "questionnaires");
-        toast.success(`Debug mode: Found ${data?.length || 0} questionnaires directly from RPC`);
-        setDebugMode(true);
-      } catch (error) {
-        console.error("Error using debug RPC function:", error);
-        toast.error("Failed to use debug mode");
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-      setDebugMode(false);
-      loadAllQuestionnaires();
-    }
+  // Load questionnaires without debug mode
+  const handleToggleDebugMode = () => {
+    toast.info("Debug mode is not available");
   };
 
   return (

@@ -55,19 +55,6 @@ export const checkPermissions = async (user: User) => {
       toast.success(`Found ${proposalData?.length || 0} proposals for this vendor`);
     }
     
-    // Try a direct access using the debug RPC function
-    console.log("Trying debug RPC function...");
-    const { data: debugData, error: debugError } = await supabase
-      .rpc('get_debug_questionnaires');
-      
-    if (debugError) {
-      console.error("Debug RPC error:", debugError);
-      toast.error("Debug RPC failed: " + debugError.message);
-    } else {
-      console.log(`Debug RPC returned ${debugData?.length || 0} questionnaires`);
-      toast.success(`Debug RPC returned ${debugData?.length || 0} questionnaires`);
-    }
-    
     return true;
   } catch (error) {
     console.error("Error in checkPermissions:", error);
