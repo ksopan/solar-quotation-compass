@@ -1,9 +1,8 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Battery, BatteryCharging } from "lucide-react";
-import { toast } from "sonner";
 
 interface BatteryInterestStepProps {
   value: boolean;
@@ -18,20 +17,6 @@ export const BatteryInterestStep: React.FC<BatteryInterestStepProps> = ({
   onNext, 
   onPrevious 
 }) => {
-  const [hasSelected, setHasSelected] = useState(false);
-
-  const handleSelection = (selection: boolean) => {
-    onChange(selection);
-    setHasSelected(true);
-  };
-
-  const handleContinue = () => {
-    if (!hasSelected) {
-      toast.error("Please select an option to continue");
-      return;
-    }
-    onNext();
-  };
 
   return (
     <div className="space-y-6">
@@ -40,7 +25,7 @@ export const BatteryInterestStep: React.FC<BatteryInterestStepProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card 
           className={`cursor-pointer hover:border-primary transition-colors ${value === true ? "border-2 border-primary bg-primary/5" : ""}`}
-          onClick={() => handleSelection(true)}
+          onClick={() => onChange(true)}
         >
           <CardContent className="flex flex-col items-center justify-center p-6">
             <BatteryCharging className="h-12 w-12 mb-4 text-primary" />
@@ -49,8 +34,8 @@ export const BatteryInterestStep: React.FC<BatteryInterestStepProps> = ({
         </Card>
         
         <Card 
-          className={`cursor-pointer hover:border-primary transition-colors ${value === false && hasSelected ? "border-2 border-primary bg-primary/5" : ""}`}
-          onClick={() => handleSelection(false)}
+          className={`cursor-pointer hover:border-primary transition-colors ${value === false ? "border-2 border-primary bg-primary/5" : ""}`}
+          onClick={() => onChange(false)}
         >
           <CardContent className="flex flex-col items-center justify-center p-6">
             <Battery className="h-12 w-12 mb-4 text-primary" />
@@ -63,7 +48,7 @@ export const BatteryInterestStep: React.FC<BatteryInterestStepProps> = ({
         <Button variant="outline" onClick={onPrevious}>
           Back
         </Button>
-        <Button onClick={handleContinue}>
+        <Button onClick={onNext}>
           Continue
         </Button>
       </div>
