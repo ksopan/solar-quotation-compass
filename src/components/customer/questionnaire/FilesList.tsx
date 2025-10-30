@@ -8,12 +8,14 @@ interface FilesListProps {
   files: Array<{name: string; size: number; id?: string;}>;
   onDelete: (fileName: string) => Promise<boolean>;
   getFileUrl: (fileName: string) => string | null;
+  isEditing: boolean;
 }
 
 export const FilesList: React.FC<FilesListProps> = ({ 
   files,
   onDelete,
-  getFileUrl
+  getFileUrl,
+  isEditing
 }) => {
   if (files.length === 0) {
     return (
@@ -69,14 +71,16 @@ export const FilesList: React.FC<FilesListProps> = ({
             >
               <Download className="h-4 w-4" />
             </Button>
-            <Button 
-              onClick={() => handleDeleteClick(file.name)} 
-              variant="ghost" 
-              size="icon"
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {isEditing && (
+              <Button 
+                onClick={() => handleDeleteClick(file.name)} 
+                variant="ghost" 
+                size="icon"
+                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       ))}

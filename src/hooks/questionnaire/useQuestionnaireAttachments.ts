@@ -115,23 +115,31 @@ export const useQuestionnaireAttachments = (questionnaire: QuestionnaireData | n
 
     try {
       const filePath = `${user.id}/${fileName}`;
-      console.log("��️ Deleting file at path:", filePath);
+      console.log("🗑️ Attempting to delete file at path:", filePath);
 
-      const { error } = await supabase.storage
+      const { error, data } = await supabase.storage
         .from('quotation_document_files')
         .remove([filePath]);
 
       if (error) {
-        console.error("❌ Error deleting file:", error);
+        console.error("❌ Storage deletion error:", error);
         toast.error("Failed to delete file: " + error.message);
         return false;
       }
 
+      console.log("✅ File deleted successfully from storage:", data);
       toast.success("File deleted successfully");
-      setAttachments(prev => prev.filter(att => att.name !== fileName));
+      
+      // Update local state to remove the file
+      setAttachments(prev => {
+        const updated = prev.filter(att => att.name !== fileName);
+        console.log("📋 Updated attachments list:", updated);
+        return updated;
+      });
+      
       return true;
     } catch (error) {
-      console.error("❌ Error in deleteAttachment:", error);
+      console.error("❌ Unexpected error in deleteAttachment:", error);
       toast.error("An error occurred while deleting the file");
       return false;
     }

@@ -14,6 +14,7 @@ interface DocumentsSectionProps {
   handleFileDelete: (fileName: string) => Promise<boolean>;
   getFileUrl: (fileName: string) => string | null;
   isUploading?: boolean;
+  isEditing: boolean;
 }
 
 export const DocumentsSection: React.FC<DocumentsSectionProps> = ({ 
@@ -23,7 +24,8 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
   handleFileUpload,
   handleFileDelete,
   getFileUrl,
-  isUploading = false
+  isUploading = false,
+  isEditing
 }) => {
   if (!questionnaire) return null;
   
@@ -31,13 +33,16 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
     <div>
       <div className="flex items-center justify-between mb-2">
         <Label className="text-base font-semibold">Property Documents & Photos</Label>
-        <span className="text-xs text-muted-foreground">Upload anytime</span>
+        {isEditing && <span className="text-xs text-muted-foreground">Upload anytime</span>}
       </div>
       <p className="text-sm text-muted-foreground mb-4">
-        Upload documents and photos related to your property. You can add or remove files at any time.
+        {isEditing 
+          ? "Upload documents and photos related to your property. You can add or remove files at any time."
+          : "View your uploaded documents and photos. Click Edit to upload more files."
+        }
       </p>
       <div className="mt-2">
-        <FileUploader onUpload={handleFileUpload} />
+        {isEditing && <FileUploader onUpload={handleFileUpload} />}
         
         {isUploading && (
           <div className="my-4 space-y-2">
@@ -58,7 +63,8 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
           <FilesList 
             files={attachments} 
             onDelete={handleFileDelete} 
-            getFileUrl={getFileUrl} 
+            getFileUrl={getFileUrl}
+            isEditing={isEditing}
           />
         )}
       </div>
