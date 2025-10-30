@@ -15,7 +15,9 @@ import AuthCallback from "./pages/auth/AuthCallback";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ResetPassword from "./pages/ResetPassword";
 import QuotationRequests from "./pages/QuotationRequests";
-import AllQuestionnaires from "./pages/AllQuestionnaires"; // Add import for new page
+import AllQuestionnaires from "./pages/AllQuestionnaires";
+import QuestionnaireDetails from "./pages/QuestionnaireDetails";
+import SubmitQuote from "./pages/SubmitQuote";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +55,16 @@ const App = () => (
             <Route path="/all-questionnaires" element={
               <ProtectedRoute>
                 <AllQuestionnaires />
+              </ProtectedRoute>
+            } />
+            <Route path="/questionnaire/:id" element={
+              <ProtectedRoute>
+                <QuestionnaireDetails />
+              </ProtectedRoute>
+            } />
+            <Route path="/submit-quote/:id" element={
+              <ProtectedRoute>
+                <SubmitQuote />
               </ProtectedRoute>
             } />
             

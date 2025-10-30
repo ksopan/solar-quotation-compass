@@ -59,17 +59,14 @@ export const QuestionnairesTable: React.FC<QuestionnairesTableProps> = ({
   };
 
   const handleViewDetails = (questionnaireId: string) => {
-    toast.info("Viewing details for questionnaire");
-    console.log("View details for:", questionnaireId);
-    // In a real implementation, this would navigate to a details page
-    navigate(`/quotation/${questionnaireId}`);
+    navigate(`/questionnaire/${questionnaireId}`);
   };
 
   const handleSubmitQuote = (questionnaireId: string) => {
     toast.info("Preparing to submit quote");
     console.log("Submit quote for:", questionnaireId);
-    // In a real implementation, this would navigate to a quote submission page
-    navigate(`/quotation/${questionnaireId}?action=quote`);
+    // Navigate to submit quote page
+    navigate(`/submit-quote/${questionnaireId}`);
   };
 
   if (loading) {
