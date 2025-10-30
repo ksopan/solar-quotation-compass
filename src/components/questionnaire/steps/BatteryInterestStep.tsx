@@ -17,6 +17,13 @@ export const BatteryInterestStep: React.FC<BatteryInterestStepProps> = ({
   onNext, 
   onPrevious 
 }) => {
+  const handleContinue = () => {
+    // If no selection made, default to false (No)
+    if (value === undefined || value === null) {
+      onChange(false);
+    }
+    onNext();
+  };
 
   return (
     <div className="space-y-6">
@@ -48,7 +55,7 @@ export const BatteryInterestStep: React.FC<BatteryInterestStepProps> = ({
         <Button variant="outline" onClick={onPrevious}>
           Back
         </Button>
-        <Button onClick={onNext}>
+        <Button onClick={handleContinue}>
           Continue
         </Button>
       </div>

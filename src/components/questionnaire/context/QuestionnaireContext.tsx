@@ -58,13 +58,23 @@ export const QuestionnaireProvider: React.FC<{
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
+      // Skip battery reason step if not interested in batteries
+      if (currentStep === 4 && !formData.interested_in_batteries) {
+        setCurrentStep(6);
+      } else {
+        setCurrentStep(currentStep + 1);
+      }
     }
   };
 
   const handlePrevious = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      // Skip battery reason step when going back if not interested in batteries
+      if (currentStep === 6 && !formData.interested_in_batteries) {
+        setCurrentStep(4);
+      } else {
+        setCurrentStep(currentStep - 1);
+      }
     }
   };
 
@@ -73,11 +83,6 @@ export const QuestionnaireProvider: React.FC<{
       ...formData,
       [field]: value
     });
-
-    // Special handling for battery interest - skip reason step if not interested
-    if (field === "interested_in_batteries" && value === false && currentStep === 4) {
-      setTimeout(() => setCurrentStep(6), 300); // Small delay for animation
-    }
   };
 
   // Determine if we should show the current step
