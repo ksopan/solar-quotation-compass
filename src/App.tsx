@@ -51,7 +51,7 @@ const App = () => (
             } />
             <Route path="/quotation-requests" element={
               <ProtectedRoute>
-                <VendorDashboard />
+                <QuotationRequests />
               </ProtectedRoute>
             } />
             <Route path="/vendor-profile" element={
