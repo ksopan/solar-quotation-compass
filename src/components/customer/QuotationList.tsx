@@ -8,6 +8,7 @@ import { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import QuotationDetails from "./QuotationDetails";
+import ProposalDetailsModal from "./ProposalDetailsModal";
 import { useAuth } from "@/contexts/auth";
 import { useCustomerQuotations } from "@/hooks/useCustomerQuotations";
 
@@ -57,6 +58,7 @@ export const QuotationList: React.FC<QuotationListProps> = ({
   deleteQuotation 
 }) => {
   const [selectedQuotation, setSelectedQuotation] = useState<QuotationItem | null>(null);
+  const [selectedQuestionnaireId, setSelectedQuestionnaireId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -93,17 +95,15 @@ export const QuotationList: React.FC<QuotationListProps> = ({
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      case "approved":
-        return <Badge variant="outline" className="bg-green-100 text-green-800">Approved</Badge>;
-      case "rejected":
-        return <Badge variant="outline" className="bg-red-100 text-red-800">Rejected</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+  const getStatusBadge = (quotation: QuotationItem) => {
+    const proposalCount = quotation.quotation_proposals?.length || 0;
+    
+    if (proposalCount === 0) {
+      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Awaiting Proposals</Badge>;
     }
+    return <Badge variant="outline" className="bg-green-100 text-green-800">
+      {proposalCount} Proposal{proposalCount > 1 ? 's' : ''} Received
+    </Badge>;
   };
 
   if (loading) {
@@ -152,12 +152,12 @@ export const QuotationList: React.FC<QuotationListProps> = ({
                   <TableRow key={quotation.id}>
                     <TableCell>{format(new Date(quotation.created_at), "MMM d, yyyy")}</TableCell>
                     <TableCell>{quotation.property_type} ({quotation.ownership_status})</TableCell>
-                    <TableCell>{getStatusBadge(quotation.is_completed ? 'completed' : 'pending')}</TableCell>
+                    <TableCell>{getStatusBadge(quotation)}</TableCell>
                     <TableCell>{quotation.quotation_proposals?.length || 0}</TableCell>
                     <TableCell className="text-right">
                       <Button
                         size="sm"
-                        onClick={() => setSelectedQuotation(quotation)}
+                        onClick={() => setSelectedQuestionnaireId(quotation.id)}
                       >
                         View Details
                       </Button>
@@ -170,13 +170,12 @@ export const QuotationList: React.FC<QuotationListProps> = ({
         </CardContent>
       </Card>
 
-      {/* Modal for details + delete */}
-      {selectedQuotation && (
-        <QuotationDetails
-          quotation={mapToQuotationDetails(selectedQuotation)}
-          isOpen={!!selectedQuotation}
-          onClose={() => setSelectedQuotation(null)}
-          onDelete={handleDeleteQuotation}
+      {/* Modal for proposal details */}
+      {selectedQuestionnaireId && (
+        <ProposalDetailsModal
+          questionnaireId={selectedQuestionnaireId}
+          isOpen={!!selectedQuestionnaireId}
+          onClose={() => setSelectedQuestionnaireId(null)}
         />
       )}
     </>
