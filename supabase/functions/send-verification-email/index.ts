@@ -30,7 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
     const appUrl = Deno.env.get("APP_URL") || "https://agmsvskzasrqnlijtwbg.supabase.co";
 
     const emailResponse = await resend.emails.send({
-      from: "Solar Quotes <onboarding@resend.dev>",
+      from: "Solar Quotes <noreply@energywise.ca>",
       to: [email],
       subject: "Verify Your Solar Quotation Request",
       html: `
