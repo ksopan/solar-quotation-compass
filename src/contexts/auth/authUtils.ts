@@ -1,15 +1,35 @@
 
 import { User } from "./types";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+// Fetch user role from database (server-side validation)
+const fetchUserRole = async (userId: string): Promise<"customer" | "vendor" | "admin"> => {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .single();
+
+  if (error || !data) {
+    console.error("Failed to fetch user role:", error);
+    return "customer"; // Safe default
+  }
+
+  return data.role as "customer" | "vendor" | "admin";
+};
 
 // Transform Supabase user data to our User interface
-export const transformUserData = (supabaseUser: any): User => {
+export const transformUserData = async (supabaseUser: any): Promise<User> => {
   const metadata = supabaseUser.user_metadata || {};
+  
+  // Fetch role from database instead of trusting JWT metadata
+  const role = await fetchUserRole(supabaseUser.id);
   
   return {
     id: supabaseUser.id,
     email: supabaseUser.email || "",
-    role: metadata.role || "customer",
+    role,
     fullName: metadata.fullName,
     firstName: metadata.firstName,
     lastName: metadata.lastName,

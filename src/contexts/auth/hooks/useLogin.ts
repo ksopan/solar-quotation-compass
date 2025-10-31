@@ -70,7 +70,7 @@ export const useLogin = (
       }
       
       // Transform data
-      const userData = transformUserData(data.user);
+      const userData = await transformUserData(data.user);
       setUser(userData);
       
       // Redirect based on completion and role

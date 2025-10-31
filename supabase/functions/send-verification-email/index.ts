@@ -5,8 +5,7 @@ const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface VerificationEmailRequest {
@@ -16,13 +15,56 @@ interface VerificationEmailRequest {
   verificationToken: string;
 }
 
+// Input validation and sanitization
+const validateAndSanitize = (data: any): VerificationEmailRequest => {
+  const { email, firstName, lastName, verificationToken } = data;
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || typeof email !== "string" || !emailRegex.test(email) || email.length > 255) {
+    throw new Error("Invalid email address");
+  }
+
+  // Validate name fields
+  if (!firstName || typeof firstName !== "string" || firstName.trim().length === 0 || firstName.length > 100) {
+    throw new Error("Invalid first name");
+  }
+  if (!lastName || typeof lastName !== "string" || lastName.trim().length === 0 || lastName.length > 100) {
+    throw new Error("Invalid last name");
+  }
+
+  // Validate token is a UUID
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!verificationToken || typeof verificationToken !== "string" || !uuidRegex.test(verificationToken)) {
+    throw new Error("Invalid verification token");
+  }
+
+  // HTML escape function to prevent XSS
+  const escapeHtml = (unsafe: string): string => {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
+
+  return {
+    email: email.trim(),
+    firstName: escapeHtml(firstName.trim()),
+    lastName: escapeHtml(lastName.trim()),
+    verificationToken: verificationToken.trim(),
+  };
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, firstName, lastName, verificationToken }: VerificationEmailRequest = await req.json();
+    const rawData = await req.json();
+    const { email, firstName, lastName, verificationToken } = validateAndSanitize(rawData);
 
     console.log("Sending verification email to:", email);
 
@@ -119,11 +161,17 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error sending verification email:", error);
+    console.error("Error in send-verification-email function:", error);
+    
+    // Return generic error message to client, log details server-side
+    const isValidationError = error.message?.includes("Invalid");
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: isValidationError ? error.message : "Unable to send verification email. Please try again later.",
+        code: "EMAIL_SEND_FAILED"
+      }),
       {
-        status: 500,
+        status: isValidationError ? 400 : 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );

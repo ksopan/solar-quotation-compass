@@ -103,13 +103,13 @@ const AuthCallback = () => {
           }
         }
         
-        const userData = transformUserData(data.session.user);
+        const userData = await transformUserData(data.session.user);
         
         setMessage("Login successful. Redirecting...");
         
         // Redirect based on profile completion
         setTimeout(() => {
-          if (isProfileComplete(userData as User)) {
+          if (isProfileComplete(userData)) {
             navigate("/");
           } else {
             navigate("/complete-profile");

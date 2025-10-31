@@ -38,7 +38,7 @@ export const useProfileManagement = (
       
       // Update local state with new user data
       if (data.user) {
-        const updatedUser = transformUserData(data.user);
+        const updatedUser = await transformUserData(data.user);
         setUser(updatedUser);
         toast.success("Profile updated successfully!");
       }
