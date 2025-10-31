@@ -98,6 +98,7 @@ export const useRegistration = (
       if (data.user) {
         // For questionnaire users, auto-confirm their email
         if (fromQuestionnaireFlow) {
+          console.log("Auto-confirming questionnaire user:", data.user.id);
           try {
             const { error: confirmError } = await supabase.functions.invoke(
               'confirm-questionnaire-user',
@@ -115,6 +116,7 @@ export const useRegistration = (
               return;
             }
             
+            console.log("User auto-confirmed successfully");
             toast.success("Registration successful!", {
               description: "Please log in to continue."
             });
@@ -128,6 +130,7 @@ export const useRegistration = (
           }
         } else {
           // Direct registration - show email verification message
+          console.log("Direct registration - email verification required");
           toast.success("Registration successful!", {
             description: "Please check your email to verify your account before logging in."
           });

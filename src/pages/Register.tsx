@@ -83,11 +83,18 @@ const Register = () => {
     try {
       const { confirmPassword, ...registrationData } = data;
       
+      // Only consider it questionnaire flow if we have questionnaire_id stored
+      const questionnaireId = localStorage.getItem("questionnaire_id") || sessionStorage.getItem("questionnaire_id");
+      const isFromQuestionnaireFlow = !!questionnaireId;
+      
+      console.log("Registration - questionnaireId:", questionnaireId);
+      console.log("Registration - fromQuestionnaireFlow:", isFromQuestionnaireFlow);
+      
       await authRegister({
         ...registrationData,
         password: registrationData.password,
         role: registrationData.role,
-        fromQuestionnaireFlow: !!questionnaireData
+        fromQuestionnaireFlow: isFromQuestionnaireFlow
       });
       
       // Keep questionnaire data in sessionStorage for post-confirmation save
