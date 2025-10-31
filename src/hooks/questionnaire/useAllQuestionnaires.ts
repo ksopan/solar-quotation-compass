@@ -45,7 +45,8 @@ export const useAllQuestionnaires = () => {
           acceptance_deadline,
           version,
           verification_token,
-          verified_at
+          verified_at,
+          verification_token_expires_at
         `)
         .order('created_at', { ascending: false });
         

@@ -70,7 +70,8 @@ export const fetchQuestionnaires = async (
           acceptance_deadline,
           version,
           verification_token,
-          verified_at
+          verified_at,
+          verification_token_expires_at
         `, { count: 'exact' })
         .eq('is_completed', true)  // Only get completed questionnaires
         .in('status', ['active', 'submitted', 'under_review', 'proposals_received'])  // Only show active and submitted questionnaires
