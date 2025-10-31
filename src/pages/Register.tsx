@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MainLayout } from "@/components/layouts/MainLayout";
@@ -12,6 +14,8 @@ import { VendorRegistrationForm } from "@/components/register/VendorRegistration
 import { AdminRegistrationForm } from "@/components/register/AdminRegistrationForm";
 import { customerSchema, vendorSchema, adminSchema, RegisterFormValues } from "@/components/register/registerSchemas";
 import { Home } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
   const { register: authRegister, loginWithOAuth } = useAuth();
@@ -19,6 +23,8 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"customer" | "vendor" | "admin">("customer");
   const [questionnaireData, setQuestionnaireData] = useState<any | null>(null);
+  const [resendEmail, setResendEmail] = useState("");
+  const [isResending, setIsResending] = useState(false);
 
   const {
     register,
@@ -132,6 +138,45 @@ const Register = () => {
     loginWithOAuth(provider);
   };
 
+  const handleResendVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!resendEmail) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    setIsResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: resendEmail,
+      });
+
+      if (error) {
+        if (error.message.includes("already confirmed") || error.message.includes("already verified")) {
+          toast.error("Email already verified", {
+            description: "This email is already confirmed. Please log in."
+          });
+        } else {
+          toast.error("Failed to resend", {
+            description: error.message
+          });
+        }
+      } else {
+        toast.success("Verification email resent!", {
+          description: "Please check your inbox for the verification link."
+        });
+        setResendEmail("");
+      }
+    } catch (error) {
+      console.error("Resend error:", error);
+      toast.error("Failed to resend verification email");
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   return (
     <MainLayout>
       <div className="flex justify-center items-center py-8">
@@ -229,6 +274,38 @@ const Register = () => {
               </Link>
             </p>
           </CardFooter>
+        </Card>
+
+        {/* Resend Verification Email Section */}
+        <Card className="w-full max-w-lg mt-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Didn't Receive Verification Email?</CardTitle>
+            <CardDescription>
+              Enter your email address to resend the verification link
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleResendVerification} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="resend-email">Email Address</Label>
+                <Input
+                  id="resend-email"
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={resendEmail}
+                  onChange={(e) => setResendEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <Button 
+                type="submit" 
+                disabled={isResending}
+                className="w-full"
+              >
+                {isResending ? "Sending..." : "Resend Verification Email"}
+              </Button>
+            </form>
+          </CardContent>
         </Card>
       </div>
     </MainLayout>
