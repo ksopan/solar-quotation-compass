@@ -2,3 +2,6 @@ project_id = "agmsvskzasrqnlijtwbg"
 
 [functions.verify-questionnaire]
 verify_jwt = false
+
+[functions.confirm-questionnaire-user]
+verify_jwt = false
