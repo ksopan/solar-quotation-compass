@@ -96,9 +96,8 @@ export const useRegistration = (
 
       if (data.user) {
         // Questionnaire data will be saved after email confirmation during login
-        // Email/password signup (always requires email confirmation)
         toast.success("Registration successful!", {
-          description: "Please check your email to confirm your account before logging in."
+          description: "Please check your email from noreply@energiwise.ca to confirm your account before logging in."
         });
         
         // Sign out immediately for email/password registration
