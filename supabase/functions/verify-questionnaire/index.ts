@@ -106,7 +106,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, {
       status: 302,
       headers: {
-        Location: `${origin}/verification-success?verified=success&email=${encodeURIComponent(questionnaire.email)}`,
+        Location: `${origin}/verification-success?verified=success&email=${encodeURIComponent(questionnaire.email)}&questionnaireId=${questionnaire.id}`,
         ...corsHeaders,
       },
     });

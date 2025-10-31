@@ -9,6 +9,7 @@ export default function VerificationSuccess() {
   const navigate = useNavigate();
   const verified = searchParams.get("verified");
   const email = searchParams.get("email");
+  const questionnaireId = searchParams.get("questionnaireId");
 
   useEffect(() => {
     // If already verified, show different message
@@ -65,7 +66,14 @@ export default function VerificationSuccess() {
 
         <div className="space-y-3">
           <Button
-            onClick={() => navigate("/register")}
+            onClick={() => {
+              // Store questionnaire info in localStorage for registration flow
+              if (questionnaireId && email) {
+                localStorage.setItem("questionnaire_id", questionnaireId);
+                localStorage.setItem("questionnaire_email", email);
+              }
+              navigate("/register");
+            }}
             className="w-full"
             size="lg"
           >

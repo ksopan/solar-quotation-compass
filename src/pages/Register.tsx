@@ -43,7 +43,23 @@ const Register = () => {
   });
 
   useEffect(() => {
+    // Check localStorage first (for email verification flow), then sessionStorage
+    const questionnaireId = localStorage.getItem("questionnaire_id") || sessionStorage.getItem("questionnaire_id");
+    const questionnaireEmail = localStorage.getItem("questionnaire_email");
     const storedQuestionnaireData = sessionStorage.getItem("questionnaire_data");
+    
+    if (questionnaireId) {
+      // We have a questionnaire ID, set it for later linking
+      sessionStorage.setItem("questionnaire_id", questionnaireId);
+      
+      // If we have email from verification, use it
+      if (questionnaireEmail) {
+        setValue("email", questionnaireEmail);
+        setQuestionnaireData({ email: questionnaireEmail });
+        setActiveTab("customer");
+      }
+    }
+    
     if (storedQuestionnaireData) {
       try {
         const parsedData = JSON.parse(storedQuestionnaireData);

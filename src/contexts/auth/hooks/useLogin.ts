@@ -38,8 +38,8 @@ export const useLogin = (
 
       toast.success("Logged in successfully!");
       
-      // Check for pending questionnaire from registration flow
-      const questionnaireId = sessionStorage.getItem("questionnaire_id");
+      // Check for pending questionnaire from registration flow (check both localStorage and sessionStorage)
+      const questionnaireId = localStorage.getItem("questionnaire_id") || sessionStorage.getItem("questionnaire_id");
       if (questionnaireId && expectedRole === "customer") {
         try {
           // Link the existing questionnaire to this user
@@ -61,6 +61,8 @@ export const useLogin = (
             toast.success("Your solar quotation request has been linked to your account!");
             sessionStorage.removeItem("questionnaire_data");
             sessionStorage.removeItem("questionnaire_id");
+            localStorage.removeItem("questionnaire_id");
+            localStorage.removeItem("questionnaire_email");
           }
         } catch (err) {
           console.error("Error processing questionnaire link:", err);
