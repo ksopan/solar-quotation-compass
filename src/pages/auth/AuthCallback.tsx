@@ -71,43 +71,35 @@ const AuthCallback = () => {
           return;
         }
         
-        // Check for questionnaire data in localStorage (OAuth) or sessionStorage (email confirmation)
-        const questionnaireData = localStorage.getItem("questionnaire_data") || sessionStorage.getItem("questionnaire_data");
-        if (questionnaireData && data.session.user) {
-          setMessage("Processing your questionnaire data...");
+        // Check for pending questionnaire from OAuth or email confirmation flow
+        const questionnaireId = localStorage.getItem("questionnaire_id") || sessionStorage.getItem("questionnaire_id");
+        if (questionnaireId && data.session.user) {
+          setMessage("Linking your quotation request...");
           try {
-            const parsedData = JSON.parse(questionnaireData);
-            
-            // Save questionnaire data with user ID
-            const { error: insertError } = await supabase
+            // Link the existing questionnaire to this user
+            const { error: updateError } = await supabase
               .from("property_questionnaires")
-              .insert({
-                property_type: parsedData.property_type,
-                ownership_status: parsedData.ownership_status,
-                monthly_electric_bill: parsedData.monthly_electric_bill,
-                interested_in_batteries: parsedData.interested_in_batteries,
-                battery_reason: parsedData.battery_reason,
-                purchase_timeline: parsedData.purchase_timeline,
-                willing_to_remove_trees: parsedData.willing_to_remove_trees,
-                roof_age_status: parsedData.roof_age_status,
-                first_name: parsedData.first_name,
-                last_name: parsedData.last_name,
-                email: parsedData.email,
+              .update({
                 customer_id: data.session.user.id,
-                is_completed: true
-              });
+                status: 'submitted',
+                submitted_at: new Date().toISOString()
+              })
+              .eq('id', questionnaireId)
+              .is('customer_id', null);
               
-            if (insertError) {
-              console.error("Error saving questionnaire data after OAuth:", insertError);
-              toast.error("Failed to process your questionnaire data");
+            if (updateError) {
+              console.error("Error linking questionnaire to user:", updateError);
+              toast.error("Failed to link your quotation request");
             } else {
-              console.log("Successfully saved questionnaire with user ID after authentication");
-              toast.success("Your questionnaire has been saved to your account");
+              console.log("Successfully linked questionnaire to user:", questionnaireId);
+              toast.success("Your solar quotation request has been linked to your account!");
               localStorage.removeItem("questionnaire_data");
+              localStorage.removeItem("questionnaire_id");
               sessionStorage.removeItem("questionnaire_data");
+              sessionStorage.removeItem("questionnaire_id");
             }
           } catch (err) {
-            console.error("Error processing questionnaire data after OAuth:", err);
+            console.error("Error processing questionnaire link:", err);
           }
         }
         

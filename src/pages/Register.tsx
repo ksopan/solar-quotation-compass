@@ -100,6 +100,10 @@ const Register = () => {
   const handleOAuthRegister = (provider: "google" | "twitter") => {
     if (questionnaireData) {
       localStorage.setItem("questionnaire_data", JSON.stringify(questionnaireData));
+      const questionnaireId = sessionStorage.getItem("questionnaire_id");
+      if (questionnaireId) {
+        localStorage.setItem("questionnaire_id", questionnaireId);
+      }
     }
     loginWithOAuth(provider);
   };

@@ -38,41 +38,32 @@ export const useLogin = (
 
       toast.success("Logged in successfully!");
       
-      // Check for questionnaire data in sessionStorage (from registration flow)
-      const questionnaireData = sessionStorage.getItem("questionnaire_data");
-      if (questionnaireData && expectedRole === "customer") {
+      // Check for pending questionnaire from registration flow
+      const questionnaireId = sessionStorage.getItem("questionnaire_id");
+      if (questionnaireId && expectedRole === "customer") {
         try {
-          const parsedData = JSON.parse(questionnaireData);
-          
-          // Save questionnaire data with user ID
-          const { error: insertError } = await supabase
+          // Link the existing questionnaire to this user
+          const { error: updateError } = await supabase
             .from("property_questionnaires")
-            .insert({
-              property_type: parsedData.property_type,
-              ownership_status: parsedData.ownership_status,
-              monthly_electric_bill: parsedData.monthly_electric_bill,
-              interested_in_batteries: parsedData.interested_in_batteries,
-              battery_reason: parsedData.battery_reason,
-              purchase_timeline: parsedData.purchase_timeline,
-              willing_to_remove_trees: parsedData.willing_to_remove_trees,
-              roof_age_status: parsedData.roof_age_status,
-              first_name: parsedData.first_name,
-              last_name: parsedData.last_name,
-              email: parsedData.email,
+            .update({
               customer_id: data.user.id,
-              is_completed: true
-            });
+              status: 'submitted',
+              submitted_at: new Date().toISOString()
+            })
+            .eq('id', questionnaireId)
+            .is('customer_id', null);
             
-          if (insertError) {
-            console.error("Error saving questionnaire data after login:", insertError);
-            toast.error("Failed to save your questionnaire data");
+          if (updateError) {
+            console.error("Error linking questionnaire to user:", updateError);
+            toast.error("Failed to link your questionnaire");
           } else {
-            console.log("Successfully saved questionnaire after login");
-            toast.success("Your questionnaire has been saved!");
+            console.log("Successfully linked questionnaire to user:", questionnaireId);
+            toast.success("Your solar quotation request has been linked to your account!");
             sessionStorage.removeItem("questionnaire_data");
+            sessionStorage.removeItem("questionnaire_id");
           }
         } catch (err) {
-          console.error("Error processing questionnaire data after login:", err);
+          console.error("Error processing questionnaire link:", err);
         }
       }
       
