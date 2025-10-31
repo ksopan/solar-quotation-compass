@@ -19,7 +19,7 @@ export interface AuthContextType {
   login: (email: string, password: string, role: UserRole) => Promise<void>;
   loginWithOAuth: (provider: "google" | "twitter") => Promise<void>;
   logout: () => Promise<void>;
-  register: (userData: Partial<User> & { password: string; role: UserRole; questionnaireData?: any }) => Promise<void>;
+  register: (userData: Partial<User> & { password: string; role: UserRole; questionnaireData?: any; fromQuestionnaireFlow?: boolean }) => Promise<void>;
   updateProfile: (userData: Partial<User>) => Promise<void>;
   isProfileComplete: () => boolean;
   sendPasswordResetEmail: (email: string) => Promise<boolean>;

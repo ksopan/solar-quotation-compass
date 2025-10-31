@@ -70,7 +70,8 @@ const Register = () => {
       await authRegister({
         ...registrationData,
         password: registrationData.password,
-        role: registrationData.role
+        role: registrationData.role,
+        fromQuestionnaireFlow: !!questionnaireData
       });
       
       // Keep questionnaire data in sessionStorage for post-confirmation save

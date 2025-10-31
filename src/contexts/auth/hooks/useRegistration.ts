@@ -16,11 +16,12 @@ export const useRegistration = (
     password: string; 
     role: UserRole;
     questionnaireData?: any;
+    fromQuestionnaireFlow?: boolean;
   }) => {
     setLoading(true);
     try {
       // Extract questionnaire data if provided
-      const { questionnaireData, ...registrationData } = userData;
+      const { questionnaireData, fromQuestionnaireFlow, ...registrationData } = userData;
       
       // Step 1: Check profile tables for this email - this is more reliable than auth.users
       const [customerResponse, vendorResponse, adminResponse] = await Promise.all([
@@ -95,10 +96,16 @@ export const useRegistration = (
       }
 
       if (data.user) {
-        // Questionnaire data will be saved after email confirmation during login
-        toast.success("Registration successful!", {
-          description: "Please check your email from noreply@energiwise.ca to confirm your account before logging in."
-        });
+        // Show different message based on registration flow
+        if (fromQuestionnaireFlow) {
+          toast.success("Registration successful!", {
+            description: "Please log in to continue."
+          });
+        } else {
+          toast.success("Registration successful!", {
+            description: "Please check your email from noreply@energiwise.ca to confirm your account before logging in."
+          });
+        }
         
         // Sign out immediately for email/password registration
         await supabase.auth.signOut();
