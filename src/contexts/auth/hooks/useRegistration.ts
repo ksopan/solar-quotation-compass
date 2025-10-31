@@ -96,16 +96,10 @@ export const useRegistration = (
       }
 
       if (data.user) {
-        // Show different message based on registration flow
-        if (fromQuestionnaireFlow) {
-          toast.success("Registration successful!", {
-            description: "Please log in to continue."
-          });
-        } else {
-          toast.success("Registration successful!", {
-            description: "Please check your email from noreply@energiwise.ca to confirm your account before logging in."
-          });
-        }
+        // Show success message - auto-confirm is enabled so no email verification needed
+        toast.success("Registration successful!", {
+          description: "Please log in to continue."
+        });
         
         // Sign out immediately for email/password registration
         await supabase.auth.signOut();
