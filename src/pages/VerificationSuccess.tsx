@@ -22,7 +22,13 @@ export default function VerificationSuccess() {
   const isAlreadyVerified = verified === "already";
   const isSuccess = verified === "success";
 
+  if (!verified) {
+    navigate("/");
+    return null;
+  }
+
   if (!isSuccess && !isAlreadyVerified) {
+    navigate("/");
     return null;
   }
 

@@ -54,12 +54,12 @@ const handler = async (req: Request): Promise<Response> => {
     // Check if already verified
     if (questionnaire.verified_at) {
       console.log("Questionnaire already verified");
-      // Redirect to success page
-      const appUrl = "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com";
+      // Redirect to success page - use origin from request or fallback to env
+      const origin = req.headers.get("origin") || Deno.env.get("SUPABASE_URL")?.replace(/https:\/\/\w+\.supabase\.co/, "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com") || "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com";
       return new Response(null, {
         status: 302,
         headers: {
-          Location: `${appUrl}/verification-success?verified=already`,
+          Location: `${origin}/verification-success?verified=already`,
           ...corsHeaders,
         },
       });
@@ -101,12 +101,12 @@ const handler = async (req: Request): Promise<Response> => {
       // Don't fail the verification if vendor notification fails
     }
 
-    // Redirect to success page
-    const appUrl = "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com";
+    // Redirect to success page - use origin from request or fallback to env
+    const origin = req.headers.get("origin") || Deno.env.get("SUPABASE_URL")?.replace(/https:\/\/\w+\.supabase\.co/, "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com") || "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com";
     return new Response(null, {
       status: 302,
       headers: {
-        Location: `${appUrl}/verification-success?verified=success&email=${encodeURIComponent(questionnaire.email)}`,
+        Location: `${origin}/verification-success?verified=success&email=${encodeURIComponent(questionnaire.email)}`,
         ...corsHeaders,
       },
     });
