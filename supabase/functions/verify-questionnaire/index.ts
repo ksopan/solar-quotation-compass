@@ -55,7 +55,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (questionnaire.verified_at) {
       console.log("Questionnaire already verified");
       // Redirect to success page
-      const appUrl = Deno.env.get("APP_URL") || "https://agmsvskzasrqnlijtwbg.supabase.co";
+      const appUrl = "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com";
       return new Response(null, {
         status: 302,
         headers: {
@@ -102,7 +102,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Redirect to success page
-    const appUrl = Deno.env.get("APP_URL") || "https://agmsvskzasrqnlijtwbg.supabase.co";
+    const appUrl = "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com";
     return new Response(null, {
       status: 302,
       headers: {
