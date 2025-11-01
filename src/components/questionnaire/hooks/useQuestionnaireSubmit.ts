@@ -20,6 +20,10 @@ export const useQuestionnaireSubmit = ({ onOpenChange, formData }: UseQuestionna
       console.log("Creating questionnaire in database:", formData);
 
       // Create the questionnaire in the database with pending_verification status
+      // Set token expiration to 24 hours from now
+      const tokenExpiration = new Date();
+      tokenExpiration.setHours(tokenExpiration.getHours() + 24);
+      
       const { data: questionnaire, error: createError } = await supabase
         .from("property_questionnaires")
         .insert({
@@ -37,6 +41,7 @@ export const useQuestionnaireSubmit = ({ onOpenChange, formData }: UseQuestionna
           status: 'pending_verification',
           is_completed: false,
           customer_id: null, // Will be linked after registration
+          verification_token_expires_at: tokenExpiration.toISOString()
         })
         .select()
         .single();
