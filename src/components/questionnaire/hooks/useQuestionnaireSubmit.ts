@@ -17,9 +17,12 @@ export const useQuestionnaireSubmit = ({ onOpenChange, formData }: UseQuestionna
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
-      console.log("Creating questionnaire in database:", formData);
+      console.log("🚀 Starting questionnaire submission...");
+      console.log("📝 Form data:", formData);
+      console.log("👤 Current auth user:", (await supabase.auth.getUser()).data.user);
 
       // Create the questionnaire in the database with pending_verification status
+      console.log("💾 Attempting to insert questionnaire into database...");
       const { data: questionnaire, error: createError } = await supabase
         .from("property_questionnaires")
         .insert({
@@ -42,15 +45,25 @@ export const useQuestionnaireSubmit = ({ onOpenChange, formData }: UseQuestionna
         .single();
 
       if (createError) {
-        console.error("Error creating questionnaire:", createError);
+        console.error("❌ Error creating questionnaire:", createError);
+        console.error("❌ Error details:", JSON.stringify(createError, null, 2));
         toast.error("Failed to submit your questionnaire. Please try again.");
         return;
       }
 
-      console.log("Questionnaire created successfully:", questionnaire);
+      console.log("✅ Questionnaire created successfully!");
+      console.log("📄 Questionnaire data:", questionnaire);
 
       // Send verification email
-      const { error: emailError } = await supabase.functions.invoke("send-verification-email", {
+      console.log("📧 Attempting to send verification email...");
+      console.log("📧 Email parameters:", {
+        email: formData.email,
+        firstName: formData.first_name,
+        lastName: formData.last_name,
+        hasToken: !!questionnaire.verification_token,
+      });
+
+      const { data: emailData, error: emailError } = await supabase.functions.invoke("send-verification-email", {
         body: {
           email: formData.email,
           firstName: formData.first_name,
@@ -60,26 +73,34 @@ export const useQuestionnaireSubmit = ({ onOpenChange, formData }: UseQuestionna
       });
 
       if (emailError) {
-        console.error("Error sending verification email:", emailError);
+        console.error("❌ Error sending verification email:", emailError);
+        console.error("❌ Email error details:", JSON.stringify(emailError, null, 2));
         toast.error("Questionnaire submitted but failed to send verification email.");
         return;
       }
 
+      console.log("✅ Verification email sent successfully!");
+      console.log("📧 Email response:", emailData);
+
       // Store questionnaire data in sessionStorage for later registration
+      console.log("💾 Storing data in sessionStorage...");
       sessionStorage.setItem("questionnaire_data", JSON.stringify(formData));
       sessionStorage.setItem("questionnaire_id", questionnaire.id);
       
       // Success! Show message and close modal
+      console.log("🎉 Questionnaire submission complete!");
       toast.success("Thank you! Please check your email to verify your request.");
       onOpenChange(false);
       
       // Redirect to a success page or show registration option
       setTimeout(() => navigate("/?submitted=success"), 1000);
     } catch (error) {
-      console.error("Error handling questionnaire:", error);
+      console.error("❌ Unexpected error handling questionnaire:", error);
+      console.error("❌ Error stack:", error instanceof Error ? error.stack : 'No stack trace');
       toast.error("Failed to process your questionnaire. Please try again.");
     } finally {
       setIsSubmitting(false);
+      console.log("🔄 Submission process ended");
     }
   };
 
