@@ -96,45 +96,10 @@ export const useRegistration = (
       }
 
       if (data.user) {
-        // For questionnaire users, auto-confirm their email
-        if (fromQuestionnaireFlow) {
-          console.log("Auto-confirming questionnaire user:", data.user.id);
-          try {
-            const { error: confirmError } = await supabase.functions.invoke(
-              'confirm-questionnaire-user',
-              {
-                body: { userId: data.user.id }
-              }
-            );
-            
-            if (confirmError) {
-              console.error("Error auto-confirming user:", confirmError);
-              toast.error("Registration failed", {
-                description: "Could not complete registration. Please try again."
-              });
-              setLoading(false);
-              return;
-            }
-            
-            console.log("User auto-confirmed successfully");
-            toast.success("Registration successful!", {
-              description: "Please log in to continue."
-            });
-          } catch (err) {
-            console.error("Error in auto-confirm:", err);
-            toast.error("Registration failed", {
-              description: "Could not complete registration. Please try again."
-            });
-            setLoading(false);
-            return;
-          }
-        } else {
-          // Direct registration - show email verification message
-          console.log("Direct registration - email verification required");
-          toast.success("Registration successful!", {
-            description: "Please check your email to verify your account before logging in."
-          });
-        }
+        // All users must verify their email
+        toast.success("Registration successful!", {
+          description: "Please check your email to verify your account before logging in."
+        });
         
         // Sign out immediately for email/password registration
         await supabase.auth.signOut();
