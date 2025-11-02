@@ -85,15 +85,7 @@ const Register = () => {
   }, [setValue]);
 
   const onSubmit = async (data: RegisterFormValues) => {
-    console.log("🔵 [Register] Form submitted with data:", { 
-      email: data.email, 
-      role: data.role,
-      hasPassword: !!data.password 
-    });
-    
     setIsLoading(true);
-    console.log("🔵 [Register] Loading state set to true");
-    
     try {
       const { confirmPassword, ...registrationData } = data;
       
@@ -101,9 +93,8 @@ const Register = () => {
       const questionnaireId = localStorage.getItem("questionnaire_id") || sessionStorage.getItem("questionnaire_id");
       const isFromQuestionnaireFlow = !!questionnaireId;
       
-      console.log("🔵 [Register] questionnaireId:", questionnaireId);
-      console.log("🔵 [Register] fromQuestionnaireFlow:", isFromQuestionnaireFlow);
-      console.log("🔵 [Register] About to call authRegister");
+      console.log("Registration - questionnaireId:", questionnaireId);
+      console.log("Registration - fromQuestionnaireFlow:", isFromQuestionnaireFlow);
       
       await authRegister({
         ...registrationData,
@@ -112,14 +103,10 @@ const Register = () => {
         fromQuestionnaireFlow: isFromQuestionnaireFlow
       });
       
-      console.log("🔵 [Register] authRegister completed successfully");
-    } catch (error: any) {
-      console.error("🔴 [Register] Error caught:", error);
-      toast.error("Registration failed", {
-        description: error?.message || "Please try again"
-      });
+      // Keep questionnaire data in sessionStorage for post-confirmation save
+      // It will be removed after successful save in useLogin
+    } catch (error) {
     } finally {
-      console.log("🔵 [Register] Finally block - setting loading to false");
       setIsLoading(false);
     }
   };
