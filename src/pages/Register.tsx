@@ -95,6 +95,7 @@ const Register = () => {
       
       console.log("Registration - questionnaireId:", questionnaireId);
       console.log("Registration - fromQuestionnaireFlow:", isFromQuestionnaireFlow);
+      console.log("Starting registration...");
       
       await authRegister({
         ...registrationData,
@@ -103,10 +104,15 @@ const Register = () => {
         fromQuestionnaireFlow: isFromQuestionnaireFlow
       });
       
-      // Keep questionnaire data in sessionStorage for post-confirmation save
-      // It will be removed after successful save in useLogin
-    } catch (error) {
+      console.log("Registration completed successfully");
+      // Navigation happens inside authRegister
+    } catch (error: any) {
+      console.error("Registration error in component:", error);
+      toast.error("Registration failed", {
+        description: error?.message || "Please try again"
+      });
     } finally {
+      console.log("Setting loading to false");
       setIsLoading(false);
     }
   };
