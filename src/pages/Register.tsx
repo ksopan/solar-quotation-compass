@@ -85,7 +85,15 @@ const Register = () => {
   }, [setValue]);
 
   const onSubmit = async (data: RegisterFormValues) => {
+    console.log("🔵 [Register] Form submitted with data:", { 
+      email: data.email, 
+      role: data.role,
+      hasPassword: !!data.password 
+    });
+    
     setIsLoading(true);
+    console.log("🔵 [Register] Loading state set to true");
+    
     try {
       const { confirmPassword, ...registrationData } = data;
       
@@ -93,9 +101,9 @@ const Register = () => {
       const questionnaireId = localStorage.getItem("questionnaire_id") || sessionStorage.getItem("questionnaire_id");
       const isFromQuestionnaireFlow = !!questionnaireId;
       
-      console.log("Registration - questionnaireId:", questionnaireId);
-      console.log("Registration - fromQuestionnaireFlow:", isFromQuestionnaireFlow);
-      console.log("Starting registration...");
+      console.log("🔵 [Register] questionnaireId:", questionnaireId);
+      console.log("🔵 [Register] fromQuestionnaireFlow:", isFromQuestionnaireFlow);
+      console.log("🔵 [Register] About to call authRegister");
       
       await authRegister({
         ...registrationData,
@@ -104,15 +112,14 @@ const Register = () => {
         fromQuestionnaireFlow: isFromQuestionnaireFlow
       });
       
-      console.log("Registration completed successfully");
-      // Navigation happens inside authRegister
+      console.log("🔵 [Register] authRegister completed successfully");
     } catch (error: any) {
-      console.error("Registration error in component:", error);
+      console.error("🔴 [Register] Error caught:", error);
       toast.error("Registration failed", {
         description: error?.message || "Please try again"
       });
     } finally {
-      console.log("Setting loading to false");
+      console.log("🔵 [Register] Finally block - setting loading to false");
       setIsLoading(false);
     }
   };
