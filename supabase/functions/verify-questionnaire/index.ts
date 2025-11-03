@@ -16,10 +16,16 @@ const handler = async (req: Request): Promise<Response> => {
     const url = new URL(req.url);
     const token = url.searchParams.get('token');
 
+    const origin = req.headers.get("origin") || "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com";
+
     if (!token) {
-      return new Response("Missing verification token", { 
-        status: 400,
-        headers: corsHeaders 
+      console.warn("Missing verification token");
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: `${origin}/?error=invalid_token`,
+          ...corsHeaders,
+        },
       });
     }
 
@@ -27,9 +33,12 @@ const handler = async (req: Request): Promise<Response> => {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(token)) {
       console.warn(`Invalid token format attempted: ${token.substring(0, 8)}...`);
-      return new Response("Invalid verification token", { 
-        status: 400,
-        headers: corsHeaders 
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: `${origin}/?error=invalid_token`,
+          ...corsHeaders,
+        },
       });
     }
 
@@ -54,9 +63,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (fetchError || !questionnaire) {
       console.error('Failed to find questionnaire:', fetchError);
-      return new Response("Invalid or expired verification token", { 
-        status: 404,
-        headers: corsHeaders 
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: `${origin}/?error=token_expired`,
+          ...corsHeaders,
+        },
       });
     }
 
@@ -65,9 +77,12 @@ const handler = async (req: Request): Promise<Response> => {
       const expiresAt = new Date(questionnaire.verification_token_expires_at);
       if (expiresAt < new Date()) {
         console.warn(`Expired token attempted: ${questionnaire.id}`);
-        return new Response("Verification token has expired. Please request a new verification email.", { 
-          status: 410,
-          headers: corsHeaders 
+        return new Response(null, {
+          status: 302,
+          headers: {
+            Location: `${origin}/?error=token_expired`,
+            ...corsHeaders,
+          },
         });
       }
     }
@@ -123,7 +138,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Redirect to success page
-    const origin = req.headers.get("origin") || "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com";
+    console.log('Redirecting to verification success page');
     return new Response(null, {
       status: 302,
       headers: {

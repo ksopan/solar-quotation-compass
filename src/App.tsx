@@ -76,6 +76,11 @@ const App = () => (
                 <SubmitQuote />
               </ProtectedRoute>
             } />
+            <Route path="/vendor-dashboard" element={
+              <ProtectedRoute>
+                <VendorDashboard />
+              </ProtectedRoute>
+            } />
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />

@@ -14,16 +14,30 @@ const LandingPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isQuestionnaireOpen, setIsQuestionnaireOpen] = useState(false);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+  const [showErrorBanner, setShowErrorBanner] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   
   useEffect(() => {
     if (searchParams.get("submitted") === "success") {
       setShowSuccessBanner(true);
-      // Remove the query param
       searchParams.delete("submitted");
       setSearchParams(searchParams, { replace: true });
-      
-      // Auto-hide after 10 seconds
       setTimeout(() => setShowSuccessBanner(false), 10000);
+    }
+    
+    const error = searchParams.get("error");
+    if (error) {
+      setShowErrorBanner(true);
+      if (error === "invalid_token") {
+        setErrorMessage("The verification link is invalid or has already been used.");
+      } else if (error === "token_expired") {
+        setErrorMessage("The verification link has expired. Please submit a new request.");
+      } else {
+        setErrorMessage("Verification failed. Please try again or contact support.");
+      }
+      searchParams.delete("error");
+      setSearchParams(searchParams, { replace: true });
+      setTimeout(() => setShowErrorBanner(false), 10000);
     }
   }, [searchParams, setSearchParams]);
   
@@ -47,6 +61,24 @@ const LandingPage = () => {
                     <p className="text-sm mt-1">
                       We've sent a verification email to your inbox. Please check your email and click the verification link to activate your quotation request and connect with solar vendors.
                     </p>
+                  </div>
+                </div>
+              </AlertDescription>
+            </Alert>
+          </div>
+        </div>
+      )}
+
+      {/* Error Banner */}
+      {showErrorBanner && (
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 border-b border-red-200 py-4 px-4">
+          <div className="container mx-auto max-w-4xl">
+            <Alert className="border-red-300 bg-transparent shadow-none">
+              <AlertDescription className="ml-2 text-red-800">
+                <div className="flex items-start gap-3">
+                  <div>
+                    <p className="font-semibold">Verification Failed</p>
+                    <p className="text-sm mt-1">{errorMessage}</p>
                   </div>
                 </div>
               </AlertDescription>
