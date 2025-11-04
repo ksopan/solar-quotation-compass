@@ -25,7 +25,22 @@ export const useRegistration = (
       const { questionnaireData, fromQuestionnaireFlow, ...registrationData } = userData;
       
       console.log("[useRegistration] Checking existing profiles for email:", registrationData.email);
-      // Step 1: Check profile tables for this email - this is more reliable than auth.users
+      
+      // Step 1: Check if email was already verified via questionnaire
+      let emailAlreadyVerified = false;
+      if (fromQuestionnaireFlow) {
+        const { data: verifiedQuestionnaire } = await supabase
+          .from("property_questionnaires")
+          .select("verified_at, email")
+          .eq("email", registrationData.email!)
+          .not("verified_at", "is", null)
+          .maybeSingle();
+        
+        emailAlreadyVerified = !!verifiedQuestionnaire;
+        console.log("[useRegistration] Email already verified via questionnaire:", emailAlreadyVerified);
+      }
+      
+      // Step 2: Check profile tables for this email - this is more reliable than auth.users
       const [customerResponse, vendorResponse, adminResponse] = await Promise.all([
         supabase.from("customer_profiles").select("email").eq("email", registrationData.email!).maybeSingle(),
         supabase.from("vendor_profiles").select("email").eq("email", registrationData.email!).maybeSingle(),
@@ -73,13 +88,20 @@ export const useRegistration = (
 
       console.log("[useRegistration] Attempting to sign up user");
       // Step 4: Attempt to sign up
+      const signUpOptions: any = {
+        data: userMetadata,
+        emailRedirectTo: `${window.location.origin}/login`
+      };
+      
+      // If email already verified (via questionnaire), skip email confirmation
+      if (emailAlreadyVerified) {
+        signUpOptions.emailRedirectTo = `${window.location.origin}/login?verified=true`;
+      }
+      
       const { data, error } = await supabase.auth.signUp({
         email: registrationData.email!,
         password: registrationData.password,
-        options: {
-          data: userMetadata,
-          emailRedirectTo: `${window.location.origin}/login`
-        }
+        options: signUpOptions
       });
 
       console.log("[useRegistration] SignUp response:", { 
@@ -115,15 +137,22 @@ export const useRegistration = (
 
       if (data.user) {
         console.log("[useRegistration] User created successfully, showing success message");
-        // All users must verify their email
-        toast.success("Registration successful!", {
-          description: "Please check your email to verify your account before logging in."
-        });
         
-        console.log("[useRegistration] Signing out user");
-        // Sign out immediately for email/password registration
+        // Sign out immediately to prevent auto-login
         await supabase.auth.signOut();
         setUser(null);
+        
+        if (emailAlreadyVerified) {
+          // Email already verified via questionnaire - can log in immediately
+          toast.success("Account created successfully!", {
+            description: "You can now log in with your credentials."
+          });
+        } else {
+          // Need to verify email
+          toast.success("Registration successful!", {
+            description: "Please check your email to verify your account before logging in."
+          });
+        }
         
         console.log("[useRegistration] Navigating to login");
         navigate("/login");
