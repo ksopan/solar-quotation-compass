@@ -71,19 +71,6 @@ const AuthCallback = () => {
           return;
         }
         
-        // Check if this is just an email verification callback (not OAuth)
-        const type = urlParams.get('type');
-        if (type === 'signup' || type === 'email_change') {
-          // This is an email confirmation link - sign out and redirect to login
-          console.log("[AuthCallback] Email verified, redirecting to login");
-          await supabase.auth.signOut();
-          toast.success("Email verified successfully!", {
-            description: "You can now log in with your credentials."
-          });
-          setTimeout(() => navigate("/login"), 1000);
-          return;
-        }
-        
         // Check for pending questionnaire from OAuth or email confirmation flow
         const questionnaireId = localStorage.getItem("questionnaire_id") || sessionStorage.getItem("questionnaire_id");
         if (questionnaireId && data.session.user) {

@@ -28,15 +28,18 @@ export const useRegistration = (
       
       // Step 1: Check if email was already verified via questionnaire
       let emailAlreadyVerified = false;
+      let questionnaireId: string | null = null;
+      
       if (fromQuestionnaireFlow) {
         const { data: verifiedQuestionnaire } = await supabase
           .from("property_questionnaires")
-          .select("verified_at, email")
+          .select("id, verified_at, email")
           .eq("email", registrationData.email!)
           .not("verified_at", "is", null)
           .maybeSingle();
         
         emailAlreadyVerified = !!verifiedQuestionnaire;
+        questionnaireId = verifiedQuestionnaire?.id || null;
         console.log("[useRegistration] Email already verified via questionnaire:", emailAlreadyVerified);
       }
       
@@ -87,21 +90,17 @@ export const useRegistration = (
       }
 
       console.log("[useRegistration] Attempting to sign up user");
-      // Step 4: Attempt to sign up
-      const signUpOptions: any = {
-        data: userMetadata,
-        emailRedirectTo: `${window.location.origin}/login`
-      };
       
-      // If email already verified (via questionnaire), skip email confirmation
-      if (emailAlreadyVerified) {
-        signUpOptions.emailRedirectTo = `${window.location.origin}/login?verified=true`;
-      }
-      
+      // Step 4: Sign up user (auto-confirmed since we handle verification manually)
       const { data, error } = await supabase.auth.signUp({
         email: registrationData.email!,
         password: registrationData.password,
-        options: signUpOptions
+        options: {
+          data: {
+            ...userMetadata,
+            email_verified: emailAlreadyVerified,
+          }
+        }
       });
 
       console.log("[useRegistration] SignUp response:", { 
@@ -136,27 +135,69 @@ export const useRegistration = (
       }
 
       if (data.user) {
-        console.log("[useRegistration] User created successfully, showing success message");
+        console.log("[useRegistration] User created successfully");
         
         // Sign out immediately to prevent auto-login
         await supabase.auth.signOut();
         setUser(null);
         
         if (emailAlreadyVerified) {
-          // Email already verified via questionnaire - can log in immediately
+          // Email already verified via questionnaire - link questionnaire and allow login
+          if (questionnaireId) {
+            try {
+              await supabase
+                .from("property_questionnaires")
+                .update({ customer_id: data.user.id })
+                .eq("id", questionnaireId);
+              
+              console.log("[useRegistration] Linked questionnaire to user");
+              
+              // Clear stored questionnaire data
+              localStorage.removeItem("questionnaire_id");
+              localStorage.removeItem("questionnaire_email");
+              sessionStorage.removeItem("questionnaire_id");
+              sessionStorage.removeItem("questionnaire_data");
+            } catch (err) {
+              console.error("[useRegistration] Failed to link questionnaire:", err);
+            }
+          }
+          
           toast.success("Account created successfully!", {
             description: "You can now log in with your credentials."
           });
         } else {
-          // Need to verify email
-          toast.success("Registration successful!", {
-            description: "Please check your email to verify your account before logging in."
-          });
+          // Send custom verification email via Resend
+          try {
+            const { error: emailError } = await supabase.functions.invoke("send-registration-verification", {
+              body: {
+                userId: data.user.id,
+                email: registrationData.email,
+                firstName: registrationData.firstName,
+                lastName: registrationData.lastName,
+                role: registrationData.role,
+              },
+            });
+            
+            if (emailError) {
+              console.error("[useRegistration] Failed to send verification email:", emailError);
+              toast.error("Account created but failed to send verification email", {
+                description: "Please contact support for assistance."
+              });
+            } else {
+              toast.success("Registration successful!", {
+                description: "Please check your email to verify your account before logging in."
+              });
+            }
+          } catch (emailErr) {
+            console.error("[useRegistration] Error sending verification email:", emailErr);
+            toast.error("Account created but failed to send verification email", {
+              description: "Please contact support for assistance."
+            });
+          }
         }
         
         console.log("[useRegistration] Navigating to login");
         navigate("/login");
-        console.log("[useRegistration] Navigation called");
       }
     } catch (err) {
       console.error("[useRegistration] Caught error:", err);

@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.confirm-questionnaire-user]
 verify_jwt = false
+
+[functions.send-registration-verification]
+verify_jwt = false
+
+[functions.verify-registration]
+verify_jwt = false
