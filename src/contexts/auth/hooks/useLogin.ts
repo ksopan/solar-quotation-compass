@@ -15,22 +15,32 @@ export const useLogin = (
   const login = async (email: string, password: string, expectedRole: UserRole) => {
     setLoading(true);
     try {
+      console.log("Attempting login for:", email, "as role:", expectedRole);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        console.error("Login error:", error);
+        throw new Error(error.message);
+      }
       if (!data.user) throw new Error("No user returned.");
 
-      // Check if email is confirmed for password auth
-      if (!data.user.email_confirmed_at && data.user.app_metadata.provider === 'email') {
+      console.log("Login successful, user data:", data.user.id, data.user.email);
+
+      // Check if email is confirmed
+      const isEmailConfirmed = data.user.email_confirmed_at || data.user.user_metadata?.email_verified;
+      if (!isEmailConfirmed && data.user.app_metadata.provider === 'email') {
         await supabase.auth.signOut();
         throw new Error("Please confirm your email before logging in.");
       }
 
       // Check if user role matches expected role
       const userRole = data.user.user_metadata?.role;
+      console.log("User role from metadata:", userRole, "Expected:", expectedRole);
+      
       if (userRole !== expectedRole) {
         await supabase.auth.signOut();
         throw new Error(`Invalid role. Please log in as a ${expectedRole}.`);
