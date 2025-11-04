@@ -39,8 +39,12 @@ export const useFetchQuestionnaire = () => {
             .maybeSingle();
           
           if (!fetchError && existingQuestionnaire) {
+            console.log("Found existing questionnaire:", existingQuestionnaire);
+            
             // Only link if questionnaire is unlinked OR already linked to this user
             if (!existingQuestionnaire.customer_id || existingQuestionnaire.customer_id === user.id) {
+              console.log("Linking questionnaire to user...");
+              
               const { error: updateError } = await supabase
                 .from("property_questionnaires")
                 .update({ 
@@ -55,14 +59,20 @@ export const useFetchQuestionnaire = () => {
               } else {
                 console.log("Successfully linked questionnaire to user");
               }
+            } else {
+              console.log("Questionnaire already linked to different user, skipping");
             }
+          } else {
+            console.log("Could not find questionnaire with ID:", storedQuestionnaireId);
           }
           
-          // Clean up storage
+          // Clean up storage after processing
           localStorage.removeItem("questionnaire_id");
           localStorage.removeItem("questionnaire_email");
+          localStorage.removeItem("questionnaire_data");
           sessionStorage.removeItem("questionnaire_id");
           sessionStorage.removeItem("questionnaire_email");
+          sessionStorage.removeItem("questionnaire_data");
         }
         
         // Fetch the user's questionnaire
