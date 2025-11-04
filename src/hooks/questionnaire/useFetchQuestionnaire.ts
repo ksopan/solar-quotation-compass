@@ -22,24 +22,46 @@ export const useFetchQuestionnaire = () => {
       try {
         setLoading(true);
         
-        // Check if there's a questionnaire ID in localStorage (from OAuth flow)
-        const oauthQuestionnaireId = localStorage.getItem("questionnaire_id");
-        if (oauthQuestionnaireId) {
-          console.log("Found OAuth questionnaire ID:", oauthQuestionnaireId);
+        // Check both localStorage and sessionStorage for questionnaire ID
+        const storedQuestionnaireId = localStorage.getItem("questionnaire_id") || 
+                                      sessionStorage.getItem("questionnaire_id");
+        const storedEmail = localStorage.getItem("questionnaire_email") || 
+                           sessionStorage.getItem("questionnaire_email");
+        
+        if (storedQuestionnaireId) {
+          console.log("Found stored questionnaire ID:", storedQuestionnaireId);
           
-          // Associate this questionnaire with the user
-          const { error: updateError } = await supabase
+          // First, fetch the questionnaire to check its current state
+          const { data: existingQuestionnaire, error: fetchError } = await supabase
             .from("property_questionnaires")
-            .update({ customer_id: user.id })
-            .eq("id", oauthQuestionnaireId);
-            
-          if (updateError) {
-            console.error("Error associating questionnaire with user:", updateError);
-          } else {
-            console.log("Successfully associated questionnaire with user");
-            // Remove the ID from localStorage
-            localStorage.removeItem("questionnaire_id");
+            .select("*")
+            .eq("id", storedQuestionnaireId)
+            .maybeSingle();
+          
+          if (!fetchError && existingQuestionnaire) {
+            // Only link if questionnaire is unlinked OR already linked to this user
+            if (!existingQuestionnaire.customer_id || existingQuestionnaire.customer_id === user.id) {
+              const { error: updateError } = await supabase
+                .from("property_questionnaires")
+                .update({ 
+                  customer_id: user.id,
+                  status: 'active'  // Move from pending_verification to active
+                })
+                .eq("id", storedQuestionnaireId);
+                
+              if (updateError) {
+                console.error("Error linking questionnaire:", updateError);
+              } else {
+                console.log("Successfully linked questionnaire to user");
+              }
+            }
           }
+          
+          // Clean up storage
+          localStorage.removeItem("questionnaire_id");
+          localStorage.removeItem("questionnaire_email");
+          sessionStorage.removeItem("questionnaire_id");
+          sessionStorage.removeItem("questionnaire_email");
         }
         
         // Fetch the user's questionnaire
@@ -49,26 +71,22 @@ export const useFetchQuestionnaire = () => {
           .eq("customer_id", user.id)
           .order("created_at", { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
         
         if (error) {
-          if (error.code === "PGRST116") {
-            // No questionnaire found - this is not an error
-            console.log("No questionnaire found for user");
-            setQuestionnaire(null);
-          } else {
-            console.error("Error fetching questionnaire:", error);
-            toast.error("Failed to load your questionnaire data");
-          }
+          console.error("Error fetching questionnaire:", error);
+          toast.error("Failed to load your questionnaire data");
         } else if (data) {
           console.log("Fetched questionnaire:", data);
           setQuestionnaire(data as QuestionnaireData);
+        } else {
+          console.log("No questionnaire found for user");
+          setQuestionnaire(null);
         }
       } catch (error) {
         console.error("Error in fetchQuestionnaire:", error);
         toast.error("An error occurred while loading your questionnaire data");
       } finally {
-        // Always set loading to false when the fetch completes
         setLoading(false);
       }
     };
