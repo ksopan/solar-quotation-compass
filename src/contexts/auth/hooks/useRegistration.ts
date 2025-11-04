@@ -31,16 +31,28 @@ export const useRegistration = (
       let questionnaireId: string | null = null;
       
       if (fromQuestionnaireFlow) {
-        const { data: verifiedQuestionnaire } = await supabase
-          .from("property_questionnaires")
-          .select("id, verified_at, email")
-          .eq("email", registrationData.email!)
-          .not("verified_at", "is", null)
-          .maybeSingle();
+        // Get questionnaire ID from storage
+        const storedQuestionnaireId = localStorage.getItem("questionnaire_id") || sessionStorage.getItem("questionnaire_id");
         
-        emailAlreadyVerified = !!verifiedQuestionnaire;
-        questionnaireId = verifiedQuestionnaire?.id || null;
-        console.log("[useRegistration] Email already verified via questionnaire:", emailAlreadyVerified);
+        if (storedQuestionnaireId) {
+          try {
+            // Use edge function with service role to bypass RLS
+            const { data: verificationData, error: verificationError } = await supabase.functions.invoke(
+              "check-questionnaire-verified",
+              {
+                body: { questionnaireId: storedQuestionnaireId }
+              }
+            );
+            
+            if (!verificationError && verificationData?.verified) {
+              emailAlreadyVerified = true;
+              questionnaireId = verificationData.questionnaireId;
+              console.log("[useRegistration] Email already verified via questionnaire:", emailAlreadyVerified);
+            }
+          } catch (err) {
+            console.error("[useRegistration] Error checking questionnaire verification:", err);
+          }
+        }
       }
       
       // Step 2: Check profile tables for this email - this is more reliable than auth.users
