@@ -67,10 +67,12 @@ export default function VerificationSuccess() {
         <div className="space-y-3">
           <Button
             onClick={() => {
-              // Store questionnaire info in localStorage for registration flow
+              // Store questionnaire info in both localStorage and sessionStorage for registration flow
               if (questionnaireId && email) {
                 localStorage.setItem("questionnaire_id", questionnaireId);
                 localStorage.setItem("questionnaire_email", email);
+                sessionStorage.setItem("questionnaire_id", questionnaireId);
+                sessionStorage.setItem("questionnaire_email", email);
               }
               navigate("/register");
             }}

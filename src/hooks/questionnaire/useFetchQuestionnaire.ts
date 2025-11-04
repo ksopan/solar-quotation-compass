@@ -39,31 +39,44 @@ export const useFetchQuestionnaire = () => {
             .maybeSingle();
           
           if (!fetchError && existingQuestionnaire) {
-            console.log("Found existing questionnaire:", existingQuestionnaire);
+            console.log("Found existing questionnaire with data:", {
+              id: existingQuestionnaire.id,
+              first_name: existingQuestionnaire.first_name,
+              last_name: existingQuestionnaire.last_name,
+              email: existingQuestionnaire.email,
+              customer_id: existingQuestionnaire.customer_id
+            });
             
             // Only link if questionnaire is unlinked OR already linked to this user
             if (!existingQuestionnaire.customer_id || existingQuestionnaire.customer_id === user.id) {
               console.log("Linking questionnaire to user...");
               
-              const { error: updateError } = await supabase
+              const { data: updatedQuestionnaire, error: updateError } = await supabase
                 .from("property_questionnaires")
                 .update({ 
                   customer_id: user.id,
                   status: 'draft',  // Set to draft so user can edit and upload documents
                   is_completed: false
                 })
-                .eq("id", storedQuestionnaireId);
+                .eq("id", storedQuestionnaireId)
+                .select()
+                .single();
                 
               if (updateError) {
                 console.error("Error linking questionnaire:", updateError);
+                toast.error("Failed to link your questionnaire");
               } else {
-                console.log("Successfully linked questionnaire to user");
+                console.log("Successfully linked questionnaire to user:", updatedQuestionnaire);
+                // Set the questionnaire immediately so it displays
+                setQuestionnaire(updatedQuestionnaire as QuestionnaireData);
+                toast.success("Your solar questionnaire has been linked to your account!");
               }
             } else {
               console.log("Questionnaire already linked to different user, skipping");
             }
           } else {
-            console.log("Could not find questionnaire with ID:", storedQuestionnaireId);
+            console.log("Could not find questionnaire with ID:", storedQuestionnaireId, fetchError);
+            toast.error("Could not find your questionnaire");
           }
           
           // Clean up storage after processing
