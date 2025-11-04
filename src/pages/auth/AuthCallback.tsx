@@ -93,10 +93,18 @@ const AuthCallback = () => {
             } else {
               console.log("Successfully linked questionnaire to user:", questionnaireId);
               toast.success("Your solar quotation request has been linked to your account!");
+              
+              // Clean up storage
               localStorage.removeItem("questionnaire_data");
               localStorage.removeItem("questionnaire_id");
+              localStorage.removeItem("questionnaire_email");
               sessionStorage.removeItem("questionnaire_data");
               sessionStorage.removeItem("questionnaire_id");
+              sessionStorage.removeItem("questionnaire_email");
+              
+              // Redirect to profile tab to view the questionnaire
+              setTimeout(() => navigate("/?tab=profile"), 1500);
+              return;
             }
           } catch (err) {
             console.error("Error processing questionnaire link:", err);
