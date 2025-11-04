@@ -27,9 +27,8 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { userId, email, firstName, lastName, role }: RegistrationVerificationRequest = await req.json();
 
-    console.log("Creating registration verification for:", email);
+    console.log("📧 Creating registration verification for:", email);
 
-    // Create Supabase client with service role
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Generate verification token
@@ -42,18 +41,19 @@ const handler = async (req: Request): Promise<Response> => {
         verification_token: verificationToken,
         verification_token_expires_at: expiresAt.toISOString(),
         email_verified: false,
+        firstName,
+        lastName,
+        role,
       },
     });
 
     if (updateError) {
-      console.error("Failed to store verification token:", updateError);
+      console.error("❌ Failed to store verification token:", updateError);
       throw new Error("Failed to create verification");
     }
 
-    // Build verification URL
+    // Build verification URL - this will verify the email WITHOUT logging in
     const verificationUrl = `${supabaseUrl}/functions/v1/verify-registration?token=${verificationToken}&userId=${userId}`;
-    const appUrl = "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com";
-
     const displayName = firstName && lastName ? `${firstName} ${lastName}` : email.split("@")[0];
 
     // Send verification email via Resend
@@ -89,7 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
               <div class="content">
                 <p>Hello ${displayName},</p>
                 
-                <p>Thank you for registering as a ${role}! Please verify your email address to activate your account and start using Solar Quotation Compass.</p>
+                <p>Thank you for registering as a ${role}! Please verify your email address to activate your account.</p>
                 
                 <div style="text-align: center;">
                   <a href="${verificationUrl}" class="button">
@@ -104,15 +104,12 @@ const handler = async (req: Request): Promise<Response> => {
                 
                 <div class="highlight">
                   <strong>This link will expire in 24 hours.</strong><br>
-                  After verification, you can log in and access your dashboard.
+                  After verification, you can log in to access your dashboard.
                 </div>
               </div>
               
               <div class="footer">
                 <p>If you didn't create this account, you can safely ignore this email.</p>
-                <p style="margin-top: 15px;">
-                  <a href="${appUrl}" style="color: #2563eb; text-decoration: none;">Visit Solar Quotation Compass</a>
-                </p>
               </div>
             </div>
           </body>
@@ -120,7 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Registration verification email sent successfully:", emailResponse);
+    console.log("✅ Registration verification email sent successfully:", emailResponse);
 
     return new Response(
       JSON.stringify({ success: true, message: "Verification email sent" }),
@@ -133,7 +130,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in send-registration-verification function:", error);
+    console.error("❌ Error in send-registration-verification function:", error);
     
     return new Response(
       JSON.stringify({ 

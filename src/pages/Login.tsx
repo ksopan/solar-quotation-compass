@@ -18,35 +18,44 @@ const Login = () => {
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
 
   useEffect(() => {
-    // Show success message if email was verified
-    if (searchParams.get("verified") === "success") {
+    const verified = searchParams.get("verified");
+    const error = searchParams.get("error");
+
+    if (verified === "true") {
       setShowSuccessBanner(true);
       toast.success("Email verified successfully!", {
-        description: "You can now log in with your credentials."
+        description: "You can now log in to your account.",
+        duration: 5000,
       });
       searchParams.delete("verified");
-      setSearchParams(searchParams, { replace: true });
+      setSearchParams(searchParams);
       setTimeout(() => setShowSuccessBanner(false), 5000);
     }
-    
-    // Show error messages
-    const error = searchParams.get("error");
+
     if (error) {
       if (error === "invalid_token") {
         toast.error("Invalid verification link", {
-          description: "The verification link is invalid or has already been used."
+          description: "The verification link is invalid or has been used already."
         });
       } else if (error === "token_expired") {
         toast.error("Verification link expired", {
-          description: "The verification link has expired. Please register again or request a new link."
+          description: "Please request a new verification email."
         });
       } else if (error === "verification_failed") {
         toast.error("Verification failed", {
-          description: "Failed to verify your email. Please try again or contact support."
+          description: "Please try again or contact support."
+        });
+      } else if (error === "invalid_link") {
+        toast.error("Invalid link", {
+          description: "The verification link is invalid."
+        });
+      } else if (error === "user_not_found") {
+        toast.error("User not found", {
+          description: "Please register again."
         });
       }
       searchParams.delete("error");
-      setSearchParams(searchParams, { replace: true });
+      setSearchParams(searchParams);
     }
   }, [searchParams, setSearchParams]);
 

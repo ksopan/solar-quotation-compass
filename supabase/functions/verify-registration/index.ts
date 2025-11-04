@@ -96,11 +96,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("User verified successfully:", userId);
 
-    // Redirect to login with success message
+    // CRITICAL: Redirect to login WITHOUT creating a session
+    // User must manually log in
     return new Response(null, {
       status: 302,
       headers: {
-        Location: `${origin}/login?verified=success`,
+        Location: `${origin}/login?verified=true`,
         ...corsHeaders,
       },
     });
