@@ -31,15 +31,33 @@ export const useRegistration = (
       let questionnaireId: string | null = null;
       
       if (fromQuestionnaireFlow) {
-        const { data: verifiedQuestionnaire } = await supabase
-          .from("property_questionnaires")
-          .select("id, verified_at, email")
-          .eq("email", registrationData.email!)
-          .not("verified_at", "is", null)
-          .maybeSingle();
+        // Get the questionnaire ID from storage
+        const storedQuestionnaireId = localStorage.getItem("questionnaire_id") || sessionStorage.getItem("questionnaire_id");
+        console.log("[useRegistration] Stored questionnaire ID:", storedQuestionnaireId);
         
-        emailAlreadyVerified = !!verifiedQuestionnaire;
-        questionnaireId = verifiedQuestionnaire?.id || null;
+        if (storedQuestionnaireId) {
+          // Use edge function to check if questionnaire is verified (bypasses RLS)
+          try {
+            const { data: checkResult, error: checkError } = await supabase.functions.invoke(
+              "check-questionnaire-verified",
+              {
+                body: { questionnaireId: storedQuestionnaireId },
+              }
+            );
+            
+            console.log("[useRegistration] Questionnaire verification check:", checkResult);
+            
+            if (checkError) {
+              console.error("[useRegistration] Error checking questionnaire:", checkError);
+            } else {
+              emailAlreadyVerified = checkResult?.verified === true;
+              questionnaireId = checkResult?.questionnaireId || null;
+            }
+          } catch (err) {
+            console.error("[useRegistration] Exception checking questionnaire:", err);
+          }
+        }
+        
         console.log("[useRegistration] Email already verified via questionnaire:", emailAlreadyVerified);
       }
       
