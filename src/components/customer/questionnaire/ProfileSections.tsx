@@ -56,20 +56,18 @@ export const ProfileSections: React.FC<ProfileSectionsProps> = ({
         handleChange={handleChange} 
       />
       
-      {questionnaire && (
-        <div className="pt-4 mt-4 border-t border-border">
-          <DocumentsSection 
-            questionnaire={questionnaire}
-            isLoadingFiles={isLoadingFiles}
-            attachments={attachments || []}
-            handleFileUpload={uploadAttachment}
-            handleFileDelete={deleteAttachment}
-            getFileUrl={getFileUrl}
-            isUploading={isUploading}
-            isEditing={isEditing}
-          />
-        </div>
-      )}
+      <div className="pt-4 mt-4 border-t border-border">
+        <DocumentsSection 
+          questionnaire={questionnaire || displayData as any}
+          isLoadingFiles={isLoadingFiles}
+          attachments={attachments || []}
+          handleFileUpload={uploadAttachment}
+          handleFileDelete={deleteAttachment}
+          getFileUrl={getFileUrl}
+          isUploading={isUploading}
+          isEditing={isEditing}
+        />
+      </div>
     </>
   );
 };

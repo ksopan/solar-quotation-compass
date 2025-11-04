@@ -45,7 +45,8 @@ export const useFetchQuestionnaire = () => {
                 .from("property_questionnaires")
                 .update({ 
                   customer_id: user.id,
-                  status: 'active'  // Move from pending_verification to active
+                  status: 'draft',  // Set to draft so user can edit and upload documents
+                  is_completed: false
                 })
                 .eq("id", storedQuestionnaireId);
                 

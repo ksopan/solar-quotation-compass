@@ -76,13 +76,13 @@ const AuthCallback = () => {
         if (questionnaireId && data.session.user) {
           setMessage("Linking your quotation request...");
           try {
-            // Link the existing questionnaire to this user
+            // Link the existing questionnaire to this user and set to draft for editing
             const { error: updateError } = await supabase
               .from("property_questionnaires")
               .update({
                 customer_id: data.session.user.id,
-                status: 'submitted',
-                submitted_at: new Date().toISOString()
+                status: 'draft', // Allow user to edit and upload documents
+                is_completed: false
               })
               .eq('id', questionnaireId)
               .is('customer_id', null);
