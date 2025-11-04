@@ -42,27 +42,48 @@ export const useLogin = (
       const questionnaireId = localStorage.getItem("questionnaire_id") || sessionStorage.getItem("questionnaire_id");
       if (questionnaireId && expectedRole === "customer") {
         try {
-          // Link the existing questionnaire to this user
-          const { error: updateError } = await supabase
+          console.log("Attempting to link questionnaire:", questionnaireId);
+          
+          // First check if questionnaire exists and its current state
+          const { data: existingQuestionnaire, error: fetchError } = await supabase
             .from("property_questionnaires")
-            .update({
-              customer_id: data.user.id,
-              status: 'submitted',
-              submitted_at: new Date().toISOString()
-            })
+            .select("customer_id, status")
             .eq('id', questionnaireId)
-            .is('customer_id', null);
+            .single();
+          
+          if (fetchError) {
+            console.error("Error fetching questionnaire:", fetchError);
+          } else if (existingQuestionnaire) {
+            console.log("Found questionnaire with customer_id:", existingQuestionnaire.customer_id);
             
-          if (updateError) {
-            console.error("Error linking questionnaire to user:", updateError);
-            toast.error("Failed to link your questionnaire");
-          } else {
-            console.log("Successfully linked questionnaire to user:", questionnaireId);
-            toast.success("Your solar quotation request has been linked to your account!");
-            sessionStorage.removeItem("questionnaire_data");
-            sessionStorage.removeItem("questionnaire_id");
-            localStorage.removeItem("questionnaire_id");
-            localStorage.removeItem("questionnaire_email");
+            // Only link if not already linked to another user
+            if (!existingQuestionnaire.customer_id || existingQuestionnaire.customer_id === data.user.id) {
+              const { error: updateError } = await supabase
+                .from("property_questionnaires")
+                .update({
+                  customer_id: data.user.id,
+                  status: 'submitted',
+                  submitted_at: new Date().toISOString()
+                })
+                .eq('id', questionnaireId);
+                
+              if (updateError) {
+                console.error("Error linking questionnaire to user:", updateError);
+                toast.error("Failed to link your questionnaire");
+              } else {
+                console.log("Successfully linked questionnaire to user:", questionnaireId);
+                toast.success("Your solar quotation request has been linked to your account!");
+                sessionStorage.removeItem("questionnaire_data");
+                sessionStorage.removeItem("questionnaire_id");
+                localStorage.removeItem("questionnaire_id");
+                localStorage.removeItem("questionnaire_email");
+              }
+            } else {
+              console.log("Questionnaire already linked to different user");
+              // Clear the storage since it's not valid
+              localStorage.removeItem("questionnaire_id");
+              localStorage.removeItem("questionnaire_email");
+            }
           }
         } catch (err) {
           console.error("Error processing questionnaire link:", err);

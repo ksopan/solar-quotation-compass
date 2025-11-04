@@ -5,18 +5,34 @@ import { supabase } from "@/integrations/supabase/client";
 
 // Fetch user role from database (server-side validation)
 const fetchUserRole = async (userId: string): Promise<"customer" | "vendor" | "admin"> => {
-  const { data, error } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .single();
+  try {
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise<null>((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout fetching role')), 5000)
+    );
+    
+    const rolePromise = supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .single();
+    
+    const { data, error } = await Promise.race([rolePromise, timeoutPromise]) as any;
 
-  if (error || !data) {
-    console.error("Failed to fetch user role:", error);
-    return "customer"; // Safe default
+    if (error || !data) {
+      console.error("Failed to fetch user role:", error);
+      // Fallback to user_metadata if database query fails
+      const { data: userData } = await supabase.auth.getUser();
+      return (userData.user?.user_metadata?.role as "customer" | "vendor" | "admin") || "customer";
+    }
+
+    return data.role as "customer" | "vendor" | "admin";
+  } catch (err) {
+    console.error("Error in fetchUserRole:", err);
+    // Fallback to user_metadata
+    const { data: userData } = await supabase.auth.getUser();
+    return (userData.user?.user_metadata?.role as "customer" | "vendor" | "admin") || "customer";
   }
-
-  return data.role as "customer" | "vendor" | "admin";
 };
 
 // Transform Supabase user data to our User interface
