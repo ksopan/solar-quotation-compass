@@ -15,22 +15,32 @@ export const useLogin = (
   const login = async (email: string, password: string, expectedRole: UserRole) => {
     setLoading(true);
     try {
+      console.log("Attempting login for:", email, "as role:", expectedRole);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        console.error("Login error:", error);
+        throw new Error(error.message);
+      }
       if (!data.user) throw new Error("No user returned.");
 
-      // Check if email is confirmed for password auth
-      if (!data.user.email_confirmed_at && data.user.app_metadata.provider === 'email') {
+      console.log("Login successful, user data:", data.user.id, data.user.email);
+
+      // Check if email is confirmed
+      const isEmailConfirmed = data.user.email_confirmed_at || data.user.user_metadata?.email_verified;
+      if (!isEmailConfirmed && data.user.app_metadata.provider === 'email') {
         await supabase.auth.signOut();
         throw new Error("Please confirm your email before logging in.");
       }
 
       // Check if user role matches expected role
       const userRole = data.user.user_metadata?.role;
+      console.log("User role from metadata:", userRole, "Expected:", expectedRole);
+      
       if (userRole !== expectedRole) {
         await supabase.auth.signOut();
         throw new Error(`Invalid role. Please log in as a ${expectedRole}.`);
@@ -42,27 +52,48 @@ export const useLogin = (
       const questionnaireId = localStorage.getItem("questionnaire_id") || sessionStorage.getItem("questionnaire_id");
       if (questionnaireId && expectedRole === "customer") {
         try {
-          // Link the existing questionnaire to this user
-          const { error: updateError } = await supabase
+          console.log("Attempting to link questionnaire:", questionnaireId);
+          
+          // First check if questionnaire exists and its current state
+          const { data: existingQuestionnaire, error: fetchError } = await supabase
             .from("property_questionnaires")
-            .update({
-              customer_id: data.user.id,
-              status: 'submitted',
-              submitted_at: new Date().toISOString()
-            })
+            .select("customer_id, status")
             .eq('id', questionnaireId)
-            .is('customer_id', null);
+            .single();
+          
+          if (fetchError) {
+            console.error("Error fetching questionnaire:", fetchError);
+          } else if (existingQuestionnaire) {
+            console.log("Found questionnaire with customer_id:", existingQuestionnaire.customer_id);
             
-          if (updateError) {
-            console.error("Error linking questionnaire to user:", updateError);
-            toast.error("Failed to link your questionnaire");
-          } else {
-            console.log("Successfully linked questionnaire to user:", questionnaireId);
-            toast.success("Your solar quotation request has been linked to your account!");
-            sessionStorage.removeItem("questionnaire_data");
-            sessionStorage.removeItem("questionnaire_id");
-            localStorage.removeItem("questionnaire_id");
-            localStorage.removeItem("questionnaire_email");
+            // Only link if not already linked to another user
+            if (!existingQuestionnaire.customer_id || existingQuestionnaire.customer_id === data.user.id) {
+              const { error: updateError } = await supabase
+                .from("property_questionnaires")
+                .update({
+                  customer_id: data.user.id,
+                  status: 'submitted',
+                  submitted_at: new Date().toISOString()
+                })
+                .eq('id', questionnaireId);
+                
+              if (updateError) {
+                console.error("Error linking questionnaire to user:", updateError);
+                toast.error("Failed to link your questionnaire");
+              } else {
+                console.log("Successfully linked questionnaire to user:", questionnaireId);
+                toast.success("Your solar quotation request has been linked to your account!");
+                sessionStorage.removeItem("questionnaire_data");
+                sessionStorage.removeItem("questionnaire_id");
+                localStorage.removeItem("questionnaire_id");
+                localStorage.removeItem("questionnaire_email");
+              }
+            } else {
+              console.log("Questionnaire already linked to different user");
+              // Clear the storage since it's not valid
+              localStorage.removeItem("questionnaire_id");
+              localStorage.removeItem("questionnaire_email");
+            }
           }
         } catch (err) {
           console.error("Error processing questionnaire link:", err);

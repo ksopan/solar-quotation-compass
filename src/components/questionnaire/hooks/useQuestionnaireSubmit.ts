@@ -82,9 +82,18 @@ export const useQuestionnaireSubmit = ({ onOpenChange, formData }: UseQuestionna
       console.log("✅ Verification email sent successfully!");
       console.log("📧 Email response:", emailData);
 
-      // Store questionnaire data in sessionStorage for later registration
-      console.log("💾 Storing data in sessionStorage...");
-      sessionStorage.setItem("questionnaire_data", JSON.stringify(formData));
+      // Store questionnaire data in BOTH localStorage AND sessionStorage for persistence
+      console.log("💾 Storing data in localStorage and sessionStorage...");
+      const storageData = {
+        id: questionnaire.id,
+        email: formData.email,
+        first_name: formData.first_name,
+        last_name: formData.last_name
+      };
+      localStorage.setItem("questionnaire_data", JSON.stringify(storageData));
+      localStorage.setItem("questionnaire_id", questionnaire.id);
+      localStorage.setItem("questionnaire_email", formData.email);
+      sessionStorage.setItem("questionnaire_data", JSON.stringify(storageData));
       sessionStorage.setItem("questionnaire_id", questionnaire.id);
       
       // Success! Show message and close modal
