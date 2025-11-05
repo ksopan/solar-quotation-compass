@@ -130,26 +130,20 @@ export const useRegistration = (
         setUser(null);
         
         if (emailAlreadyVerified && questionnaireId) {
-          // Link questionnaire to user and set to draft for editing
+          // Link questionnaire to user
           try {
-            const { error: linkError } = await supabase
+            await supabase
               .from("property_questionnaires")
-              .update({ 
-                customer_id: data.user.id,
-                status: 'draft', // Set to draft so user can edit
-                is_completed: false // Ensure it's not marked as completed yet
-              })
+              .update({ customer_id: data.user.id })
               .eq("id", questionnaireId);
             
-            if (linkError) {
-              console.error("❌ [useRegistration] Failed to link questionnaire:", linkError);
-            } else {
-              console.log("✅ [useRegistration] Linked questionnaire to user and set to draft");
-            }
+            console.log("✅ [useRegistration] Linked questionnaire to user");
             
-            // Keep questionnaire ID in localStorage for fetch after login
-            // Don't clear it immediately - let the fetch hook handle it
-            localStorage.setItem("questionnaire_linked", "true");
+            // Clear stored data
+            localStorage.removeItem("questionnaire_id");
+            localStorage.removeItem("questionnaire_email");
+            sessionStorage.removeItem("questionnaire_id");
+            sessionStorage.removeItem("questionnaire_data");
           } catch (err) {
             console.error("❌ [useRegistration] Failed to link questionnaire:", err);
           }

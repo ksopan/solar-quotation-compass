@@ -30,43 +30,32 @@ export const useQuestionnaireData = (
           if (error.code === "PGRST116") {
             console.log("No questionnaire directly associated with user. Checking for unassociated questionnaires...");
             
-            // Check both localStorage and session storage for a questionnaire ID
-            const storedQuestionnaireId = localStorage.getItem("questionnaire_id") || sessionStorage.getItem("questionnaire_id");
+            // Check session storage for a questionnaire ID
+            const sessionQuestionnaireId = sessionStorage.getItem("questionnaire_id");
             
-            if (storedQuestionnaireId) {
-              console.log("Found questionnaire ID in storage:", storedQuestionnaireId);
+            if (sessionQuestionnaireId) {
               // Try to get that questionnaire
               const { data: unassociatedData, error: unassociatedError } = await supabase
                 .from("property_questionnaires")
                 .select("*")
-                .eq("id", storedQuestionnaireId)
+                .eq("id", sessionQuestionnaireId)
                 .single();
                 
               if (!unassociatedError && unassociatedData) {
-                console.log("Found questionnaire, current customer_id:", unassociatedData.customer_id);
+                console.log("Found unassociated questionnaire, associating with user:", user.id);
                 
-                // If it's already linked to this user, use it
-                if (unassociatedData.customer_id === user.id) {
-                  console.log("Questionnaire already linked to current user");
-                  data = unassociatedData;
-                  localStorage.removeItem("questionnaire_id");
+                // Associate it with this user
+                const { error: updateError } = await supabase
+                  .from("property_questionnaires")
+                  .update({ customer_id: user.id })
+                  .eq("id", sessionQuestionnaireId);
+                  
+                if (updateError) {
+                  console.error("Error associating questionnaire with user:", updateError);
+                } else {
+                  console.log("Successfully associated questionnaire with user");
+                  data = { ...unassociatedData, customer_id: user.id };
                   sessionStorage.removeItem("questionnaire_id");
-                } else if (!unassociatedData.customer_id) {
-                  // Associate it with this user if not linked to anyone
-                  console.log("Associating questionnaire with user:", user.id);
-                  const { error: updateError } = await supabase
-                    .from("property_questionnaires")
-                    .update({ customer_id: user.id })
-                    .eq("id", storedQuestionnaireId);
-                    
-                  if (updateError) {
-                    console.error("Error associating questionnaire with user:", updateError);
-                  } else {
-                    console.log("Successfully associated questionnaire with user");
-                    data = { ...unassociatedData, customer_id: user.id };
-                    localStorage.removeItem("questionnaire_id");
-                    sessionStorage.removeItem("questionnaire_id");
-                  }
                 }
               }
             }

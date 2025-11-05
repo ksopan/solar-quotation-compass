@@ -434,7 +434,7 @@ export type Database = {
         Returns: boolean
       }
       customer_can_view_vendor: {
-        Args: { p_customer_id: string; p_vendor_id: string }
+        Args: { customer_id: string; vendor_id: string }
         Returns: boolean
       }
       get_user_role: {

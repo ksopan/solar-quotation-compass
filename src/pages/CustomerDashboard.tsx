@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { DashboardStats } from "@/components/customer/DashboardStats";
 import { DashboardTabs } from "@/components/customer/DashboardTabs";
@@ -10,18 +9,8 @@ import { useAuth } from "@/contexts/auth";
 
 export const CustomerDashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("quotations");
   const { quotations, loading, fetchQuotations, deleteQuotation: deleteQuotationRequest } = useCustomerQuotations(user);
-
-  // Check URL params for tab navigation
-  useEffect(() => {
-    const tab = searchParams.get("tab");
-    if (tab === "profile") {
-      setActiveTab("profile");
-    }
-  }, [searchParams]);
 
   // Load data only once when the component mounts or when user changes
   useEffect(() => {

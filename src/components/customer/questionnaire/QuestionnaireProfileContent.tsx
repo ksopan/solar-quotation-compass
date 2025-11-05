@@ -22,7 +22,6 @@ export const QuestionnaireProfileContent: React.FC = () => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [formData, setFormData] = React.useState<any>(null);
   const [showSubmitButton, setShowSubmitButton] = React.useState(questionnaire?.is_completed === false);
-  const [isNewProfile, setIsNewProfile] = React.useState(false);
   
   // Initialize formData when questionnaire changes
   React.useEffect(() => {
@@ -102,10 +101,8 @@ export const QuestionnaireProfileContent: React.FC = () => {
       roof_age_status: "no",
       first_name: "",
       last_name: "",
-      email: "",
-      status: 'draft'  // New profiles start as draft
+      email: ""
     });
-    setIsNewProfile(true);  // Flag this as a new profile
     setIsEditing(true);
   };
   
@@ -114,14 +111,11 @@ export const QuestionnaireProfileContent: React.FC = () => {
     
     const success = await updateQuestionnaire({ 
       ...questionnaire, 
-      is_completed: true,
-      status: 'submitted'  // Mark as submitted
+      is_completed: true 
     });
     
     if (success) {
       setShowSubmitButton(false);
-      setIsEditing(false);
-      setIsNewProfile(false);
     }
   };
   
@@ -165,7 +159,6 @@ export const QuestionnaireProfileContent: React.FC = () => {
         handleCancel={handleCancel}
         handleSave={handleSave}
         handleSubmitProfile={handleSubmitProfile}
-        isNewProfile={isNewProfile}
       />
     </Card>
   );

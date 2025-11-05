@@ -101,11 +101,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Update the questionnaire status to active and mark as verified
-    // Keep it in pending state until user registers, then it becomes draft for editing
     const { error: updateError } = await supabaseAdmin
       .from('property_questionnaires')
       .update({ 
-        status: 'pending_verification', // Keep pending until user creates account
+        status: 'active',
         verified_at: new Date().toISOString(),
         verification_token: null, // Invalidate token after use
         verification_token_expires_at: null

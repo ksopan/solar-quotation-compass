@@ -5,50 +5,18 @@ import { supabase } from "@/integrations/supabase/client";
 
 // Fetch user role from database (server-side validation)
 const fetchUserRole = async (userId: string): Promise<"customer" | "vendor" | "admin"> => {
-  try {
-    console.log("Fetching role for user:", userId);
-    
-    // Add timeout to prevent hanging
-    const timeoutPromise = new Promise<null>((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout fetching role')), 3000)
-    );
-    
-    const rolePromise = supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
-    
-    const result = await Promise.race([rolePromise, timeoutPromise]) as any;
-    
-    if (!result || result.error || !result.data) {
-      console.error("Failed to fetch user role from database:", result?.error);
-      // Fallback to user_metadata
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) {
-        console.error("Failed to get user metadata:", userError);
-        return "customer";
-      }
-      const metadataRole = userData.user?.user_metadata?.role as "customer" | "vendor" | "admin";
-      console.log("Using role from metadata:", metadataRole);
-      return metadataRole || "customer";
-    }
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .single();
 
-    console.log("Role fetched successfully:", result.data.role);
-    return result.data.role as "customer" | "vendor" | "admin";
-  } catch (err) {
-    console.error("Error in fetchUserRole:", err);
-    // Fallback to user_metadata
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      const metadataRole = userData.user?.user_metadata?.role as "customer" | "vendor" | "admin";
-      console.log("Fallback to metadata role:", metadataRole);
-      return metadataRole || "customer";
-    } catch (fallbackErr) {
-      console.error("Fallback error:", fallbackErr);
-      return "customer";
-    }
+  if (error || !data) {
+    console.error("Failed to fetch user role:", error);
+    return "customer"; // Safe default
   }
+
+  return data.role as "customer" | "vendor" | "admin";
 };
 
 // Transform Supabase user data to our User interface
