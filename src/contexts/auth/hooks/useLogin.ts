@@ -48,13 +48,16 @@ export const useLogin = (
 
       toast.success("Logged in successfully!");
       
-      // Check for pending questionnaire from registration flow (check both localStorage and sessionStorage)
+      // Check for pending questionnaire from registration flow
       const questionnaireId = localStorage.getItem("questionnaire_id") || sessionStorage.getItem("questionnaire_id");
+      const wasLinked = localStorage.getItem("questionnaire_linked");
+
       if (questionnaireId && expectedRole === "customer") {
         try {
-          console.log("Attempting to link questionnaire:", questionnaireId);
+          console.log("🔗 [useLogin] Found pending questionnaire:", questionnaireId);
+          console.log("🔗 [useLogin] Was linked during registration?", wasLinked);
           
-          // First check if questionnaire exists and its current state
+          // Check if questionnaire exists and its current state
           const { data: existingQuestionnaire, error: fetchError } = await supabase
             .from("property_questionnaires")
             .select("customer_id, status")
@@ -62,9 +65,9 @@ export const useLogin = (
             .single();
           
           if (fetchError) {
-            console.error("Error fetching questionnaire:", fetchError);
+            console.error("❌ [useLogin] Error fetching questionnaire:", fetchError);
           } else if (existingQuestionnaire) {
-            console.log("Found questionnaire with customer_id:", existingQuestionnaire.customer_id);
+            console.log("📋 [useLogin] Found questionnaire with customer_id:", existingQuestionnaire.customer_id);
             
             // Only link if not already linked to another user
             if (!existingQuestionnaire.customer_id || existingQuestionnaire.customer_id === data.user.id) {
@@ -72,31 +75,31 @@ export const useLogin = (
                 .from("property_questionnaires")
                 .update({
                   customer_id: data.user.id,
-                  status: 'submitted',
-                  submitted_at: new Date().toISOString()
+                  status: 'draft', // Set to draft for editing
+                  is_completed: false
                 })
                 .eq('id', questionnaireId);
                 
               if (updateError) {
-                console.error("Error linking questionnaire to user:", updateError);
-                toast.error("Failed to link your questionnaire");
+                console.error("❌ [useLogin] Error linking questionnaire:", updateError);
               } else {
-                console.log("Successfully linked questionnaire to user:", questionnaireId);
-                toast.success("Your solar quotation request has been linked to your account!");
-                sessionStorage.removeItem("questionnaire_data");
-                sessionStorage.removeItem("questionnaire_id");
-                localStorage.removeItem("questionnaire_id");
-                localStorage.removeItem("questionnaire_email");
+                console.log("✅ [useLogin] Successfully linked questionnaire to user");
+                toast.success("Your solar questionnaire has been linked to your account!");
+                
+                // Mark as linked so fetch hook knows
+                localStorage.setItem("questionnaire_linked", "true");
+                // Keep the ID so fetch hook can retrieve it
+                // Don't clear yet - let useFetchQuestionnaire handle cleanup after fetch
               }
             } else {
-              console.log("Questionnaire already linked to different user");
+              console.log("ℹ️ [useLogin] Questionnaire already linked to different user");
               // Clear the storage since it's not valid
               localStorage.removeItem("questionnaire_id");
               localStorage.removeItem("questionnaire_email");
             }
           }
         } catch (err) {
-          console.error("Error processing questionnaire link:", err);
+          console.error("❌ [useLogin] Error processing questionnaire link:", err);
         }
       }
       
