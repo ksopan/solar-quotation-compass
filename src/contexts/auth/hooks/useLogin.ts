@@ -15,7 +15,7 @@ export const useLogin = (
   const login = async (email: string, password: string, expectedRole: UserRole) => {
     setLoading(true);
     try {
-      console.log("Attempting login for:", email, "as role:", expectedRole);
+      console.log("🔵 [useLogin] Attempting login for:", email, "as role:", expectedRole);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -23,12 +23,12 @@ export const useLogin = (
       });
 
       if (error) {
-        console.error("Login error:", error);
+        console.error("🔴 [useLogin] Login error:", error);
         throw new Error(error.message);
       }
       if (!data.user) throw new Error("No user returned.");
 
-      console.log("Login successful, user data:", data.user.id, data.user.email);
+      console.log("✅ [useLogin] Login successful, user:", data.user.id);
 
       // Check if email is confirmed
       const isEmailConfirmed = data.user.email_confirmed_at || data.user.user_metadata?.email_verified;
@@ -39,7 +39,7 @@ export const useLogin = (
 
       // Check if user role matches expected role
       const userRole = data.user.user_metadata?.role;
-      console.log("User role from metadata:", userRole, "Expected:", expectedRole);
+      console.log("🔍 [useLogin] User role:", userRole, "Expected:", expectedRole);
       
       if (userRole !== expectedRole) {
         await supabase.auth.signOut();
@@ -48,55 +48,51 @@ export const useLogin = (
 
       toast.success("Logged in successfully!");
       
-      // Check for pending questionnaire from registration flow (check both localStorage and sessionStorage)
+      // Check for pending questionnaire (for "Get Free Quotes" flow)
       const questionnaireId = localStorage.getItem("questionnaire_id") || sessionStorage.getItem("questionnaire_id");
       if (questionnaireId && expectedRole === "customer") {
         try {
-          console.log("Attempting to link questionnaire:", questionnaireId);
+          console.log("🔗 [useLogin] Found pending questionnaire:", questionnaireId);
           
-          // First check if questionnaire exists and its current state
           const { data: existingQuestionnaire, error: fetchError } = await supabase
             .from("property_questionnaires")
             .select("customer_id, status")
             .eq('id', questionnaireId)
-            .single();
+            .maybeSingle();
           
           if (fetchError) {
-            console.error("Error fetching questionnaire:", fetchError);
+            console.error("❌ [useLogin] Error fetching questionnaire:", fetchError);
           } else if (existingQuestionnaire) {
-            console.log("Found questionnaire with customer_id:", existingQuestionnaire.customer_id);
+            console.log("📋 [useLogin] Found questionnaire, current customer_id:", existingQuestionnaire.customer_id);
             
-            // Only link if not already linked to another user
+            // Only link if unlinked or already linked to this user
             if (!existingQuestionnaire.customer_id || existingQuestionnaire.customer_id === data.user.id) {
               const { error: updateError } = await supabase
                 .from("property_questionnaires")
                 .update({
                   customer_id: data.user.id,
-                  status: 'submitted',
-                  submitted_at: new Date().toISOString()
+                  status: 'draft', // Set as draft so user can edit and upload documents
+                  is_completed: false
                 })
                 .eq('id', questionnaireId);
                 
               if (updateError) {
-                console.error("Error linking questionnaire to user:", updateError);
+                console.error("❌ [useLogin] Error linking questionnaire:", updateError);
                 toast.error("Failed to link your questionnaire");
               } else {
-                console.log("Successfully linked questionnaire to user:", questionnaireId);
-                toast.success("Your solar quotation request has been linked to your account!");
-                sessionStorage.removeItem("questionnaire_data");
-                sessionStorage.removeItem("questionnaire_id");
-                localStorage.removeItem("questionnaire_id");
-                localStorage.removeItem("questionnaire_email");
+                console.log("✅ [useLogin] Successfully linked questionnaire as draft");
+                toast.success("Your solar quotation is ready to complete!");
+                // Keep the ID so fetch hook can load it - don't clear yet
+                localStorage.setItem("questionnaire_linked", "true");
               }
             } else {
-              console.log("Questionnaire already linked to different user");
-              // Clear the storage since it's not valid
+              console.log("ℹ️ [useLogin] Questionnaire already linked to different user");
               localStorage.removeItem("questionnaire_id");
               localStorage.removeItem("questionnaire_email");
             }
           }
         } catch (err) {
-          console.error("Error processing questionnaire link:", err);
+          console.error("❌ [useLogin] Error processing questionnaire:", err);
         }
       }
       
@@ -111,6 +107,7 @@ export const useLogin = (
         navigate("/");
       }
     } catch (err) {
+      console.error("❌ [useLogin] Login failed:", err);
       handleAuthError(err, "Login failed");
       throw err;
     } finally {
@@ -120,7 +117,14 @@ export const useLogin = (
 
   const loginWithOAuth = async (provider: "google" | "twitter") => {
     try {
-      // Only allow customers to use OAuth
+      console.log("🔵 [useLogin] Starting OAuth login with", provider);
+      
+      // Store questionnaire ID if present before OAuth redirect
+      const questionnaireId = sessionStorage.getItem("questionnaire_id");
+      if (questionnaireId) {
+        localStorage.setItem("questionnaire_id", questionnaireId);
+      }
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -132,10 +136,14 @@ export const useLogin = (
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ [useLogin] OAuth error:", error);
+        throw error;
+      }
       
-      // The redirect happens automatically, this runs after return
+      console.log("✅ [useLogin] OAuth redirect initiated");
     } catch (error) {
+      console.error("❌ [useLogin] OAuth failed:", error);
       handleAuthError(error, "Social login failed. Please try again.");
     }
   };

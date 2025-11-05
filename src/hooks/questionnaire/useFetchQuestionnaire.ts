@@ -22,73 +22,14 @@ export const useFetchQuestionnaire = () => {
       try {
         setLoading(true);
         
-        // Check both localStorage and sessionStorage for questionnaire ID
+        const wasLinked = localStorage.getItem("questionnaire_linked");
         const storedQuestionnaireId = localStorage.getItem("questionnaire_id") || 
                                       sessionStorage.getItem("questionnaire_id");
-        const storedEmail = localStorage.getItem("questionnaire_email") || 
-                           sessionStorage.getItem("questionnaire_email");
         
-        if (storedQuestionnaireId) {
-          console.log("Found stored questionnaire ID:", storedQuestionnaireId);
-          
-          // First, fetch the questionnaire to check its current state
-          const { data: existingQuestionnaire, error: fetchError } = await supabase
-            .from("property_questionnaires")
-            .select("*")
-            .eq("id", storedQuestionnaireId)
-            .maybeSingle();
-          
-          if (!fetchError && existingQuestionnaire) {
-            console.log("Found existing questionnaire with data:", {
-              id: existingQuestionnaire.id,
-              first_name: existingQuestionnaire.first_name,
-              last_name: existingQuestionnaire.last_name,
-              email: existingQuestionnaire.email,
-              customer_id: existingQuestionnaire.customer_id
-            });
-            
-            // Only link if questionnaire is unlinked OR already linked to this user
-            if (!existingQuestionnaire.customer_id || existingQuestionnaire.customer_id === user.id) {
-              console.log("Linking questionnaire to user...");
-              
-              const { data: updatedQuestionnaire, error: updateError } = await supabase
-                .from("property_questionnaires")
-                .update({ 
-                  customer_id: user.id,
-                  status: 'draft',  // Set to draft so user can edit and upload documents
-                  is_completed: false
-                })
-                .eq("id", storedQuestionnaireId)
-                .select()
-                .single();
-                
-              if (updateError) {
-                console.error("Error linking questionnaire:", updateError);
-                toast.error("Failed to link your questionnaire");
-              } else {
-                console.log("Successfully linked questionnaire to user:", updatedQuestionnaire);
-                // Set the questionnaire immediately so it displays
-                setQuestionnaire(updatedQuestionnaire as QuestionnaireData);
-                toast.success("Your solar questionnaire has been linked to your account!");
-              }
-            } else {
-              console.log("Questionnaire already linked to different user, skipping");
-            }
-          } else {
-            console.log("Could not find questionnaire with ID:", storedQuestionnaireId, fetchError);
-            toast.error("Could not find your questionnaire");
-          }
-          
-          // Clean up storage after processing
-          localStorage.removeItem("questionnaire_id");
-          localStorage.removeItem("questionnaire_email");
-          localStorage.removeItem("questionnaire_data");
-          sessionStorage.removeItem("questionnaire_id");
-          sessionStorage.removeItem("questionnaire_email");
-          sessionStorage.removeItem("questionnaire_data");
-        }
+        console.log("📊 [useFetchQuestionnaire] Fetching for user:", user.id);
+        console.log("📊 [useFetchQuestionnaire] Was linked?", wasLinked, "Stored ID:", storedQuestionnaireId);
         
-        // Fetch the user's questionnaire
+        // Always fetch the user's primary questionnaire first
         const { data, error } = await supabase
           .from("property_questionnaires")
           .select("*")
@@ -98,17 +39,73 @@ export const useFetchQuestionnaire = () => {
           .maybeSingle();
         
         if (error) {
-          console.error("Error fetching questionnaire:", error);
+          console.error("❌ [useFetchQuestionnaire] Error:", error);
           toast.error("Failed to load your questionnaire data");
         } else if (data) {
-          console.log("Fetched questionnaire:", data);
+          console.log("✅ [useFetchQuestionnaire] Found questionnaire:", {
+            id: data.id,
+            status: data.status,
+            is_completed: data.is_completed
+          });
           setQuestionnaire(data as QuestionnaireData);
+          
+          // Clean up after successful fetch if it was linked
+          if (wasLinked || storedQuestionnaireId) {
+            console.log("🧹 [useFetchQuestionnaire] Cleaning up storage");
+            localStorage.removeItem("questionnaire_id");
+            localStorage.removeItem("questionnaire_email");
+            localStorage.removeItem("questionnaire_data");
+            localStorage.removeItem("questionnaire_linked");
+            sessionStorage.removeItem("questionnaire_id");
+            sessionStorage.removeItem("questionnaire_email");
+            sessionStorage.removeItem("questionnaire_data");
+          }
+        } else if (storedQuestionnaireId && !wasLinked) {
+          // Fallback: If no questionnaire found but we have stored ID, try to link it
+          console.log("🔗 [useFetchQuestionnaire] Fallback linking:", storedQuestionnaireId);
+          
+          const { data: existingQuestionnaire, error: fetchError } = await supabase
+            .from("property_questionnaires")
+            .select("*")
+            .eq("id", storedQuestionnaireId)
+            .maybeSingle();
+          
+          if (!fetchError && existingQuestionnaire) {
+            if (!existingQuestionnaire.customer_id || existingQuestionnaire.customer_id === user.id) {
+              const { data: updatedQuestionnaire, error: updateError } = await supabase
+                .from("property_questionnaires")
+                .update({ 
+                  customer_id: user.id,
+                  status: 'draft',
+                  is_completed: false
+                })
+                .eq("id", storedQuestionnaireId)
+                .select()
+                .single();
+                
+              if (!updateError) {
+                console.log("✅ [useFetchQuestionnaire] Fallback link successful");
+                setQuestionnaire(updatedQuestionnaire as QuestionnaireData);
+                toast.success("Your solar questionnaire has been loaded!");
+              } else {
+                console.error("❌ [useFetchQuestionnaire] Fallback link failed:", updateError);
+              }
+            }
+          }
+          
+          // Clean up storage
+          localStorage.removeItem("questionnaire_id");
+          localStorage.removeItem("questionnaire_email");
+          localStorage.removeItem("questionnaire_data");
+          sessionStorage.removeItem("questionnaire_id");
+          sessionStorage.removeItem("questionnaire_email");
+          sessionStorage.removeItem("questionnaire_data");
         } else {
-          console.log("No questionnaire found for user");
+          console.log("ℹ️ [useFetchQuestionnaire] No questionnaire found for user");
           setQuestionnaire(null);
         }
       } catch (error) {
-        console.error("Error in fetchQuestionnaire:", error);
+        console.error("❌ [useFetchQuestionnaire] Error:", error);
         toast.error("An error occurred while loading your questionnaire data");
       } finally {
         setLoading(false);
