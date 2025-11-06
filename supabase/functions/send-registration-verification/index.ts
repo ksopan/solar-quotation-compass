@@ -52,8 +52,9 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to create verification");
     }
 
-    // Build verification URL - edge function will handle verification and redirect
-    const verificationUrl = `${supabaseUrl}/functions/v1/verify-registration?token=${verificationToken}&userId=${userId}`;
+    // Build verification URL - goes to frontend page which handles verification
+    const appUrl = "https://solar-quotation-compass.lovable.app";
+    const verificationUrl = `${appUrl}/verify-email?token=${verificationToken}&userId=${userId}`;
     const displayName = firstName && lastName ? `${firstName} ${lastName}` : email.split("@")[0];
 
     // Send verification email via Resend
