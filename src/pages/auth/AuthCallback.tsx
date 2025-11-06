@@ -108,18 +108,34 @@ const AuthCallback = () => {
           }
         }
         
+        // Check if user just linked a questionnaire
+        const wasLinked = localStorage.getItem("questionnaire_linked") === "true";
+        
         const userData = await transformUserData(data.session.user);
         
-        setMessage("Login successful. Redirecting...");
-        
-        // Redirect based on profile completion
-        setTimeout(() => {
-          if (isProfileComplete(userData)) {
-            navigate("/");
-          } else {
-            navigate("/complete-profile");
-          }
-        }, 1000);
+        if (wasLinked) {
+          setMessage("Your quotation is ready! Redirecting...");
+          localStorage.removeItem("questionnaire_linked");
+          localStorage.removeItem("questionnaire_id");
+          sessionStorage.removeItem("questionnaire_id");
+          
+          toast.success("Welcome!", {
+            description: "Your solar quotation is ready to complete in My Profile."
+          });
+          
+          setTimeout(() => navigate("/?tab=profile"), 1000);
+        } else {
+          setMessage("Login successful. Redirecting...");
+          
+          // Redirect based on profile completion
+          setTimeout(() => {
+            if (isProfileComplete(userData)) {
+              navigate("/");
+            } else {
+              navigate("/complete-profile");
+            }
+          }, 1000);
+        }
         
       } catch (err) {
         console.error("Error during auth callback:", err);

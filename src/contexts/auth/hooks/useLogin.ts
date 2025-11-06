@@ -24,17 +24,36 @@ export const useLogin = (
 
       if (error) {
         console.error("🔴 [useLogin] Login error:", error);
+        
+        // Check for email not confirmed error
+        if (error.message.includes("Email not confirmed") || 
+            error.message.includes("email_not_confirmed")) {
+          toast.error("Email not verified", {
+            description: "Please check your inbox and verify your email before logging in."
+          });
+          setLoading(false);
+          return;
+        }
+        
         throw new Error(error.message);
       }
       if (!data.user) throw new Error("No user returned.");
 
       console.log("✅ [useLogin] Login successful, user:", data.user.id);
 
-      // Check if email is confirmed
-      const isEmailConfirmed = data.user.email_confirmed_at || data.user.user_metadata?.email_verified;
+      // Double-check email is confirmed (additional security layer)
+      const isEmailConfirmed = data.user.email_confirmed_at || 
+                               data.user.confirmed_at || 
+                               data.user.user_metadata?.email_verified;
+      
       if (!isEmailConfirmed && data.user.app_metadata.provider === 'email') {
+        console.log("⚠️ [useLogin] Email not confirmed, signing out");
         await supabase.auth.signOut();
-        throw new Error("Please confirm your email before logging in.");
+        toast.error("Email not verified", {
+          description: "Please verify your email before logging in. Check your inbox."
+        });
+        setLoading(false);
+        return;
       }
 
       // Check if user role matches expected role
@@ -46,10 +65,10 @@ export const useLogin = (
         throw new Error(`Invalid role. Please log in as a ${expectedRole}.`);
       }
 
-      toast.success("Logged in successfully!");
-      
       // Check for pending questionnaire (for "Get Free Quotes" flow)
       const questionnaireId = localStorage.getItem("questionnaire_id") || sessionStorage.getItem("questionnaire_id");
+      let questionnaireWasLinked = false;
+      
       if (questionnaireId && expectedRole === "customer") {
         try {
           console.log("🔗 [useLogin] Found pending questionnaire:", questionnaireId);
@@ -81,9 +100,9 @@ export const useLogin = (
                 toast.error("Failed to link your questionnaire");
               } else {
                 console.log("✅ [useLogin] Successfully linked questionnaire as draft");
-                toast.success("Your solar quotation is ready to complete!");
                 // Keep the ID so fetch hook can load it - don't clear yet
                 localStorage.setItem("questionnaire_linked", "true");
+                questionnaireWasLinked = true;
               }
             } else {
               console.log("ℹ️ [useLogin] Questionnaire already linked to different user");
@@ -100,11 +119,21 @@ export const useLogin = (
       const userData = await transformUserData(data.user);
       setUser(userData);
       
-      // Redirect based on completion and role
-      if (!isProfileComplete(userData)) {
-        navigate("/complete-profile");
+      // Handle redirect and messaging
+      if (questionnaireWasLinked) {
+        toast.success("Welcome back!", {
+          description: "Your solar quotation is ready to complete in My Profile."
+        });
+        setTimeout(() => navigate("/?tab=profile"), 500);
       } else {
-        navigate("/");
+        toast.success("Logged in successfully!");
+        
+        // Redirect based on completion and role
+        if (!isProfileComplete(userData)) {
+          navigate("/complete-profile");
+        } else {
+          navigate("/");
+        }
       }
     } catch (err) {
       console.error("❌ [useLogin] Login failed:", err);

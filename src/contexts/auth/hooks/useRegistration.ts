@@ -126,8 +126,16 @@ export const useRegistration = (
         console.log("✅ [useRegistration] User created successfully");
         
         // CRITICAL: Sign out immediately to prevent auto-login
+        console.log("🔵 [useRegistration] Signing out to prevent auto-login");
         await supabase.auth.signOut();
         setUser(null);
+        
+        // Double-check session is cleared
+        const { data: sessionCheck } = await supabase.auth.getSession();
+        if (sessionCheck.session) {
+          console.log("⚠️ [useRegistration] Session still exists, forcing sign out again");
+          await supabase.auth.signOut();
+        }
         
         if (emailAlreadyVerified && questionnaireId) {
           // Link questionnaire to user
