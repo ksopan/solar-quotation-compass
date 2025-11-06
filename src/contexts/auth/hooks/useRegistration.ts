@@ -66,11 +66,12 @@ export const useRegistration = (
           }
         }
       }
-      // Prepare user metadata - mark as unverified by default
+      // Prepare user metadata
       const userMetadata: Record<string, any> = {
         role: registrationData.role,
-        email_verified: emailAlreadyVerified,
-        custom_email_verified: emailAlreadyVerified, // Track our custom verification
+        // CRITICAL: Always set custom_email_verified based on our verification flow
+        // Don't rely on Supabase's email_verified
+        custom_email_verified: emailAlreadyVerified,
       };
 
       if (registrationData.role === "customer" || registrationData.role === "vendor") {
