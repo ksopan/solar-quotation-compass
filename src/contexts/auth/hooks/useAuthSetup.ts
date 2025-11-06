@@ -17,18 +17,18 @@ export const useAuthSetup = () => {
       setTimeout(async () => {
         try {
           if (session?.user) {
-            // Check if email is confirmed before setting user
-            const emailConfirmed = session.user.email_confirmed_at || session.user.confirmed_at;
+            // Check if custom email is verified (our Resend flow)
+            const customVerified = session.user.user_metadata?.custom_email_verified;
             
-            if (!emailConfirmed) {
-              console.log("⚠️ [useAuthSetup] Email not confirmed, not setting user");
+            if (!customVerified) {
+              console.log("⚠️ [useAuthSetup] Custom email not verified, not setting user");
               setUser(null);
               setLoading(false);
               return;
             }
             
             const userData = await transformUserData(session.user);
-            console.log("✅ [useAuthSetup] User authenticated and email confirmed");
+            console.log("✅ [useAuthSetup] User authenticated and custom email verified");
             setUser(userData);
           } else {
             console.log("🔵 [useAuthSetup] No session, clearing user");
@@ -47,18 +47,18 @@ export const useAuthSetup = () => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       try {
         if (session?.user) {
-          // Check if email is confirmed
-          const emailConfirmed = session.user.email_confirmed_at || session.user.confirmed_at;
+          // Check if custom email is verified (our Resend flow)
+          const customVerified = session.user.user_metadata?.custom_email_verified;
           
-          if (!emailConfirmed) {
-            console.log("⚠️ [useAuthSetup] Initial session: Email not confirmed");
+          if (!customVerified) {
+            console.log("⚠️ [useAuthSetup] Initial session: Custom email not verified");
             setUser(null);
             setLoading(false);
             return;
           }
           
           const userData = await transformUserData(session.user);
-          console.log("✅ [useAuthSetup] Initial session: User authenticated");
+          console.log("✅ [useAuthSetup] Initial session: User authenticated with verified custom email");
           setUser(userData);
         }
       } catch (error) {

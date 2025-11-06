@@ -72,12 +72,13 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Mark email as verified
+    // Mark email as verified with custom flag
     const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
       email_confirm: true,
       user_metadata: {
         ...user.user_metadata,
         email_verified: true,
+        custom_email_verified: true, // Our custom verification flag
         verification_token: null,
         verification_token_expires_at: null,
       },

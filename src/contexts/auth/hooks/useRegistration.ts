@@ -66,10 +66,11 @@ export const useRegistration = (
           }
         }
       }
-      // Prepare user metadata
+      // Prepare user metadata - mark as unverified by default
       const userMetadata: Record<string, any> = {
         role: registrationData.role,
         email_verified: emailAlreadyVerified,
+        custom_email_verified: emailAlreadyVerified, // Track our custom verification
       };
 
       if (registrationData.role === "customer" || registrationData.role === "vendor") {

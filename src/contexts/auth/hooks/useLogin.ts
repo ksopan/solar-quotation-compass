@@ -41,13 +41,11 @@ export const useLogin = (
 
       console.log("✅ [useLogin] Login successful, user:", data.user.id);
 
-      // Double-check email is confirmed (additional security layer)
-      const isEmailConfirmed = data.user.email_confirmed_at || 
-                               data.user.confirmed_at || 
-                               data.user.user_metadata?.email_verified;
+      // Check if custom email is verified (additional security layer)
+      const isCustomEmailVerified = data.user.user_metadata?.custom_email_verified;
       
-      if (!isEmailConfirmed && data.user.app_metadata.provider === 'email') {
-        console.log("⚠️ [useLogin] Email not confirmed, signing out");
+      if (!isCustomEmailVerified && data.user.app_metadata.provider === 'email') {
+        console.log("⚠️ [useLogin] Custom email not verified, signing out");
         await supabase.auth.signOut();
         toast.error("Email not verified", {
           description: "Please verify your email before logging in. Check your inbox."
