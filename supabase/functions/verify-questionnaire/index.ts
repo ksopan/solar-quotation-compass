@@ -16,7 +16,7 @@ const handler = async (req: Request): Promise<Response> => {
     const url = new URL(req.url);
     const token = url.searchParams.get('token');
 
-    const origin = req.headers.get("origin") || "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com";
+    const origin = req.headers.get("origin") || "https://solar-quotation-compass.lovable.app";
 
     if (!token) {
       console.warn("Missing verification token");
@@ -90,7 +90,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Check if already verified
     if (questionnaire.verified_at) {
       console.log('Questionnaire already verified');
-      const origin = req.headers.get("origin") || "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com";
+      const origin = req.headers.get("origin") || "https://solar-quotation-compass.lovable.app";
       return new Response(null, {
         status: 302,
         headers: {
