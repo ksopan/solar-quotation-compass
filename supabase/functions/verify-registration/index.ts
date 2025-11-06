@@ -15,7 +15,7 @@ const handler = async (req: Request): Promise<Response> => {
     const url = new URL(req.url);
     const token = url.searchParams.get("token");
     const userId = url.searchParams.get("userId");
-    const origin = req.headers.get("origin") || "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com";
+    const origin = req.headers.get("origin") || "https://solar-quotation-compass.lovable.app";
 
     if (!token || !userId) {
       console.warn("Missing verification token or userId");
@@ -108,7 +108,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error in verify-registration function:", error);
-    const origin = "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com";
+    const origin = "https://solar-quotation-compass.lovable.app";
     return new Response(null, {
       status: 302,
       headers: {
