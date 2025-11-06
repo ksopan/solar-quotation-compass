@@ -52,8 +52,9 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to create verification");
     }
 
-    // Build verification URL - this will verify the email WITHOUT logging in
-    const verificationUrl = `${supabaseUrl}/functions/v1/verify-registration?token=${verificationToken}&userId=${userId}`;
+    // Build verification URL - goes to app page which handles verification
+    const appUrl = "https://solar-quotation-compass.lovable.app";
+    const verificationUrl = `${appUrl}/verify-email?token=${verificationToken}&userId=${userId}`;
     const displayName = firstName && lastName ? `${firstName} ${lastName}` : email.split("@")[0];
 
     // Send verification email via Resend

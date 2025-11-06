@@ -21,6 +21,7 @@ import SubmitQuote from "./pages/SubmitQuote";
 import VendorDashboard from "./pages/VendorDashboard";
 import VendorProfile from "./pages/VendorProfile";
 import VerificationSuccess from "./pages/VerificationSuccess";
+import VerifyEmail from "./pages/VerifyEmail";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verification-success" element={<VerificationSuccess />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             
             {/* Protected routes */}
             <Route path="/complete-profile" element={
