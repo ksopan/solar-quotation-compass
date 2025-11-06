@@ -14,7 +14,8 @@ export const useLogout = (
       console.log("Starting logout process");
       const { error } = await supabase.auth.signOut();
       
-      if (error) {
+      // If the error is that the session doesn't exist, that's fine - user is already logged out
+      if (error && !error.message.includes("session_not_found") && !error.message.includes("Session not found")) {
         console.error("Error during logout:", error);
         throw error;
       }
