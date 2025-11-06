@@ -128,69 +128,56 @@ export const useRegistration = (
 
       if (data.user) {
         console.log("✅ [useRegistration] User created successfully");
-        const userId = data.user.id;
         
-        // CRITICAL: For Get Free Quotes flow, link questionnaire BEFORE signing out
-        // This ensures the operation completes with proper auth context
-        if (emailAlreadyVerified && questionnaireId) {
-          try {
-            console.log("🔗 [useRegistration] Linking questionnaire via edge function");
-            const { error: linkError } = await supabase.functions.invoke("confirm-questionnaire-user", {
-              body: {
-                userId: userId,
-                questionnaireId: questionnaireId,
-              },
-            });
-            
-            if (linkError) {
-              console.error("❌ [useRegistration] Failed to link questionnaire:", linkError);
-            } else {
-              console.log("✅ [useRegistration] Questionnaire linked successfully");
-            }
-          } catch (err) {
-            console.error("❌ [useRegistration] Error linking questionnaire:", err);
-          }
-        }
-        
-        // CRITICAL: Now sign out completely to prevent auto-login
-        console.log("🔵 [useRegistration] Signing out to prevent auto-login");
-        
-        // Step 1: Sign out from auth
-        await supabase.auth.signOut({ scope: 'global' });
-        
-        // Step 2: Clear user state
+        // CRITICAL: Sign out IMMEDIATELY to prevent any auto-login
+        // We do this BEFORE sending verification email to ensure no session exists
+        console.log("🔵 [useRegistration] Signing out immediately to prevent auto-login");
+        await supabase.auth.signOut({ scope: 'local' });
         setUser(null);
         
-        // Step 3: Aggressively clear ALL storage
-        localStorage.clear();
+        // Extra safety: Clear any lingering session data
+        localStorage.removeItem('supabase.auth.token');
         sessionStorage.clear();
         
-        // Step 4: Wait and verify session is completely cleared
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // Double-check session is cleared with a small delay
+        await new Promise(resolve => setTimeout(resolve, 100));
         const { data: sessionCheck } = await supabase.auth.getSession();
         if (sessionCheck.session) {
-          console.log("⚠️ [useRegistration] Session still exists, forcing complete cleanup");
+          console.log("⚠️ [useRegistration] Session still exists after signout, forcing another signout");
           await supabase.auth.signOut({ scope: 'global' });
-          localStorage.clear();
-          sessionStorage.clear();
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
         console.log("✅ [useRegistration] Session cleared successfully");
         
-        // Restore questionnaire data only if it was from that flow
         if (emailAlreadyVerified && questionnaireId) {
-          localStorage.setItem("questionnaire_completed", "true");
+          // Link questionnaire to user
+          try {
+            await supabase
+              .from("property_questionnaires")
+              .update({ customer_id: data.user.id })
+              .eq("id", questionnaireId);
+            
+            console.log("✅ [useRegistration] Linked questionnaire to user");
+            
+            // Clear stored data
+            localStorage.removeItem("questionnaire_id");
+            localStorage.removeItem("questionnaire_email");
+            sessionStorage.removeItem("questionnaire_id");
+            sessionStorage.removeItem("questionnaire_data");
+          } catch (err) {
+            console.error("❌ [useRegistration] Failed to link questionnaire:", err);
+          }
           
           toast.success("Account created successfully!", {
-            description: "Please log in to access your solar quotation request."
+            description: "You can now log in with your credentials."
           });
         } else {
-          // Send verification email via Resend for regular registration
+          // Send verification email via Resend
           try {
             console.log("📧 [useRegistration] Sending verification email via Resend");
             const { error: emailError } = await supabase.functions.invoke("send-registration-verification", {
               body: {
-                userId: userId,
+                userId: data.user.id,
                 email: registrationData.email,
                 firstName: registrationData.firstName,
                 lastName: registrationData.lastName,
@@ -217,11 +204,8 @@ export const useRegistration = (
           }
         }
         
-        // Step 5: Navigate to login AFTER everything is cleaned up
-        console.log("🔵 [useRegistration] Navigating to login page");
-        setTimeout(() => {
-          navigate("/login", { replace: true });
-        }, 100);
+        console.log("🔵 [useRegistration] Navigating to login");
+        navigate("/login");
       }
     } catch (err) {
       console.error("🔴 [useRegistration] Caught error:", err);

@@ -28,8 +28,11 @@ export const useLogin = (
         // Check for email not confirmed error
         if (error.message.includes("Email not confirmed") || 
             error.message.includes("email_not_confirmed")) {
+          toast.error("Email not verified", {
+            description: "Please check your inbox and verify your email before logging in."
+          });
           setLoading(false);
-          throw new Error("Email not verified. Please check your inbox and verify your email before logging in.");
+          return;
         }
         
         throw new Error(error.message);
@@ -44,8 +47,11 @@ export const useLogin = (
       if (!isCustomEmailVerified && data.user.app_metadata.provider === 'email') {
         console.log("⚠️ [useLogin] Custom email not verified, signing out");
         await supabase.auth.signOut();
+        toast.error("Email not verified", {
+          description: "Please verify your email before logging in. Check your inbox."
+        });
         setLoading(false);
-        throw new Error("Email not verified. Please check your inbox and verify your email before logging in.");
+        return;
       }
 
       // Check if user role matches expected role
