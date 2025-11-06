@@ -91,12 +91,14 @@ export const useRegistration = (
 
       console.log("🔵 [useRegistration] Signing up user");
       
-      // Sign up user with auto-confirm enabled (we handle verification manually)
+      // Sign up user with auto-confirm (we handle verification manually)
+      // This prevents Supabase from sending default confirmation emails
       const { data, error } = await supabase.auth.signUp({
         email: registrationData.email!,
         password: registrationData.password,
         options: {
           data: userMetadata,
+          emailRedirectTo: undefined, // Disable default email confirmation
         }
       });
 
@@ -127,17 +129,25 @@ export const useRegistration = (
       if (data.user) {
         console.log("✅ [useRegistration] User created successfully");
         
-        // CRITICAL: Sign out immediately to prevent auto-login
-        console.log("🔵 [useRegistration] Signing out to prevent auto-login");
-        await supabase.auth.signOut();
+        // CRITICAL: Sign out IMMEDIATELY to prevent any auto-login
+        // We do this BEFORE sending verification email to ensure no session exists
+        console.log("🔵 [useRegistration] Signing out immediately to prevent auto-login");
+        await supabase.auth.signOut({ scope: 'local' });
         setUser(null);
         
-        // Double-check session is cleared
+        // Extra safety: Clear any lingering session data
+        localStorage.removeItem('supabase.auth.token');
+        sessionStorage.clear();
+        
+        // Double-check session is cleared with a small delay
+        await new Promise(resolve => setTimeout(resolve, 100));
         const { data: sessionCheck } = await supabase.auth.getSession();
         if (sessionCheck.session) {
-          console.log("⚠️ [useRegistration] Session still exists, forcing sign out again");
-          await supabase.auth.signOut();
+          console.log("⚠️ [useRegistration] Session still exists after signout, forcing another signout");
+          await supabase.auth.signOut({ scope: 'global' });
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
+        console.log("✅ [useRegistration] Session cleared successfully");
         
         if (emailAlreadyVerified && questionnaireId) {
           // Link questionnaire to user
