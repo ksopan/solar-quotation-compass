@@ -93,20 +93,20 @@ const GetFreeQuotes = () => {
 
       // Send verification email
       const { error: emailError } = await supabase.functions.invoke(
-        "send-registration-verification",
+        "send-verification-email",
         {
           body: {
-            userId: questionnaire.id,
             email: formData.email,
             firstName: formData.first_name,
-            lastName: formData.last_name
+            lastName: formData.last_name,
+            verificationToken: questionnaire.verification_token
           }
         }
       );
 
       if (emailError) throw emailError;
 
-      toast.success("Quote request submitted! Please check your email to verify and create your account.");
+      toast.success("Quote request submitted! Please check your email to verify.");
       setIsOpen(false);
       navigate("/");
     } catch (error: any) {
@@ -174,6 +174,7 @@ const GetFreeQuotes = () => {
             firstName={formData.first_name}
             lastName={formData.last_name}
             email={formData.email}
+            phone={formData.phone}
             onChange={(field, value) => handleChange(field, value)}
             onNext={handleSubmit}
             onPrevious={handlePrevious}
