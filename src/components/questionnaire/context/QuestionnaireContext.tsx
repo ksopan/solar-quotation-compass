@@ -14,6 +14,7 @@ export interface QuestionnaireData {
   first_name: string;
   last_name: string;
   email: string;
+  phone?: string;
 }
 
 interface QuestionnaireContextType {
@@ -41,7 +42,8 @@ const defaultFormData: QuestionnaireData = {
   roof_age_status: "no",
   first_name: "",
   last_name: "",
-  email: ""
+  email: "",
+  phone: ""
 };
 
 export const QuestionnaireContext = createContext<QuestionnaireContextType | undefined>(undefined);

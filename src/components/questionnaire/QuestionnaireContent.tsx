@@ -119,6 +119,7 @@ export const QuestionnaireContent: React.FC<QuestionnaireContentProps> = ({
           firstName={formData.first_name}
           lastName={formData.last_name}
           email={formData.email}
+          phone={formData.phone}
           onChange={(field, value) => handleChange(field as keyof typeof formData, value)}
           onNext={handleNext}
           onPrevious={handlePrevious}
