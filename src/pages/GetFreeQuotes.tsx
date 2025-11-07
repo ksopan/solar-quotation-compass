@@ -45,7 +45,12 @@ const GetFreeQuotes = () => {
   const totalSteps = 5;
 
   const handleChange = (field: string, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    console.log(`📝 GetFreeQuotes handleChange - field: ${field}, value:`, value);
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      console.log("📝 Updated formData:", updated);
+      return updated;
+    });
   };
 
   const handleNext = () => {
