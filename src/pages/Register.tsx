@@ -222,7 +222,7 @@ const Register = () => {
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <TabsContent value="customer">
-                  <CustomerRegistrationForm register={register} errors={errors} />
+                  <CustomerRegistrationForm register={register} errors={errors} setValue={setValue} />
                 </TabsContent>
 
                 <TabsContent value="vendor">
