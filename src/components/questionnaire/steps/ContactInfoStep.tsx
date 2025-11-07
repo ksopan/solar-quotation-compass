@@ -101,9 +101,13 @@ export const ContactInfoStep: React.FC<ContactInfoStepProps> = ({
           <Input 
             id="phone" 
             type="tel" 
-            value={phone} 
-            onChange={(e) => onChange("phone", e.target.value)}
+            value={phone || ""} 
+            onChange={(e) => {
+              console.log("Phone input changed:", e.target.value);
+              onChange("phone", e.target.value);
+            }}
             placeholder="(555) 123-4567"
+            autoComplete="tel"
           />
         </div>
       </div>
