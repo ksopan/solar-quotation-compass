@@ -23,6 +23,8 @@ import VendorProfile from "./pages/VendorProfile";
 import VerificationSuccess from "./pages/VerificationSuccess";
 import VerifyEmail from "./pages/VerifyEmail";
 
+import GetFreeQuotes from "./pages/GetFreeQuotes";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -35,6 +37,7 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Index />} />
+            <Route path="/get-free-quotes" element={<GetFreeQuotes />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/auth/callback" element={<AuthCallback />} />

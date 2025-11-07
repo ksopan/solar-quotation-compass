@@ -22,32 +22,7 @@ export const useAllQuestionnaires = () => {
       console.log("Fetching questionnaires...");
       const { data, error } = await supabase
         .from("property_questionnaires")
-        .select(`
-          id, 
-          customer_id,
-          first_name,
-          last_name,
-          email,
-          property_type,
-          ownership_status,
-          monthly_electric_bill,
-          roof_age_status,
-          purchase_timeline,
-          interested_in_batteries,
-          battery_reason,
-          willing_to_remove_trees,
-          created_at,
-          updated_at,
-          is_completed,
-          status,
-          submitted_at,
-          proposal_deadline,
-          acceptance_deadline,
-          version,
-          verification_token,
-          verified_at,
-          verification_token_expires_at
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
         
       if (error) {
@@ -57,7 +32,7 @@ export const useAllQuestionnaires = () => {
         setQuestionnaires([]);
       } else {
         console.log("Fetched questionnaires:", data);
-        setQuestionnaires(data || []);
+        setQuestionnaires((data || []) as PropertyQuestionnaireItem[]);
         if (data && data.length > 0) {
           toast.success(`Found ${data.length} questionnaire(s)`);
         } else {

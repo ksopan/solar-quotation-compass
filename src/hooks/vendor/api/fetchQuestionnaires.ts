@@ -95,8 +95,8 @@ export const fetchQuestionnaires = async (
       }
       
       // Process questionnaires to check if vendor has submitted a proposal
-      const processedQuestionnaires: PropertyQuestionnaireItem[] = await Promise.all(
-        questionnaires.map(async (questionnaire) => {
+      const processedQuestionnaires = await Promise.all(
+        questionnaires.map(async (questionnaire: any) => {
           // Prepare customer name from the questionnaire data itself
           const customerName = `${questionnaire.first_name} ${questionnaire.last_name}`;
           
@@ -115,6 +115,13 @@ export const fetchQuestionnaires = async (
             
           return {
             ...questionnaire,
+            address: questionnaire.address || null,
+            latitude: questionnaire.latitude || null,
+            longitude: questionnaire.longitude || null,
+            roof_material: questionnaire.roof_material || null,
+            heating_type: questionnaire.heating_type || null,
+            electrification_interest: questionnaire.electrification_interest || null,
+            phone: questionnaire.phone || null,
             customerName,
             customerEmail: questionnaire.email,
             hasProposal
@@ -126,7 +133,7 @@ export const fetchQuestionnaires = async (
     console.log("Total pages:", count ? Math.ceil(count / limit) : 1);
     
     return { 
-      questionnaires: processedQuestionnaires, 
+      questionnaires: processedQuestionnaires as PropertyQuestionnaireItem[], 
       totalPages: count ? Math.ceil(count / limit) : 1
     };
   } catch (error) {

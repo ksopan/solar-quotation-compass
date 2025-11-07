@@ -71,21 +71,28 @@ export type Database = {
       property_questionnaires: {
         Row: {
           acceptance_deadline: string | null
+          address: string | null
           battery_reason: string | null
           created_at: string
           customer_id: string | null
+          electrification_interest: string | null
           email: string
           first_name: string
+          heating_type: string | null
           id: string
           interested_in_batteries: boolean
           is_completed: boolean
           last_name: string
+          latitude: number | null
+          longitude: number | null
           monthly_electric_bill: number
           ownership_status: string
+          phone: string | null
           property_type: string
           proposal_deadline: string | null
           purchase_timeline: string
           roof_age_status: string
+          roof_material: string | null
           status: Database["public"]["Enums"]["questionnaire_status"] | null
           submitted_at: string | null
           updated_at: string
@@ -97,21 +104,28 @@ export type Database = {
         }
         Insert: {
           acceptance_deadline?: string | null
+          address?: string | null
           battery_reason?: string | null
           created_at?: string
           customer_id?: string | null
+          electrification_interest?: string | null
           email: string
           first_name: string
+          heating_type?: string | null
           id?: string
           interested_in_batteries?: boolean
           is_completed?: boolean
           last_name: string
+          latitude?: number | null
+          longitude?: number | null
           monthly_electric_bill?: number
           ownership_status?: string
+          phone?: string | null
           property_type?: string
           proposal_deadline?: string | null
           purchase_timeline?: string
           roof_age_status?: string
+          roof_material?: string | null
           status?: Database["public"]["Enums"]["questionnaire_status"] | null
           submitted_at?: string | null
           updated_at?: string
@@ -123,21 +137,28 @@ export type Database = {
         }
         Update: {
           acceptance_deadline?: string | null
+          address?: string | null
           battery_reason?: string | null
           created_at?: string
           customer_id?: string | null
+          electrification_interest?: string | null
           email?: string
           first_name?: string
+          heating_type?: string | null
           id?: string
           interested_in_batteries?: boolean
           is_completed?: boolean
           last_name?: string
+          latitude?: number | null
+          longitude?: number | null
           monthly_electric_bill?: number
           ownership_status?: string
+          phone?: string | null
           property_type?: string
           proposal_deadline?: string | null
           purchase_timeline?: string
           roof_age_status?: string
+          roof_material?: string | null
           status?: Database["public"]["Enums"]["questionnaire_status"] | null
           submitted_at?: string | null
           updated_at?: string

@@ -8,15 +8,17 @@ interface ContactInfoStepProps {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string;
   onChange: (field: string, value: string) => void;
   onNext: () => void;
-  onPrevious: () => void;
+  onPrevious?: () => void;
 }
 
 export const ContactInfoStep: React.FC<ContactInfoStepProps> = ({ 
   firstName, 
   lastName, 
-  email, 
+  email,
+  phone = "",
   onChange, 
   onNext, 
   onPrevious 
@@ -92,6 +94,17 @@ export const ContactInfoStep: React.FC<ContactInfoStepProps> = ({
           {errors.email && (
             <p className="text-red-500 text-sm">{errors.email}</p>
           )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone Number (Optional)</Label>
+          <Input 
+            id="phone" 
+            type="tel" 
+            value={phone} 
+            onChange={(e) => onChange("phone", e.target.value)}
+            placeholder="(555) 123-4567"
+          />
         </div>
       </div>
       
