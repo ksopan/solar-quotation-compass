@@ -45,12 +45,19 @@ const GetFreeQuotes = () => {
   const totalSteps = 5;
 
   const handleChange = (field: string, value: string | number) => {
-    console.log(`📝 GetFreeQuotes handleChange - field: ${field}, value:`, value);
-    setFormData(prev => {
-      const updated = { ...prev, [field]: value };
-      console.log("📝 Updated formData:", updated);
-      return updated;
-    });
+    console.log(`📝 GetFreeQuotes handleChange CALLED - field: ${field}, value:`, value);
+    console.log("📝 Current formData before update:", formData);
+    try {
+      setFormData(prev => {
+        console.log("📝 Inside setFormData - prev:", prev);
+        const updated = { ...prev, [field]: value };
+        console.log("📝 Updated formData:", updated);
+        return updated;
+      });
+      console.log("📝 setFormData completed successfully");
+    } catch (error) {
+      console.error("📝 Error in handleChange:", error);
+    }
   };
 
   const handleNext = () => {
@@ -180,7 +187,11 @@ const GetFreeQuotes = () => {
             lastName={formData.last_name}
             email={formData.email}
             phone={formData.phone}
-            onChange={(field, value) => handleChange(field, value)}
+            onChange={(field, value) => {
+              console.log("🔵 ContactInfoStep onChange wrapper called:", field, value);
+              handleChange(field, value);
+              console.log("🔵 handleChange returned");
+            }}
             onNext={handleSubmit}
             onPrevious={handlePrevious}
           />
