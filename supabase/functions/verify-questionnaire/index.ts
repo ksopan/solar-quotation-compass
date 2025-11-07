@@ -16,11 +16,9 @@ const handler = async (req: Request): Promise<Response> => {
     const url = new URL(req.url);
     const token = url.searchParams.get('token');
 
-    // Get the origin from referer or construct from host
-    const referer = req.headers.get("referer");
-    const origin = referer ? new URL(referer).origin : 
-                   req.headers.get("origin") || 
-                   `https://${url.hostname}`;
+    // Get the app origin - construct from project ID or use environment variable
+    const projectId = Deno.env.get('SUPABASE_PROJECT_ID') ?? 'agmsvskzasrqnlijtwbg';
+    const origin = `https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com`;
 
     if (!token) {
       console.warn("Missing verification token");
