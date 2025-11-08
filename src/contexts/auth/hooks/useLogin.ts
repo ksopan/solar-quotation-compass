@@ -45,13 +45,58 @@ export const useLogin = (
       const isCustomEmailVerified = data.user.user_metadata?.custom_email_verified;
       
       if (!isCustomEmailVerified && data.user.app_metadata.provider === 'email') {
-        console.log("⚠️ [useLogin] Custom email not verified, signing out");
-        await supabase.auth.signOut();
-        toast.error("Email not verified", {
-          description: "Please verify your email before logging in. Check your inbox."
-        });
-        setLoading(false);
-        return;
+        console.log("⚠️ [useLogin] Custom email not verified, checking for verified questionnaires");
+        
+        // Check if user has any verified questionnaires (alternative verification method)
+        const { data: verifiedQuestionnaires, error: qError } = await supabase
+          .from("property_questionnaires")
+          .select("id")
+          .eq("customer_id", data.user.id)
+          .not("verified_at", "is", null)
+          .limit(1);
+        
+        if (!qError && verifiedQuestionnaires && verifiedQuestionnaires.length > 0) {
+          console.log("✅ [useLogin] User has verified questionnaire, marking as verified");
+          // User has a verified questionnaire, mark them as verified via edge function
+          const { error: verifyError } = await supabase.functions.invoke(
+            "confirm-questionnaire-user",
+            { body: { userId: data.user.id } }
+          );
+          
+          if (verifyError) {
+            console.error("❌ [useLogin] Failed to verify user via questionnaire:", verifyError);
+            await supabase.auth.signOut();
+            toast.error("Verification error", {
+              description: "Please contact support."
+            });
+            setLoading(false);
+            return;
+          }
+          
+          // Refresh the session to get updated user metadata
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError || !refreshData.session) {
+            console.error("❌ [useLogin] Failed to refresh session:", refreshError);
+            await supabase.auth.signOut();
+            toast.error("Login failed", {
+              description: "Please try again."
+            });
+            setLoading(false);
+            return;
+          }
+          
+          console.log("✅ [useLogin] User verified and session refreshed");
+          // Continue with login using refreshed user data
+          data.user = refreshData.user!;
+        } else {
+          console.log("⚠️ [useLogin] No verified questionnaires found, email verification required");
+          await supabase.auth.signOut();
+          toast.error("Email not verified", {
+            description: "Please verify your email before logging in. Check your inbox."
+          });
+          setLoading(false);
+          return;
+        }
       }
 
       // Check if user role matches expected role

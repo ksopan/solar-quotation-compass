@@ -69,9 +69,9 @@ export const useRegistration = (
       // Prepare user metadata
       const userMetadata: Record<string, any> = {
         role: registrationData.role,
-        // CRITICAL: Always set custom_email_verified based on our verification flow
-        // Don't rely on Supabase's email_verified
-        custom_email_verified: emailAlreadyVerified,
+        // CRITICAL: ALWAYS set to false during registration to prevent auto-login
+        // User must manually log in after registration
+        custom_email_verified: false,
       };
 
       if (registrationData.role === "customer" || registrationData.role === "vendor") {
@@ -150,7 +150,7 @@ export const useRegistration = (
         console.log("✅ [useRegistration] Session cleared successfully");
         
         if (emailAlreadyVerified && questionnaireId) {
-          // Link questionnaire to user
+          // Link questionnaire to user - verification status will be handled on login
           try {
             await supabase
               .from("property_questionnaires")

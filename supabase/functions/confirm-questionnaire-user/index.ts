@@ -37,11 +37,22 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    // Update user to confirm their email
+    // Update user to confirm their email and set custom verification flag
+    const { data: userData, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    
+    if (getUserError || !userData.user) {
+      console.error("Error fetching user:", getUserError);
+      throw getUserError || new Error("User not found");
+    }
+
     const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
       userId,
       { 
-        email_confirm: true
+        email_confirm: true,
+        user_metadata: {
+          ...userData.user.user_metadata,
+          custom_email_verified: true,
+        }
       }
     );
 
