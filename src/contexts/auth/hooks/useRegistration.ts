@@ -150,7 +150,7 @@ export const useRegistration = (
         console.log("✅ [useRegistration] Session cleared successfully");
         
         if (emailAlreadyVerified && questionnaireId) {
-          // Link questionnaire to user and mark user as verified
+          // Link questionnaire to user - verification will be handled during first login
           try {
             await supabase
               .from("property_questionnaires")
@@ -159,30 +159,13 @@ export const useRegistration = (
             
             console.log("✅ [useRegistration] Linked questionnaire to user");
             
-            // Mark user as verified since questionnaire was verified
-            console.log("🔵 [useRegistration] Marking user as verified");
-            const { error: verifyError } = await supabase.functions.invoke(
-              "confirm-questionnaire-user",
-              { body: { userId: data.user.id } }
-            );
-            
-            if (verifyError) {
-              console.error("❌ [useRegistration] Failed to verify user:", verifyError);
-            } else {
-              console.log("✅ [useRegistration] User marked as verified");
-            }
-            
-            // Clear stored data
-            localStorage.removeItem("questionnaire_id");
-            localStorage.removeItem("questionnaire_email");
-            sessionStorage.removeItem("questionnaire_id");
-            sessionStorage.removeItem("questionnaire_data");
+            // Don't clear stored data yet - we need it for the login flow
           } catch (err) {
             console.error("❌ [useRegistration] Failed to link questionnaire:", err);
           }
           
           toast.success("Account created successfully!", {
-            description: "You can now log in with your credentials."
+            description: "You can now log in with your credentials. Your email has already been verified."
           });
         } else {
           // Send verification email via Resend

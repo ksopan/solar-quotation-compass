@@ -86,6 +86,13 @@ export const useLogin = (
           }
           
           console.log("✅ [useLogin] User verified and session refreshed");
+          
+          // Clear stored questionnaire data since verification is complete
+          localStorage.removeItem("questionnaire_id");
+          localStorage.removeItem("questionnaire_email");
+          sessionStorage.removeItem("questionnaire_id");
+          sessionStorage.removeItem("questionnaire_data");
+          
           // Continue with login using refreshed user data
           data.user = refreshData.user!;
         } else {
