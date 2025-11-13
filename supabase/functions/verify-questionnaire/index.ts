@@ -16,9 +16,8 @@ const handler = async (req: Request): Promise<Response> => {
     const url = new URL(req.url);
     const token = url.searchParams.get('token');
 
-    // Get the app origin from environment or use request origin
-    const requestOrigin = req.headers.get('origin') || req.headers.get('referer');
-    const origin = Deno.env.get('APP_URL') || requestOrigin?.replace(/\/$/, '') || `https://${Deno.env.get('SUPABASE_PROJECT_ID') ?? 'agmsvskzasrqnlijtwbg'}.lovableproject.com`;
+    // Get the app origin - use custom domain
+    const origin = Deno.env.get('APP_URL') || "https://energiwise.ca";
 
     if (!token) {
       console.warn("Missing verification token");
