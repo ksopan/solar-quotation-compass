@@ -69,7 +69,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Sending verification email to:", email);
 
     const verificationUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/verify-questionnaire?token=${verificationToken}`;
-    const appUrl = "https://5abb8aa6-16f5-4047-b465-705cb57ba542.lovableproject.com";
+    const appUrl = Deno.env.get("APP_URL") || "https://energiwise.ca";
 
     const emailResponse = await resend.emails.send({
       from: "Solar Quotes <noreply@energiwise.ca>",
